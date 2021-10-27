@@ -15,6 +15,8 @@ download.file("https://emp.baydeltalive.com/assets/06942155460a79991fdf1b57f641b
 
 download.file("https://emp.baydeltalive.com/assets/e106ca2a359a122e74e33ef183a0fb4a/application/vnd.ms-excel/EMP_Phytoplankton_2019_Data.xlsx", destfile = here("data/EMP_Phytoplankton_2019_Data.xlsx"))
 
+# download the stations locations
+download.file("https://wwww.water.ca.gov/bdma/docs/150722.Phytoplankton_Stations.xls", destfile = here("data/EMP_Phytoplankton_Stations.xlsx"))
 
 
 # Tidy Data and Join Together ---------------------------------------------
@@ -26,4 +28,5 @@ ph17 <- read_xlsx(here("data/EMP_Phytoplankton_2017_2018_Data.xlsx"), sheet = "2
 ph18 <- read_xlsx(here("data/EMP_Phytoplankton_2017_2018_Data.xlsx"), sheet = "2018 Algal Type Data")
 ph19 <- read_xlsx(here("data/EMP_Phytoplankton_2019_Data.xlsx"), sheet = "2019 Data by Algal Type")
 
-## combine the
+## combine the files
+
