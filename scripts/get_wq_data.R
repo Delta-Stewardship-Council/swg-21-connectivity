@@ -8,8 +8,13 @@ library(lubridate)
 
 # download the files
 # download.file("https://portal.edirepository.org/nis/dataviewer?packageid=edi.731.1&entityid=0f71269d5347e1c4318424f7efda7503", destfile = here("data/Delta_Integrated_WQ.csv"))
-# zip(zipfile = "data/Delta_Integrated_WQ.csv.zip", files = "data/Delta_Integrated_WQ.csv")
 
+# can zip files in R
+# zip(zipfile = "data/Delta_Integrated_WQ.csv.zip", files = "data/Delta_Integrated_WQ.csv")
+# and unzip
+# unzip("data/Delta_Integrated_WQ.csv.zip)
+# and can read directly from zip if file is a csv
+# read_csv("data/Delta_Integrated_WQ.csv.zip")
 
 # Import Data -------------------------------------------------------------
 
