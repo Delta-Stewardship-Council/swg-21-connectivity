@@ -1,0 +1,27 @@
+---
+title: "VisualizePhyto"
+author: "Shruti"
+date: "10/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Read the data
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(lubridate)
+
+phyto.hist = read.csv("../data/EMP_Phytoplankton_1975_2016_Data.csv") %>%
+  mutate(date = mdy(SampleDate)) %>% 
+#  filter(StationCode %in% c("D22","D24", "C3A"))
+  filter(StationCode == "C3A")
+
+ggplot(phyto.hist, aes(x=date, y=Green.Algae)) + geom_point() + facet_wrap(~StationCode, scales = "free") + theme_bw()
+
+```
+
