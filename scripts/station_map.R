@@ -143,9 +143,9 @@ verona_sta <- verona_sta %>%
 
 mapview(emp_wq, col.regions = "purple", layer.name="EMP WQ") +
   mapview(cimis_all, col.regions = "orange", layer.name = "CIMIS") +
-  mapview(djfmp_fish, col.regions = "darkblue", layer.name = "DJFMP Fish") +
+  mapview(djfmp_fish, col.regions = "darkblue", layer.name = "DJFMP Fish", cex=3, pch=23) +
   mapview(sacsj_wq, col.regions = "salmon", layer.name = "SacSJ WQ") +
-  mapview(dinteg_wq_sta, col.regions="darkgreen", layer.name="Integrated WQ") +
+  mapview(dinteg_wq_sta, col.regions="darkgreen", layer.name="Integrated WQ", cex=4) +
   mapview(usgs_cawsc, col.regions="skyblue", layer.name="USGS CAWSC") +
-  mapview(verona_sta, col.regions = "black", layer.name = "USGS Verona", cex=5)
+  mapview(verona_sta, col.regions = "gray", layer.name = "USGS Verona", cex=8)
 
