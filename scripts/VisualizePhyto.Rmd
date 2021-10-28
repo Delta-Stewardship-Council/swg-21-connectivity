@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Read the data
+## Read the phytoplankton data
 
 ```{r}
 library(ggplot2)
@@ -22,6 +22,25 @@ phyto.hist = read.csv("../data/EMP_Phytoplankton_1975_2016_Data.csv") %>%
   filter(StationCode == "C3A")
 
 ggplot(phyto.hist, aes(x=date, y=Green.Algae)) + geom_point() + facet_wrap(~StationCode, scales = "free") + theme_bw()
+
+```
+## Exploring the temperature datasets
+
+# Air temperature CIMIS dataset
+
+```{r}
+
+cimis.lht = read.csv("../data/LHT_CIMIS_daily.csv") %>% 
+  mutate(fdate = mdy(Date))
+
+cimis.brt = read.csv("../data/Bryte_CIMIS_daily.csv") %>% 
+  mutate(fdate = mdy(Date))
+
+ggplot(cimis.lht, aes(x = fdate, y = Max.Air.Temp..C.)) + geom_point() + theme_bw()
+
+ggplot(cimis.brt, aes(x = fdate, y = Max.Air.Temp..C.)) + geom_point() + theme_bw()
+
+
 
 ```
 
