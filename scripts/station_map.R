@@ -129,13 +129,23 @@ usgs_cawsc <- readxl::read_xlsx("data/USGS_CAWSC_discrete_connectivity_stations.
 
 mapview(usgs_cawsc, zcol="Site_Abbrev", legend=FALSE)
 
+## USGS VERONA -------------------------
+
+verona_sta <- dataRetrieval::whatNWISsites(sites="11425500")
+
+# map
+verona_sta <- verona_sta %>%
+  st_as_sf(coords=c("dec_long_va", "dec_lat_va"),
+           crs=4326, remove=FALSE)
+#mapview::mapview(verona_sta)
 
 # Map with All Layers -----------------------------------------------------
 
 mapview(emp_wq, col.regions = "purple", layer.name="EMP WQ") +
   mapview(cimis_all, col.regions = "orange", layer.name = "CIMIS") +
-  mapview(djfmp_fish, col.regions = "darkblue", layer.name = "DJFMP Fish") +
+  mapview(djfmp_fish, col.regions = "darkblue", layer.name = "DJFMP Fish", cex=3, pch=23) +
   mapview(sacsj_wq, col.regions = "salmon", layer.name = "SacSJ WQ") +
-  mapview(dinteg_wq_sta, col.regions="darkgreen", layer.name="Integrated WQ") +
-  mapview(usgs_cawsc, col.regions="skyblue", layer.name="USGS CAWSC")
+  mapview(dinteg_wq_sta, col.regions="darkgreen", layer.name="Integrated WQ", cex=4) +
+  mapview(usgs_cawsc, col.regions="skyblue", layer.name="USGS CAWSC") +
+  mapview(verona_sta, col.regions = "gray", layer.name = "USGS Verona", cex=8)
 
