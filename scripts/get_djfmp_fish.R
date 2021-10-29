@@ -51,7 +51,11 @@ SS_stations <- unique(DJFMP_seine_98_now_4cyp$Station[grep("SS", DJFMP_seine_98_
 # Delta Cross Channel
 XC_stations <- unique(DJFMP_seine_98_now_4cyp$Station[grep("XC", DJFMP_seine_98_now_4cyp$Station)])
 
+# Designate regions based on station code
 DJFMP_seine_98_now_4cyp <- DJFMP_seine_98_now_4cyp %>%
   dplyr::mutate(Region = dplyr::case_when(Station %in% c(LI_stations) ~ "Liberty_Island", Station %in% c(GS_stations) ~ "Georgiana_Slough", Station %in% c(AM_stations) ~ "American_River", Station %in% c(SR_stations) ~ "Sac_River", Station %in% c(SS_stations) ~ "Steamboat_Slough", Station %in% c(XC_stations) ~ "Delta_XC"))
+
 # plot the 4 cyprinid species over time period of interest
 cyp_plot <- ggplot(DJFMP_seine_98_now_4cyp, aes(x = Date, y = Count, group = Taxa, color = Taxa)) + geom_point() + theme_bw() + facet_wrap(vars(Region))
+
+cyp_plot
