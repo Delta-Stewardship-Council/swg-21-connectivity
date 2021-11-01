@@ -1,4 +1,5 @@
 # Switch to chlorophyll data
+# Combine diffrent sources, match to inundation and Q variables
 
 
 library(readr)
@@ -36,15 +37,20 @@ usgs <- read_csv("data/USGS_CAWSC_discrete_connectivity_clean.csv") %>%
   filter(!is.na(result_va_Chla_ugL) == TRUE)
 
 # Read in YOLO inundation and verona flow
-flo <- read_csv("data/yolo_data_for_model.csv")
+flo <- read_csv("data/yolo_data_for_model.csv") %>%
+  mutate(inun = ifelse(Topped.days == 0, 0, 1))
+# Calculate # of topped days in past 30 days
+flo$past_topped <- NA
+for(i in 31:nrow(flo)) {
+  flo$past_topped[i] <- sum(flo$inun[(i-31):(i-1)])
+}
 
 # Stack the two data sources
 total <- data.frame(station = c(int$Station, usgs$site_no),
                     date = c(int$Date, usgs$sample_dt),
                     chl = c(int$Chlorophyll, usgs$result_va_Chla_ugL)) %>%
   left_join(flo, by = c("date" = "Date")) %>%
-  drop_na() %>%
-  mutate(inun = ifelse(Topped.days == 0, 0, 1))
+  drop_na()
 
 range(total$date) # n = 1041, 1999-01-05 to 2020-07-23
 range(flo$Date) # 1996-10-01 to 2020-09-30 for verona
@@ -69,28 +75,4 @@ ggplot()+
   guides(color = "none")
 
 
-ggplot(all, aes(x = cch_discharge_daily, y = Chlorophyll)) +
-  geom_point()
-
-
-
-ggplot()+
-  geom_rect(data = yolo %>% filter(Overtopping_FW == "Yes"),
-            aes(xmin = Date, xmax = Date,
-                ymin = -Inf, ymax = Inf,
-                color = Overtopping_FW)) +
-  geom_point(data = ch2, aes(x = Date, y = chloro_a*3750, col = "Chlorophyll")) +
-  geom_point(data = ch2, aes(x = Date, y = cch_discharge_daily, col = "Q")) +
-  labs(y = expression(paste("Q (", ft^3, " ", s^-1, ")"))) +
-  scale_y_continuous(sec.axis = sec_axis(~./3750, name = "Chlorophyll")) +
-  scale_x_date(limits = c(as.Date("2015-01-01"), as.Date("2020-01-01"))) +
-  scale_color_manual(values = c("forestgreen", "skyblue", "purple")) +
-  theme_bw(base_size = 12)
-
-ggplot(ch2, aes(x = cch_discharge_daily, y = chloro_a)) +
-  geom_point()
-
-
-# Read out simple data for quick SAM model
-# Retain USGS 36 + CCH daily Q + overtopping at Lisbon weir
-save(all, file = "scripts/sam_models/USGS36_all.Rda")
+save(total, file = "scripts/sam_models/Chla_all.Rda")
