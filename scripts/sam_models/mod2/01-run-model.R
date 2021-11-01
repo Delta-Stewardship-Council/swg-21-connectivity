@@ -1,7 +1,8 @@
 # Create input for SAM model
 # Add past_topped, Rant, and Tant
-# Should account for random effect of site
+# Accounts for random effect of site (intercept-only, due to low sample size)
 
+library(readr)
 library(dplyr)
 library(rjags)
 library(mcmcplots)
@@ -26,12 +27,14 @@ covars <- left_join(days, flo)
 load("scripts/sam_models/Chla_all.Rda")
 
 # Add index (integer) of days since 1998-01-01
+# Remove station 11455420 - only 1 observation
 all <- total %>%
-  select(date, chl, Flow_usgs_verona, past_topped) %>%
-  filter(chl > 0) %>%
+  select(station, date, chl, Flow_usgs_verona, past_topped) %>%
+  filter(chl > 0 & station != '11455420') %>%
   filter(complete.cases(.)) %>%
-  arrange(date) %>%
-  mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1)
+  arrange(station, date) %>%
+  mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+         station_id = as.numeric(as.factor(station)))
 
 # past_topped is an index of the number of days in the past 30 that were inundated
 
@@ -42,6 +45,8 @@ datlist <- list(chl = log(all$chl),
                 Q = c(covars$Q),
                 Rad = c(covars$Rad),
                 Temp = c(covars$Temp),
+                station_id = all$station_id,
+                Nstation = length(unique(all$station_id)),
                 doy1998 = all$doy1998,
                 N = nrow(all),
                 pA = c(1, 3, 3, 7, 7),
@@ -63,7 +68,8 @@ update(jm, n.iter = 1000)
 
 jm_coda <- coda.samples(jm,
                         variable.names = c("B", "wA", "wB", "wC",
-                                           "sig", "tau"),
+                                           "deltaA", "deltaB", "deltaC",
+                                           "sig", "tau", "sig.eps", "tau.eps"),
                         n.iter = 1000*15,
                         thin = 15)
 
