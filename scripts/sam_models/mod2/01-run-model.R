@@ -41,6 +41,14 @@ all <- total %>%
   mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
          station_id = as.numeric(as.factor(station)))
 
+
+# Fill NAs ----------------------------------------------------------------
+# need to fill NA values so we
+summary(all)
+summary(total)
+summary(covars)
+
+
 # past_topped is an index of the number of days in the past 30 that were inundated
 
 hist(log(all$chl))
