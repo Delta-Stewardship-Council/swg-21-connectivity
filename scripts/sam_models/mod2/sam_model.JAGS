@@ -78,6 +78,7 @@ model{
   sig <- 1/sqrt(tau)
 
   # Diffuse folded-t prior for random-effect standard deviation
+  # Most effective for smaller number of groups
   sig.eps ~ dt(0, 10, 2)
   tau.eps <- pow(abs(sig.eps), -2)
 }
