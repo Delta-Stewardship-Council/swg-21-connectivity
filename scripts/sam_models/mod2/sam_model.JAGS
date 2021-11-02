@@ -18,6 +18,9 @@ model{
     Tant[i] <- sum(tTemp[i,])
 
   # Create temporary antecedent variable
+  # here we create index (of Q or temp or radians) multiply weight by
+  # index based on days since 1998, average of next day period, etc
+
     # use lag of
     for(k in 1:nlagA){
       qTemp[i,k] <-
@@ -40,13 +43,19 @@ model{
   sumB <- sum(deltaB[])
   sumC <- sum(deltaC[])
 
-  # Priors for weights using the delta trick
+  # a way to avoid using ddirich distrib function in JAGS
+  # use a variable drawn from gamma distrib
+  # use a weight from the dirich distribution
+  # use weight from that point / sum of all deltas
+
+  # set Priors for weights using the delta trick
   #daily variable weights
   for(k in 1:nlagA){
     wA[k] <- deltaA[k]/sumA
     deltaA[k] ~ dgamma(alphaA[k],1)
   }
 
+  # for 5 time steps, need separate for loops
   for(k in 1:nlagB){
     wB[k] <- deltaB[k]/sumB
     deltaB[k] ~ dgamma(alphaB[k],1)

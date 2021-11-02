@@ -29,7 +29,7 @@ days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day
 covars <- left_join(days, flo)
 
 # Bring in response variables
-load("scripts/sam_models/Chla_all.Rda")
+load("scripts/sam_models/Chla_all.Rda") # file called "total"
 
 # Add index (integer) of days since 1998-01-01
 # Remove station 11455420 - only 1 observation
@@ -55,8 +55,9 @@ datlist <- list(chl = log(all$chl),
                 doy1998 = all$doy1998,
                 N = nrow(all),
                 pA = c(1, 3, 3, 7, 7),
-                nlagA = 5,
-                alphaA = rep(1, 5),
+                # mean of 1 day, mean of 3 days before that, etc
+                nlagA = 5, # index for for loop
+                alphaA = rep(1, 5), # for prior
                 pB = c(1, 1, 1, 1, 1, 1, 1),
                 pC = c(1, 1, 1, 1, 1, 1, 1),
                 nlagB = 7,
