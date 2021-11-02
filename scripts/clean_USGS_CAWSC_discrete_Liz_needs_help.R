@@ -83,37 +83,38 @@ discrete_rename <- discrete_select %>%
 # NH4, NO2, NO3_NO2, Ortho, TDN, Chl-a
 # approved c("R", "NA", "A")
 
-filter_RA <- discrete_rename %>%
-  select(startDateTime,
-         site_no,
-         tz_cd,
-         starts_with("NH4"),
-         starts_with("NO2"),
-         starts_with("NO3"),
-         starts_with("Ortho"),
-         starts_with("Chl")) %>%
-  mutate(across(.cols = contains("dqi_cd"),
-                .fns = ~ifelse(is.na(.), "NA", .))) %>%
-  filter(if_all(contains("dqi_cd"), ~. %in% c("R", "A", "NA")))
+sp <-  c("NH4_mgL", "NO2_mgL", "NO3_NO2_mgL", "Ortho_PO4_mgL", "TDN_mgL", "Chla_mgL",
+         "Phaeo_mgL", "DOC_mgL", "A254", "SUVA")
 
-# Case 2: R approval code, convert NA values to string NA for easier filtering
-# Phaeo, DOC, A254, SUVA
+res <- data.frame(startDateTime = NA, site_no = NA, tz_cd = NA)
+for (i in seq_along(sp)){
 
-filter_R <- discrete_rename %>%
-  select(startDateTime,
-         site_no,
-         tz_cd,
-         starts_with("Phaeo"),
-         starts_with("DOC"),
-         starts_with("A254"),
-         starts_with("SUVA")) %>%
-  mutate(across(.cols = contains("dqi_cd"),
-                .fns = ~ifelse(is.na(.), "NA", .))) %>%
-  filter(if_all(contains("dqi_cd"), ~. %in% c("R", "NA")))
+  filter_RA <- discrete_rename %>%
+    select(startDateTime,
+           site_no,
+           tz_cd,
+           starts_with(sp[i])) %>%
+    mutate(across(.cols = contains("dqi_cd"),
+                  .fns = ~ifelse(is.na(.), "NA", .)))
 
-# join data  back together
-clean_df <- full_join(filter_R, filter_RA)
+  if (sp[i] %in% c("NH4_mgL", "NO2_mgL", "NO3_NO2_mgL", "Ortho_PO4_mgL", "TDN_mgL", "Chla_mgL")){
+    filter_f <- filter_RA %>%
+      filter(if_all(contains("dqi_cd"), ~. %in% c("R", "A", "NA"))) %>%
+      filter_at(vars(sp[i]), all_vars(!is.na(.)))
+  } else if (sp[i] %in% c("Phaeo_mgL", "DOC_mgL", "A254", "SUVA")){
+    filter_f <- filter_RA %>%
+      filter(if_all(contains("dqi_cd"), ~. %in% c("R", "NA"))) %>%
+      filter_at(vars(sp[i]), all_vars(!is.na(.)))
+  }
 
+  res <- full_join(res, filter_f)
+
+
+
+}
+
+full_data <- res %>%
+  filter_all(any_vars(!is.na(.)))
 
 # idk what happens after this
 
