@@ -8,6 +8,7 @@ library(rjags)
 library(mcmcplots)
 library(broom.mixed)
 library(ggplot2)
+library(naniar)
 
 # Read in yolo inundation dataset, with flow from verona and temp, etc
 flo <- read_csv("data/yolo_data_for_model.csv") %>%
@@ -19,6 +20,10 @@ flo <- read_csv("data/yolo_data_for_model.csv") %>%
          Temp = scale(max_air_temp_c),
          doy1998 = as.numeric(difftime(date, as.Date("1997-12-31"), "day")))
 
+# check missing data
+naniar::gg_miss_var(read_csv("data/yolo_data_for_model.csv"))
+
+# make days
 days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
 
 covars <- left_join(days, flo)

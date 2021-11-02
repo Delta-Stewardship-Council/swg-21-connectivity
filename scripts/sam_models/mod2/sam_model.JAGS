@@ -18,6 +18,7 @@ model{
     Tant[i] <- sum(tTemp[i,])
 
   # Create temporary antecedent variable
+    # use lag of
     for(k in 1:nlagA){
       qTemp[i,k] <-
         mean(Q[(doy1998[i]-k*pA[k]):(doy1998[i]-k*pA[k]+pA[k] - 1)])*wA[k]
