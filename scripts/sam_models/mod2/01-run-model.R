@@ -9,24 +9,27 @@ library(mcmcplots)
 library(broom.mixed)
 library(ggplot2)
 library(naniar)
+library(lubridate)
 
 # Read in yolo inundation dataset, with flow from verona and temp, etc
-flo <- read_csv("data/yolo_data_for_model.csv") %>%
-  filter(Date >= as.Date("1998-01-01")) %>%
-  mutate(date = as.Date(Date)) %>%
-  select(date, Flow_usgs_verona, sol_rad_w_sq_m, max_air_temp_c) %>%
+flo <- read_csv("data/yolo_daymet_for_model.csv") %>%
+  filter(Date >= ymd("1998-01-01")) %>%
+  rename(date = Date) %>%
+  # select parameters of interest
+  select(date, Flow_usgs_verona, daymet_srad, daymet_tmax) %>%
   mutate(Q = scale(Flow_usgs_verona),
-         Rad = scale(sol_rad_w_sq_m),
-         Temp = scale(max_air_temp_c),
-         doy1998 = as.numeric(difftime(date, as.Date("1997-12-31"), "day")))
+         Rad = scale(daymet_srad),
+         Temp = scale(daymet_tmax),
+         doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
 
 # check missing data
-naniar::gg_miss_var(read_csv("data/yolo_data_for_model.csv"))
+naniar::gg_miss_var(flo)
 
 # make days
 days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
 
 covars <- left_join(days, flo)
+summary(covars)
 
 # Bring in response variables
 load("scripts/sam_models/Chla_all.Rda") # file called "total"
@@ -40,7 +43,6 @@ all <- total %>%
   arrange(station, date) %>%
   mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
          station_id = as.numeric(as.factor(station)))
-
 
 # Fill NAs ----------------------------------------------------------------
 # need to fill NA values so we
