@@ -51,7 +51,11 @@ summary(covars)
 
 # past_topped is an index of the number of days in the past 30 that were inundated
 
+# check histogram of logged chlorophyll
 hist(log(all$chl))
+
+# check sd among site mean chlorophyll, set as parameter for folded-t prior
+sd(tapply(all$chl, all$station_id, mean))
 
 datlist <- list(chl = log(all$chl),
                 past_topped = all$past_topped,
@@ -81,9 +85,9 @@ jm <- jags.model("scripts/sam_models/mod2/sam_model.JAGS",
 update(jm, n.iter = 1000)
 
 jm_coda <- coda.samples(jm,
-                        variable.names = c("B", "wA", "wB", "wC",
+                        variable.names = c("Bstar", "wA", "wB", "wC",
                                            "deltaA", "deltaB", "deltaC",
-                                           "sig", "tau", "sig.eps", "tau.eps"),
+                                           "sig", "tau", "sig.eps", "Estar"),
                         n.iter = 1000*15,
                         thin = 15)
 
@@ -123,6 +127,10 @@ caterplot(jm_coda,
 
 caterplot(jm_coda,
           parms = "wC",
+          reorder = FALSE)
+
+caterplot(jm_coda,
+          parms = "Estar",
           reorder = FALSE)
 
 # summarize and plot

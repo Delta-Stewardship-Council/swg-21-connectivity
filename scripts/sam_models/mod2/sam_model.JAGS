@@ -10,7 +10,7 @@ model{
              B[4] * Qant[i] +
              B[5] * Rant[i] +
              B[6] * Tant[i] +
-             Eps[station_id[i]]
+             eps[station_id[i]]
 
   # Sum antecedent components across all timesteps
     Qant[i] <- sum(qTemp[i,])
@@ -24,17 +24,17 @@ model{
     # use lag of
     for(k in 1:nlagA){
       qTemp[i,k] <-
-        mean(Q[(doy1998[i]-k*pA[k]):(doy1998[i]-k*pA[k]+pA[k] - 1)])*wA[k]
+        mean(Q[(doy1998[i]-sum(pA[1:k])):(doy1998[i]-sum(pA[1:k])+pA[k] - 1)])*wA[k]
     }
 
     for(k in 1:nlagB){
       rTemp[i,k] <-
-        mean(Rad[(doy1998[i]-k*pB[k]):(doy1998[i]-k*pB[k]+pB[k] - 1)])*wB[k]
+        mean(Rad[(doy1998[i]-sum(pB[1:k])):(doy1998[i]-sum(pB[1:k])+pB[k] - 1)])*wB[k]
     }
 
     for(k in 1:nlagC){
       tTemp[i,k] <-
-        mean(Temp[(doy1998[i]-k*pC[k]):(doy1998[i]-k*pC[k]+pC[k] - 1)])*wC[k]
+        mean(Temp[(doy1998[i]-sum(pC[1:k])):(doy1998[i]-sum(pC[1:k])+pC[k] - 1)])*wC[k]
     }
   }
 
@@ -68,19 +68,26 @@ model{
 
   # Priors for random effects
   for(r in 1:Nstation){
-    Eps[r] ~ dnorm(0, tau.eps)
+  # non-identifiable random effects
+    eps[r] ~ dnorm(0, tau.eps)
+  # identifable random effects
+    Estar[r] <- eps[r] - mean(eps[])
   }
 
   # Diffuse normal priors for regression coefficients
-  for(i in 1:6){
-    B[i] ~ dnorm(0, 0.001)
+  for(k in 1:6){
+    B[k] ~ dnorm(0, 0.001)
+    # Identifiable parameter vector
+    Bstar[k] <- B[k] + equals(k, 1)*mean(eps[])
   }
 
 
-  # Diffuse gamma priors for observation-level and random effect precisions
+  # Diffuse gamma prior for observation-level precisions
   tau ~ dgamma(0.01, 0.01)
   sig <- 1/sqrt(tau)
 
-  tau.eps ~ dgamma(0.01, 0.01)
-  sig.eps <- 1/sqrt(tau.eps)
+  # Diffuse folded-t prior for random-effect standard deviation
+  # Most effective for smaller number of groups
+  sig.eps ~ dt(0, 10, 2)
+  tau.eps <- pow(abs(sig.eps), -2)
 }
