@@ -2,7 +2,7 @@
 
 # pull in data and view stations with data/source, and year range, and date ranges (lat, lon, start_yr, end_yr, date_range (i.e., 20181001-20191002, 20201001-20211002)
 
-# Stations Metadata: StationCode - Lat - Lon - Agency - StartDate - EndDate - YearGaps - DataType
+# Stations Metadata: StationCode - Latitude - Longitude - Agency - StartDate - EndDate - YearGaps - DataType
 
 # Libraries ---------------------------------------------------------------
 
@@ -89,8 +89,8 @@ mapview(djfmp_fish) # doesn't have years
 
 ## SACSJ WQ Data -----------------------------------------------------------
 
-sacsj_wq <- read_csv("data/SACSJ_delta_water_quality_1975_2020.csv") %>%
-  filter(!is.na(NorthLat)) %>%
+sacsj_wq <- read.csv("data/SACSJ_delta_water_quality_1975_2020.csv") %>%
+  filter(!is.na(NorthLat))  %>%
   st_as_sf(coords=c("WestLong", "NorthLat"), crs=4326, remove=FALSE) %>%
   distinct(Station, .keep_all = TRUE)
 
@@ -106,13 +106,34 @@ mapview(emp_wq, zcol = "Station", legend =FALSE)
 
 ## Yolo Chl-a -------------------------
 
-ybfmp <- read_csv("data/YBFMP_Chlorophyll_2009_2019.csv")
+ybfmp <- readr::read_csv("data/YBFMP_Chlorophyll_2009_2019.csv") %>%
+  filter(`Station Number` %in% c("A0200000", "A0D82120386", "B9D82851352")) %>%
+  mutate(Longitude = case_when(`Station Number` == "A0200000" ~ -121.527912,
+                     `Station Number` == "A0D82120386" ~ -121.643181,
+                     `Station Number` == "B9D82851352" ~ -121.588584),
+         Latitude = case_when(`Station Number` == "A0200000" ~ 38.531881,
+                              `Station Number` == "A0D82120386" ~ 38.353383,
+                              `Station Number` == "B9D82851352" ~ 38.474816))
+
+ybfmp_sta <- ybfmp %>%
+  group_by(`Short Station Name`) %>%
+  mutate(year_start = min(`Collection Date`),
+         year_end = max(`Collection Date`)) %>%
+  ungroup() %>%
+  select(`Short Station Name`, `Station Number`, Longitude, Latitude, year_start, year_end) %>%
+  rename(Station = `Short Station Name`) %>%
+  distinct() %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE)
+
+mapview(ybfmp_sta, zcol = "Station", legend = FALSE)
 # no station lat lons in this dataset?
 
 ## Continuous Water Temp ---------------------------------------------------
 
-load("data/ContinuousWaterTemp_1985_2019.rda")
-unique(WaterTemp$StationName)
+int_temp_sta <- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=edi.591.2&entityid=a059f5eea4f8500fe1a43566451ec593")%>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE)
+
+mapview(int_temp_sta, zcol = "Station", legend = FALSE)
 # no station lat lons in this dataset
 
 ## USGS_CAWSC_discrete --------------------
@@ -141,11 +162,14 @@ verona_sta <- verona_sta %>%
 
 # Map with All Layers -----------------------------------------------------
 
-mapview(emp_wq, col.regions = "purple", layer.name="EMP WQ") +
-  mapview(cimis_all, col.regions = "orange", layer.name = "CIMIS") +
-  mapview(djfmp_fish, col.regions = "darkblue", layer.name = "DJFMP Fish", cex=3, pch=23) +
-  mapview(sacsj_wq, col.regions = "salmon", layer.name = "SacSJ WQ") +
-  mapview(dinteg_wq_sta, col.regions="darkgreen", layer.name="Integrated WQ", cex=4) +
-  mapview(usgs_cawsc, col.regions="skyblue", layer.name="USGS CAWSC") +
-  mapview(verona_sta, col.regions = "gray", layer.name = "USGS Verona", cex=8)
+mapview(emp_wq, label = "Station", col.regions = "purple", layer.name="EMP WQ") +
+  mapview(cimis_all, label = "stn_name", col.regions = "orange", layer.name = "CIMIS") +
+  mapview(djfmp_fish, label = "StationCode", col.regions = "darkblue", layer.name = "DJFMP Fish", cex=3, pch=23) +
+  mapview(sacsj_wq, label = "Station", col.regions = "salmon", layer.name = "SacSJ WQ") +
+  mapview(dinteg_wq_sta, label = "station", col.regions="darkgreen", layer.name="Integrated WQ", cex=4) +
+  mapview(usgs_cawsc, label = "Site_Abbrev", col.regions="skyblue", layer.name="USGS CAWSC") +
+  mapview(verona_sta, label = "station_nm", col.regions = "gray", layer.name = "USGS Verona", cex=8) +
+  mapview(ybfmp_sta, label = "Station", col.regions = "plum4", layer.name = "YBFMP WQ", cex = 6)+
+  mapview(int_temp_sta, label = "Station", col.regions = "cyan", layer.name = "Integrated Temp", cex = 2)
+
 
