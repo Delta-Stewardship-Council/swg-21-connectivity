@@ -5,15 +5,17 @@ library(readr)
 library(lubridate)
 library(ggplot2)
 
+# FLOW --------------------------------------------
+# pull in flow data
 
-# Bring in Inundation Data ------------------------------------------------
+## INUNDATION: Inundation Data ------------------------------------------------
 
 # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days (from Pascale's code inundation_days.R)
 
 inund <- read_csv("data/inundation_days.csv") %>%
   select(Date:Topped.days) # drop row id column
 
-# Get Verona Daily Flow ---------------------------------------------------
+## DAILY FLOW: Verona Daily Flow ---------------------------------------------------
 
 library(dataRetrieval)
 
@@ -24,39 +26,39 @@ verona <- dataRetrieval::readNWISdv(siteNumbers = "11425500", parameterCd = c("0
 verona <- addWaterYear(verona)
 verona <- dataRetrieval::renameNWISColumns(verona)
 
-# write out
-# write_csv(verona, "data/usgs_verona_discharge_1929-2021.csv")
-
 # quick plot
-(g1 <-ggplot(verona) + geom_line(aes(x=Date, y=Flow)) +
-    geom_line(data=inund, aes(x=Date, y=YOLO), color="blue"))
+(g1 <-ggplot(verona) +
+    geom_line(aes(x=Date, y=Flow)) +
+    geom_line(data=inund, aes(x=Date, y=YOLO), color="blue") +
+    theme_minimal() +
+    labs(title="Flow at USGS Verona (11425500)",
+         subtitle = "Inundation Data: Yolo (blue)"))
 
-# check for missing flow data
+#ggsave("figures/usgs_daily_flow_at_verona.png", width = 11, height = 8.5, dpi=300)
+
+# no missing data in this period of flow
+
+# package checks for missing data
 library(naniar)
-gg_miss_var(verona)
+gg_miss_var(verona) # no data missing
+gg_miss_var(inund) # no data missing
 
-# use plotly to interactively visualize
-# library(plotly)
-# ggplotly(g1)
-
-
-# Merge Data --------------------------------------------------------------
+## Merge FLOW & INUNDATION Data --------------------------------------------------------------
 
 # only merge for same period of record of inund data
 
-df_out <- left_join(inund, verona, by="Date") %>%
+flow_out <- left_join(inund, verona, by="Date") %>%
   # drop columns
   select(-c(agency_cd, Flow_cd)) %>%
   # rename
   rename(Flow_usgs_verona = Flow,
          site_no_usgs = site_no)
 
-summary(df_out)
+summary(flow_out)
 
-gg_miss_var(df_out)
+gg_miss_var(flow_out)
 
-
-# Get DayMet Data ---------------------------------------------------------
+# DAYMET: Get DayMet Data ---------------------------------------------------------
 
 # Yolo
 lats <- 38.307857513
@@ -66,23 +68,25 @@ library(daymetr)
 yolo_daymet <- download_daymet(site = "Yolo",
                                    lat = lats,
                                    lon =  lons,
-                                   start = 1997,
+                                   start = 1994,
                                    end = 2020, internal = TRUE)
 
 
 # rename variables, create a date column
 yolo_daymet_df <- yolo_daymet$data %>%
   transmute(date = ymd(paste0(year, '01-01'))+ days(yday) -1,
-            precip_mm = prcp..mm.day., # mm ppt / day
-            tmax = tmax..deg.c., #max temp
-            tmin = tmin..deg.c., # min temp
-            tmean = (tmax + tmin) / 2, # mean temp
-            trange = tmax - tmin, # temp range
-            srad = srad..W.m.2., # soloar radiation
-            vpd = vp..Pa.)
+            daymet_precip_mm = prcp..mm.day., # mm ppt / day
+            daymet_tmax = tmax..deg.c., #max temp
+            daymet_tmin = tmin..deg.c., # min temp
+            daymet_tmean = (daymet_tmax + daymet_tmin) / 2, # mean temp
+            daymet_trange = daymet_tmax - daymet_tmin, # temp range
+            daymet_srad = srad..W.m.2., # soloar radiation
+            daymet_vpd = vp..Pa.)
 
-plot(yolo_daymet_df$date, yolo_daymet_df$tmean)
 gg_miss_var(yolo_daymet_df)
+
+# save out:
+write_csv(yolo_daymet_df, "data/cimis_yolo_1994-2020.csv")
 
 # Bring in Air Temperature: CIMIS ------------------------------------------------
 
@@ -103,7 +107,7 @@ bryte <- bryte %>%
 library(janitor)
 bryte <- clean_names(bryte)
 
-# see what qc has
+# see what qc codes exist
 table(bryte$qc_9, exclude = "ifany")
 
 # filter to cols of interest and filter flagged data:
@@ -135,7 +139,6 @@ bryte_filt <- select(bryte_filt,
 ggplot() + geom_line(data=bryte_filt, aes(x=date, y=sol_rad_w_sq_m))
 ggplot() + geom_line(data=bryte_filt, aes(x=date, y=avg_air_temp_c))
 
-
 # check temps
 ggplot() +
   geom_line(data=bryte_filt,
@@ -143,53 +146,75 @@ ggplot() +
   geom_line(data=bryte_filt,
             aes(x=date, y=min_air_temp_c), color="darkblue") +
   geom_line(data=bryte_filt,
-            aes(x=date, y=avg_air_temp_c), color="cyan4")
-
-# look for missing data?
-library(naniar)
-naniar::gg_miss_var(bryte_filt)
-gg_miss_case(bryte_filt)
+            aes(x=date, y=avg_air_temp_c), color="gray40") +
+  theme_minimal() +
+  labs(title="CIMIS (Bryte)",
+       subtitle = "Air Temperature (max=red, min=darkblue, avg=gray)",
+       x="", y="Air Temp (C)")
+#ggsave("figures/cimis_bryte_daily_airtemp.png", width = 11,
+#       height = 8.5, dpi=300)
 
 
 # Plot Daymet vs. CIMIS ---------------------------------------------------
 
 # join w daymet and plot?
-cimis_daymet <- left_join(bryte_filt, yolo_daymet_df, by=c("date"))
+cimis_daymet <- left_join(yolo_daymet_df, bryte_filt, by=c("date"))
 
-# replot
+# whats missing?
+gg_miss_var(cimis_daymet)
+# def gaps in the CIMIS data
+
+# plot
 ggplot() +
-  geom_line(data=cimis_daymet, aes(x=date, y=tmean), color="blue") +
-  geom_line(data=cimis_daymet, aes(x=date, y=avg_air_temp_c), color="orange") +
-  theme_classic() +
-  labs(title="Comparison of CIMIS Bryte and DayMet Air Temp")
-ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
+  geom_line(data=cimis_daymet, aes(x=date, y=daymet_tmean), color="darkblue") +
+  geom_line(data=cimis_daymet, aes(x=date, y=avg_air_temp_c), color="orange", alpha=0.8) +
+  theme_minimal() +
+  labs(title="Comparison of CIMIS Bryte and DayMet Air Temp",
+       subtitle = "CIMIS=orange, DayMet=blue", x="", y="Mean Air Temp (C)")
+
+# ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
 
 # sol rad
 ggplot() +
-  geom_line(data=cimis_daymet, aes(x=date, y=sol_rad_w_sq_m), color="blue") +
-  geom_line(data=cimis_daymet, aes(x=date, y=srad), color="orange") +
-  theme_classic() +
-  labs(title="Comparison of CIMIS Bryte and DayMet Solar Radiation", caption = "Using DayMet for (38.307857513,
--121.692428589)")
+  geom_line(data=cimis_daymet, aes(x=date, y=sol_rad_w_sq_m), color="orange") +
+  geom_line(data=cimis_daymet, aes(x=date, y=daymet_srad), color="darkblue", alpha=0.8) +
+  theme_minimal() +
+  labs(title="Comparison of CIMIS Bryte and DayMet Solar Radiation", caption = "DayMet from: 38.307857513,
+-121.692428589", subtitle = "CIMIS=orange, DayMet=blue", x="", y="Solar Rad (sq.m)")
 
-ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
-
+# ggsave(filename = "figures/cimis_vs_daymet_solarrad.png",width = 11, height = 8.5, dpi=300)
 
 # JOIN Data ---------------------------------------------------------------
+# join daymet with flow data
+names(yolo_daymet_df)
+
+# plot to see if data lines up
+ggplot() +
+  geom_path(data=flow_out,
+                 aes(x=Date, y="USGS"), color="blue") +
+  geom_path(data=yolo_daymet_df,
+                 aes(x=date, y="DayMet")) +
+  geom_path(data=bryte_filt,
+            aes(x=date, y="CIMIS"), color="orange") +
+  theme_classic()
 
 # join
-df_out_2 <- left_join(cimis_daymet, df_out, by=c("date"="Date"))
+mod_data_out <- left_join(flow_out, yolo_daymet_df, by=c("Date"="date"))
 
-naniar::gg_miss_var(df_out_2)
-gg_miss_case(df_out_2)
+summary(mod_data_out)
+# note: the NAs are due to leap years
+
+#drop the NAs
+mod_data_out <- mod_data_out %>%
+  filter(!is.na(daymet_srad))
+naniar::gg_miss_var(mod_data_out)
+
 
 # Export Data -------------------------------------------------------------
 
 # write out
-write_csv(df_out_2, "data/yolo_data_for_model.csv")
+write_csv(mod_data_out, "data/yolo_daymet_for_model.csv")
 
-
-# Update Model Dataset? --------------------------------
 
 ## Pull in Phyto Data from Jessica & Liz -----------------------------------
 
