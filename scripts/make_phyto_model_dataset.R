@@ -159,12 +159,20 @@ cimis_daymet <- left_join(bryte_filt, yolo_daymet_df, by=c("date"))
 # replot
 ggplot() +
   geom_line(data=cimis_daymet, aes(x=date, y=tmean), color="blue") +
-  geom_line(data=cimis_daymet, aes(x=date, y=avg_air_temp_c), color="orange")
+  geom_line(data=cimis_daymet, aes(x=date, y=avg_air_temp_c), color="orange") +
+  theme_classic() +
+  labs(title="Comparison of CIMIS Bryte and DayMet Air Temp")
+ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
 
 # sol rad
 ggplot() +
   geom_line(data=cimis_daymet, aes(x=date, y=sol_rad_w_sq_m), color="blue") +
-  geom_line(data=cimis_daymet, aes(x=date, y=srad), color="orange")
+  geom_line(data=cimis_daymet, aes(x=date, y=srad), color="orange") +
+  theme_classic() +
+  labs(title="Comparison of CIMIS Bryte and DayMet Solar Radiation", caption = "Using DayMet for (38.307857513,
+-121.692428589)")
+
+ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
 
 
 # JOIN Data ---------------------------------------------------------------
