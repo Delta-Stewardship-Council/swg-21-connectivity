@@ -76,3 +76,14 @@ Good stations to consider:
 4. RIV (Rio Vista) - 1999-2017
 
 
+## The Yolo Flow Inundation Dataset
+
+with inundation days, weir topping, flow information, etc.
+
+```{r}
+
+inund.yolo = read.csv("../data/yolo_flow_inund_fremont.csv")
+
+
+```
+
