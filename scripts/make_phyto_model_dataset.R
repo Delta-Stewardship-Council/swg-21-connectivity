@@ -33,8 +33,8 @@ verona <- dataRetrieval::renameNWISColumns(verona)
     theme_minimal() +
     labs(title="Flow at USGS Verona (11425500)",
          subtitle = "Inundation Data: Yolo (blue)"))
-ggsave("figures/usgs_daily_flow_at_verona.png", width = 11,
-       height = 8.5, dpi=300)
+
+#ggsave("figures/usgs_daily_flow_at_verona.png", width = 11, height = 8.5, dpi=300)
 
 # no missing data in this period of flow
 
@@ -151,8 +151,8 @@ ggplot() +
   labs(title="CIMIS (Bryte)",
        subtitle = "Air Temperature (max=red, min=darkblue, avg=gray)",
        x="", y="Air Temp (C)")
-ggsave("figures/cimis_bryte_daily_airtemp.png", width = 11,
-       height = 8.5, dpi=300)
+#ggsave("figures/cimis_bryte_daily_airtemp.png", width = 11,
+#       height = 8.5, dpi=300)
 
 
 # Plot Daymet vs. CIMIS ---------------------------------------------------
@@ -162,6 +162,7 @@ cimis_daymet <- left_join(yolo_daymet_df, bryte_filt, by=c("date"))
 
 # whats missing?
 gg_miss_var(cimis_daymet)
+# def gaps in the CIMIS data
 
 # plot
 ggplot() +
@@ -170,7 +171,8 @@ ggplot() +
   theme_minimal() +
   labs(title="Comparison of CIMIS Bryte and DayMet Air Temp",
        subtitle = "CIMIS=orange, DayMet=blue", x="", y="Mean Air Temp (C)")
-ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
+
+# ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
 
 # sol rad
 ggplot() +
@@ -180,8 +182,7 @@ ggplot() +
   labs(title="Comparison of CIMIS Bryte and DayMet Solar Radiation", caption = "DayMet from: 38.307857513,
 -121.692428589", subtitle = "CIMIS=orange, DayMet=blue", x="", y="Solar Rad (sq.m)")
 
-ggsave(filename = "figures/cimis_vs_daymet_solarrad.png",width = 11, height = 8.5, dpi=300)
-
+# ggsave(filename = "figures/cimis_vs_daymet_solarrad.png",width = 11, height = 8.5, dpi=300)
 
 # JOIN Data ---------------------------------------------------------------
 # join daymet with flow data
@@ -189,12 +190,12 @@ names(yolo_daymet_df)
 
 # plot to see if data lines up
 ggplot() +
-  geom_linerange(data=flow_out,
-                 aes(xmin=min(Date), xmax=max(Date),
-                     y="USGS"), color="blue") +
-  geom_linerange(data=yolo_daymet_df,
-                 aes(xmin=min(date), xmax=max(date),
-                     y="DayMet")) +
+  geom_path(data=flow_out,
+                 aes(x=Date, y="USGS"), color="blue") +
+  geom_path(data=yolo_daymet_df,
+                 aes(x=date, y="DayMet")) +
+  geom_path(data=bryte_filt,
+            aes(x=date, y="CIMIS"), color="orange") +
   theme_classic()
 
 # join
@@ -203,12 +204,16 @@ mod_data_out <- left_join(flow_out, yolo_daymet_df, by=c("Date"="date"))
 summary(mod_data_out)
 # note: the NAs are due to leap years
 
+#drop the NAs
+mod_data_out <- mod_data_out %>%
+  filter(!is.na(daymet_srad))
 naniar::gg_miss_var(mod_data_out)
+
 
 # Export Data -------------------------------------------------------------
 
 # write out
-write_csv(mod_data_out, "data/yolo_data_for_model.csv")
+write_csv(mod_data_out, "data/yolo_daymet_for_model.csv")
 
 
 ## Pull in Phyto Data from Jessica & Liz -----------------------------------
