@@ -20,7 +20,7 @@ library(dplyr)
 library(ggplot2)
 
 # pull data: defaults to Verona daily discharge
-download_daily_flow <- function(gageID="11425500", param="00060") {
+f_get_flow <- function(gageID="11425500", param="00060") {
 
   # get data:
   print("Downloading data...")
