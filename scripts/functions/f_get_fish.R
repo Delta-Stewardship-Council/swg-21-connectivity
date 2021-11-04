@@ -10,7 +10,7 @@ require(LTMRdata)
 library(janitor)
 
 # pull data from the integrated long-term monitoring surveys, start with DJFMP
-download_fish <- function(survey = "djfmp") {
+f_get_fish <- function(survey = "djfmp") {
 
   # get data:
   print("Downloading data...")
@@ -19,10 +19,11 @@ download_fish <- function(survey = "djfmp") {
 
   print("Data downloaded!")
 
-  # write out
-  readr::write_csv(fishdat, glue("data_raw/raw_fish_{survey}.csv"))
+  # write out; commented out for now as file was too big
+  #readr::write_csv(fishdat, glue("data_raw/raw_fish_{survey}.csv"))
 
   # print message!
-  print(glue("Data saved here: 'data_raw/raw_fish_{survey}.csv'"))
+  #print(glue("Data saved here: 'data_raw/raw_fish_{survey}.csv'"))
 
+return(fishdat)
 }
