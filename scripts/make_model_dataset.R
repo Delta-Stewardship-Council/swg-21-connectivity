@@ -47,7 +47,7 @@ gg_miss_var(inund) # no data missing
 
 # only merge for same period of record of inund data
 
-flow_out <- left_join(inund, verona, by="Date") %>%
+flow_out <- left_join(verona, inund, by="Date") %>%
   # drop columns
   select(-c(agency_cd, Flow_cd)) %>%
   # rename
@@ -206,7 +206,7 @@ summary(mod_data_out)
 
 #drop the NAs
 mod_data_out <- mod_data_out %>%
-  filter(!is.na(daymet_srad))
+  filter(Date > ymd("1997-12-31") & Date < ymd("2021-01-01"))
 naniar::gg_miss_var(mod_data_out)
 
 
@@ -221,3 +221,6 @@ write_csv(mod_data_out, "data/yolo_daymet_for_model.csv")
 load("scripts/sam_models/Chla_all.Rda") # file called "total"
 
 
+tst <- read_csv("data/yolo_daymet_for_model.csv")
+cimis <- read_csv("data/cimis_yolo_1994-2020.csv")
+verona

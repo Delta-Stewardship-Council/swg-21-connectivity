@@ -2,6 +2,9 @@
 # Add past_topped, Rant, and Tant
 # Accounts for random effect of site (intercept-only, due to low sample size)
 
+
+# Libraries ---------------------------------------------------------------
+
 library(readr)
 library(dplyr)
 library(rjags)
@@ -9,24 +12,50 @@ library(mcmcplots)
 library(broom.mixed)
 library(ggplot2)
 library(naniar)
+library(lubridate)
+
+
+# Import Flow Temp and Solar Rads -----------------------------------------
+
 
 # Read in yolo inundation dataset, with flow from verona and temp, etc
-flo <- read_csv("data/yolo_data_for_model.csv") %>%
-  filter(Date >= as.Date("1998-01-01")) %>%
-  mutate(date = as.Date(Date)) %>%
-  select(date, Flow_usgs_verona, sol_rad_w_sq_m, max_air_temp_c) %>%
+flo <- read_csv("data/yolo_daymet_for_model.csv") %>%
+  filter(Date >= ymd("1998-01-01")) %>%
+  rename(date = Date) %>%
+  # select parameters of interest
+  select(date, Flow_usgs_verona, daymet_srad, daymet_tmax)
+summary(flo)
+
+# fill missing data with MICE
+# see this https://datascienceplus.com/imputing-missing-data-with-r-mice-package/
+library(mice)
+flo_fill <- mice(flo,  m=5, # 5 iterations
+                 maxit=50, meth='pmm', seed=500)
+flo_fill$imp$daymet_srad # check imputed data for a variable
+flo_fill$method # only vars with NAs have a method
+
+# now get completed dataset, pick first.
+flow_complete <- complete(flo_fill, 1) # change number for diff imputation
+summary(flow_complete)
+summary(flo)
+
+flow <- flow_complete %>%
   mutate(Q = scale(Flow_usgs_verona),
-         Rad = scale(sol_rad_w_sq_m),
-         Temp = scale(max_air_temp_c),
-         doy1998 = as.numeric(difftime(date, as.Date("1997-12-31"), "day")))
+         Rad = scale(daymet_srad),
+         Temp = scale(daymet_tmax),
+         doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
 
 # check missing data
-naniar::gg_miss_var(read_csv("data/yolo_data_for_model.csv"))
+# naniar::gg_miss_var(flow)
+# VIM::marginplot(flow[c(6,7)])
 
 # make days
 days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
 
-covars <- left_join(days, flo)
+covars <- left_join(days, flow_complete)
+summary(covars) # YESSSS
+
+# Bring in Chl-a ----------------------------------------------------------
 
 # Bring in response variables
 load("scripts/sam_models/Chla_all.Rda") # file called "total"
@@ -41,13 +70,7 @@ all <- total %>%
   mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
          station_id = as.numeric(as.factor(station)))
 
-
-# Fill NAs ----------------------------------------------------------------
-# need to fill NA values so we
 summary(all)
-summary(total)
-summary(covars)
-
 
 # past_topped is an index of the number of days in the past 30 that were inundated
 
