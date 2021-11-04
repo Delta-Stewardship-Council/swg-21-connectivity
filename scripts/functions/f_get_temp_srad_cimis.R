@@ -30,5 +30,5 @@ f_get_temp_srad_cimis <- function(stationID="bryte") {
   # print message!
   print(glue("Data saved here: 'data_raw/raw_temp_srad_cimis_{stationID}.csv'"))
 
-  return(cimis)
+  #return(cimis)
 }
