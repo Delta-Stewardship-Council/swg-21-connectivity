@@ -1,17 +1,15 @@
-getwd()
-
 library(readr)
 library(tidyr)
 library(dplyr)
-library(ggplot2)
-library(padr)
+library(here)
 
 #remove scientific notation
+
 options(scipen = 100)
 
 #read in data pull
 
-discrete <- read_csv("data/USGS_CAWSC_discrete.csv")
+#discrete <- read_csv("data/USGS_CAWSC_discrete.csv")
 
 #select columns
 
@@ -116,116 +114,4 @@ for (i in seq_along(sp)){
 full_data <- res %>%
   filter_all(any_vars(!is.na(.)))
 
-# idk what happens after this
 
-#rename site_no and tz cols
-
-USGS_CAWSC_approved_WQ <- USGS_CAWSC_approved_WQ %>%
-  dplyr::rename(site_no = site_no.x.x.x) %>%
-  dplyr::rename(tz_cd = tz_cd.x.x.x)
-
-#drop extra site_no and tz cols - this is leading to NAs in the site_no columns. should I incorporate an IFNULL statement so the site_no is never NA
-USGS_CAWSC_approved_WQ_discrete <- subset (USGS_CAWSC_approved_WQ, select = -c (site_no.y.y.x, tz_cd.y.y.x, site_no.x.y.x, tz_cd.x.y.x, site_no.x, tz_cd.x, site_no.y, tz_cd.y, site_no.x.x.y, tz_cd.x.x.y, site_no.y.y.x, tz_cd.y.y.x, site_no.x.y.y, tz_cd.x.y.y, site_no.y.x.y, tz_cd.y.x.y, site_no.y.y.y, tz_cd.y.y.y))
-
-
-#exploring ways to drop unapproved data
-
-discrete_Dave <-discrete %>%
-  select(startDateTime, site_no, result_va_00608, dqi_cd_00608, result_va_00631, dqi_cd_00631)
-
-
-levs(discrete_Dave$dqi_cd_00631)
-
-str(discrete_Dave$dqi_cd_00631)
-
-discrete_Dave_R_approved_00608 <- discrete_Dave %>%
-  filter(dqi_cd_00608 %in% c("R", "NA"))
-
-
-?levels
-
-tail(discrete_Dave)
-
-str(discrete_Dave)
-
-# check NH4 values [00608], S = provisional, R = approved
-
-dqiR_00608 = filter(discrete,dqi_cd_00608=="R")
-
-dqiS_00608 = filter(discrete,dqi_cd_00608=="S")
-
-# check NO3+NO2 values [00631], S = provisional, R = approved
-
-dqiR_00631 = filter(discrete,dqi_cd_00608=="R")
-
-dqiS_00631 = filter(discrete,dqi_cd_00608=="S")
-
-
-
-
-
-
-
-
-#=============================================================
-
-
-
-# check NO3+NO2 values [00631], S = provisional, R = approved
-
-dqiR_NO3 = filter(discrete,dqi_cd_00608=="R")
-
-dqiS_NO3 = filter(discrete,dqi_cd_00608=="S")#check Chl-a values [70953], S = provisional, R = approved
-
-dqiR_Chl = filter(discrete,dqi_cd_70953=="R")
-
-dqiS_Chl = filter(discrete,dqi_cd_70953=="S")
-
-discrete_Chl_select <- read_csv("USGS_CAWSC_discrete.csv") %>%
-  filter(!is.na(result_va_70953)) %>%
-  group_by(site_no, dqi_cd_70953) %>%
-  summarize(n=n())
-
-
-
-# check Phaeophytin values [00681], S = provisional, R = approved
-
-dqiR_phaeo = filter(discrete,dqi_cd_00681=="R")
-
-dqiS_phaeo = filter(discrete,dqi_cd_62360=="S")
-
-
-
-# check OrthoP values [00671], S = provisional, R = approved
-
-dqiR_OrthoP = filter(discrete,dqi_cd_00671=="R")
-
-dqiS_OrthoP = filter(discrete,dqi_cd_00671=="S")
-
-# check TDN values [62854], S = provisional, R = approved
-
-dqiR_TDN = filter(discrete,dqi_cd_62854=="R")
-
-dqiS_TDN = filter(discrete,dqi_cd_62854=="S")
-
-
-?stat
-
-ggplot(discrete_select, aes(fill = dqi_cd_70953, y = n, x = site_no)) +
-  geom_bar(position='dodge', stat='identity') +
-  ggtitle('dqi') +
-  xlab('site_no') +
-  ylab('counts') +
-  scale_fill_manual('dqi_cd_70953', values=c('coral2','steelblue', 'pink'))
-
-dqi <- ggplot(discrete_select, aes(x=site_no,
-                                   y=dqi_cd_70953))
-dqi + geom_bar(x, alpha, color, fill=3, linetype, size, weight)
-
-head(discrete_select)
-
-discrete_Chl_dqi <- summary(discrete_Chl_select)
-head("discrete_dqi")
-
-
-FPT_uv <- read.csv()
