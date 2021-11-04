@@ -16,8 +16,5 @@ clean_flow_verona <- function(gageID="11425500") {
   # read in data
   flowdat <- read_csv(flow_file)
 
-  # clean names
-  flowdat <- janitor::clean_names(flowdat)
-
   write_csv(flowdat, file=glue("data_clean/clean_flow_usgs_{gageID}.csv"))
 }

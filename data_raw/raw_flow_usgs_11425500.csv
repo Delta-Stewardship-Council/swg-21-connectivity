@@ -1,4 +1,4 @@
-agency_cd,site_no,Date,waterYear,Flow,Flow_cd
+agency_cd,site_no,date,water_year,flow,flow_cd
 USGS,11425500,1929-10-01,1930,5020,A
 USGS,11425500,1929-10-02,1930,5020,A
 USGS,11425500,1929-10-03,1930,5020,A
