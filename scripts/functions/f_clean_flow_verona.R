@@ -9,7 +9,7 @@ library(janitor)
 clean_flow_verona <- function(gageID="11425500") {
 
   # get raw data ID:
-  flow <- contentid::store(glue("data/raw_flow_usgs_{gageID}.csv"))
+  flow <- contentid::store(glue("data_raw/raw_flow_usgs_{gageID}.csv"))
 
   flow_file <- contentid::resolve("hash://sha256/1b36a8c933dc1d38ac1139d182df22818ae3a81c393ec6d659db8b30f8eb6db9")
 
