@@ -31,12 +31,13 @@ download_daily_flow_data <- function(gageID="11425500", param="00060") {
   print("Data downloaded!")
 
   # write out
-  write_csv(flowdat, glue("data/usgs_{gageID}_flow_{min(flowdat$waterYear)}-{max(flowdat$waterYear)-1}.csv"))
+  readr::write_csv(flowdat, glue("data/usgs_{gageID}_flow_{min(flowdat$waterYear)}-{max(flowdat$waterYear)-1}.csv"))
 
   # print message!
   print(glue("Data saved here: 'data/usgs_{gageID}_flow_{min(flowdat$waterYear)}-{max(flowdat$waterYear)-1}.csv'"))
 
   # quick plot
+  library(ggplot2)
   p1 <- ggplot(flowdat) +
     geom_line(aes(x=Date, y=Flow)) +
     labs(title=glue("USGS Daily flow for {gageID}: {min(flowdat$waterYear)}-{max(flowdat$waterYear)}"))
