@@ -20,7 +20,7 @@ library(dplyr)
 library(ggplot2)
 
 # pull data: defaults to Verona daily discharge
-download_daily_flow_data <- function(gageID="11425500", param="00060") {
+download_daily_flow <- function(gageID="11425500", param="00060") {
 
   # get data:
   print("Downloading data...")
@@ -33,10 +33,10 @@ download_daily_flow_data <- function(gageID="11425500", param="00060") {
   print("Data downloaded!")
 
   # write out
-  readr::write_csv(flowdat, glue("data/usgs_{gageID}_flow_{min(flowdat$waterYear)}-{max(flowdat$waterYear)-1}.csv"))
+  readr::write_csv(flowdat, glue("data/raw_flow_usgs_{gageID}.csv"))
 
   # print message!
-  print(glue("Data saved here: 'data/usgs_{gageID}_flow_{min(flowdat$waterYear)}-{max(flowdat$waterYear)-1}.csv'"))
+  print(glue("Data saved here: 'data/raw_flow_usgs_{gageID}.csv'"))
 
   # quick plot
   p1 <- ggplot(flowdat) +
