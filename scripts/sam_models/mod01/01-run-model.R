@@ -34,26 +34,23 @@ flo_fill <- mice(flo,  m=5, # 5 iterations
 flo_fill$imp$daymet_srad # check imputed data for a variable
 flo_fill$method # only vars with NAs have a method
 
-# now get completed dataset, pick first.
+# now get completed dataset, pick first iteration.
 flow_complete <- complete(flo_fill, 1) # change number for diff imputation
-summary(flow_complete)
-summary(flo)
+summary(flow_complete) # new version
+summary(flo) # old version
 
+# select the data
 flow <- flow_complete %>%
   mutate(Q = scale(Flow_usgs_verona),
          Rad = scale(daymet_srad),
          Temp = scale(daymet_tmax),
          doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
 
-# check missing data
-# naniar::gg_miss_var(flow)
-# VIM::marginplot(flow[c(6,7)])
-
 # make days
 days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
 
-covars <- left_join(days, flow_complete)
-summary(covars) # YESSSS
+covars <- left_join(days, flow)
+summary(covars) # YESSSS, full data no missing
 
 # Bring in Chl-a ----------------------------------------------------------
 
@@ -101,7 +98,7 @@ datlist <- list(chl = log(all$chl),
                 alphaC = rep(1, 7))
 
 # Run model
-jm <- jags.model("scripts/sam_models/mod2/sam_model.JAGS",
+jm <- jags.model("scripts/sam_models/mod01/sam_model.JAGS",
                  data = datlist,
                  n.chains = 3)
 
