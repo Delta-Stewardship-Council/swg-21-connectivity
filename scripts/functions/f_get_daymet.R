@@ -1,6 +1,6 @@
 # get dayMet for a location
 
-download_daymet <- function(lat, lon){
+f_get_daymet <- function(lat, lon){
 
 # Yolo
 #lats <- 38.307857513
