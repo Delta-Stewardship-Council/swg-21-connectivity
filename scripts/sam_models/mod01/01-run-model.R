@@ -13,6 +13,8 @@ library(broom.mixed)
 library(ggplot2)
 library(naniar)
 library(lubridate)
+# devtools::install_github("fellmk/PostJAGS/postjags")
+library(postjags)
 
 
 # Import Flow Temp and Solar Rads -----------------------------------------
@@ -105,6 +107,10 @@ inits <- function(){
 }
 initslist <- list(inits(), inits(), inits())
 
+# Or load saved.state
+load("scripts/sam_models/mod01/inits/sstate.Rda")
+initslist <- saved.state[[2]]
+
 # Run model
 jm <- jags.model("scripts/sam_models/mod01/sam_model.JAGS",
                  data = datlist,
@@ -116,11 +122,18 @@ update(jm, n.iter = 1000)
 jm_coda <- coda.samples(jm,
                         variable.names = c("Bstar", "wA", "wB", "wC",
                                            "deltaA", "deltaB", "deltaC",
-                                           "sig", "tau", "sig.eps", "Estar"),
+                                           "sig", "tau", "sig.eps", "tau.eps",
+                                           "Estar"),
                         n.iter = 1000*15,
                         thin = 15)
 
 mcmcplot(jm_coda)
+
+# Save state for rerunning
+newinits <- initfind(coda = jm_coda)
+newinits[[1]]
+saved.state <- removevars(initsin = newinits, variables=c(1:5, 7, 9:11))
+save(saved.state, file = "scripts/sam_models/mod01/inits/sstate.Rda")
 
 caterplot(jm_coda,
           regex  = "Bstar",
