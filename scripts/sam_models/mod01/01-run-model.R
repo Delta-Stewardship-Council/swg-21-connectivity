@@ -13,6 +13,8 @@ library(broom.mixed)
 library(ggplot2)
 library(naniar)
 library(lubridate)
+# devtools::install_github("fellmk/PostJAGS/postjags")
+library(postjags)
 
 
 # Import Flow Temp and Solar Rads -----------------------------------------
@@ -97,9 +99,22 @@ datlist <- list(chl = log(all$chl),
                 alphaB = rep(1, 7),
                 alphaC = rep(1, 7))
 
+# Initials functions for root node parameters
+inits <- function(){
+  list(sig.eps = runif(1, 0, 15),
+       tau = runif(1, 0, 1),
+       B = rnorm(6, 0, 1000)) # for 6 B parameters, adjust as needed
+}
+initslist <- list(inits(), inits(), inits())
+
+# Or load saved.state
+load("scripts/sam_models/mod01/inits/sstate.Rda")
+initslist <- saved.state[[2]]
+
 # Run model
 jm <- jags.model("scripts/sam_models/mod01/sam_model.JAGS",
                  data = datlist,
+                 inits = initslist,
                  n.chains = 3)
 
 update(jm, n.iter = 1000)
@@ -107,34 +122,25 @@ update(jm, n.iter = 1000)
 jm_coda <- coda.samples(jm,
                         variable.names = c("Bstar", "wA", "wB", "wC",
                                            "deltaA", "deltaB", "deltaC",
-                                           "sig", "tau", "sig.eps", "Estar"),
+                                           "sig", "tau", "sig.eps", "tau.eps",
+                                           "Estar"),
                         n.iter = 1000*15,
                         thin = 15)
 
 mcmcplot(jm_coda)
 
+# Save state for rerunning
+newinits <- initfind(coda = jm_coda)
+newinits[[1]]
+saved.state <- removevars(initsin = newinits, variables=c(1:5, 7, 9:11))
+save(saved.state, file = "scripts/sam_models/mod01/inits/sstate.Rda")
+
 caterplot(jm_coda,
-          regex  = "B\\[1\\,",
+          regex  = "Bstar",
           reorder = FALSE)
 
 caterplot(jm_coda,
-          regex  = "B\\[2\\,",
-          reorder = FALSE)
-
-caterplot(jm_coda,
-          regex  = "B\\[3\\,",
-          reorder = FALSE)
-
-caterplot(jm_coda,
-          regex  = "B\\[4\\,",
-          reorder = FALSE)
-
-caterplot(jm_coda,
-          regex  = "B\\[5\\,",
-          reorder = FALSE)
-
-caterplot(jm_coda,
-          regex  = "B\\[6\\,",
+          parms = "Estar",
           reorder = FALSE)
 
 caterplot(jm_coda,
@@ -149,9 +155,7 @@ caterplot(jm_coda,
           parms = "wC",
           reorder = FALSE)
 
-caterplot(jm_coda,
-          parms = "Estar",
-          reorder = FALSE)
+
 
 # summarize and plot
 coda_sum <- tidyMCMC(jm_coda,
@@ -159,47 +163,50 @@ coda_sum <- tidyMCMC(jm_coda,
                      conf.level = 0.95,
                      conf.method = "HPDinterval")
 
-# intercepts
+# intercept (interpreted as log(chlA) at average conditions, since covariates are standardized)
 coda_sum %>%
-  filter(grepl("B\\[1\\,", term)) %>%
+  filter(grepl("Bstar\\[1", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
+  geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
   scale_y_continuous("Intercept") +
   theme_bw()
 
 
-# slope of Q
+# slope of past_topped, Q, Qant, Rant, and Tant
+# can interpret relative influence of each covariate, since covariates are standardized
 coda_sum %>%
-  filter(grepl("B\\[2\\,", term)) %>%
+  filter(grepl("Bstar\\[[2-9]{1}", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_y_continuous("Slope of Q") +
+  scale_x_discrete(labels = c("past_topped", "Q", "Qant", "Rant", "Tant")) +
+  scale_y_continuous("Slope of covariates") +
   theme_bw()
 
-# slope of Qant
-coda_sum %>%
-  filter(grepl("B\\[3\\,", term)) %>%
-  ggplot(aes(x = term, y = estimate)) +
-  geom_hline(yintercept = 0, color = "red") +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_y_continuous("Slope of Qant") +
-  theme_bw()
-
-# slope of Qant
+# weights of Qant
 coda_sum %>%
   filter(grepl("wA", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
-  geom_hline(yintercept = 1/7, color = "red") +
+  geom_hline(yintercept = 1/5, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_y_continuous("Weights when non-inundated") +
+  scale_y_continuous("Weights of past Q") +
   theme_bw()
 
-# slope of Qant
+# weights of Rant
 coda_sum %>%
   filter(grepl("wB", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 1/7, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_y_continuous("Weights when inundated") +
+  scale_y_continuous("Weights of past solar rad") +
+  theme_bw()
+
+# weights of Tant
+coda_sum %>%
+  filter(grepl("wC", term)) %>%
+  ggplot(aes(x = term, y = estimate)) +
+  geom_hline(yintercept = 1/7, color = "red") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  scale_y_continuous("Weights of past air temp") +
   theme_bw()
