@@ -13,7 +13,7 @@ library(broom.mixed)
 library(ggplot2)
 library(naniar)
 library(lubridate)
-# devtools::install_github("fellmk/PostJAGS/postjags")
+#devtools::install_github("fellmk/PostJAGS/postjags")
 library(postjags)
 
 
