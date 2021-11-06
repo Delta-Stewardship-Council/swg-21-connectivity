@@ -135,14 +135,17 @@ newinits[[1]]
 saved.state <- removevars(initsin = newinits, variables=c(1:5, 7, 9:11))
 save(saved.state, file = "scripts/sam_models/mod01/inits/sstate.Rda")
 
+# betas
 caterplot(jm_coda,
           regex  = "Bstar",
           reorder = FALSE)
 
+# stations
 caterplot(jm_coda,
           parms = "Estar",
           reorder = FALSE)
 
+# time lags
 caterplot(jm_coda,
           parms = "wA",
           reorder = FALSE)
@@ -183,6 +186,8 @@ coda_sum %>%
   scale_x_discrete(labels = c("past_topped", "Q", "Qant", "Rant", "Tant")) +
   scale_y_continuous("Slope of covariates") +
   theme_bw()
+ggsave(filename = "scripts/sam_models/mod01/fig_out/slope_of_betas_qant_sol_temp.png",
+       dpi=300, width = 10, height = 8)
 
 # weights of Qant
 coda_sum %>%
@@ -192,6 +197,8 @@ coda_sum %>%
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
   scale_y_continuous("Weights of past Q") +
   theme_bw()
+ggsave(filename = "scripts/sam_models/mod01/fig_out/weights_of_qant.png",
+       dpi=300, width = 10, height = 8)
 
 # weights of Rant
 coda_sum %>%
@@ -201,6 +208,9 @@ coda_sum %>%
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
   scale_y_continuous("Weights of past solar rad") +
   theme_bw()
+ggsave(filename = "scripts/sam_models/mod01/fig_out/weights_of_solrad_ant.png",
+       dpi=300, width = 10, height = 8)
+
 
 # weights of Tant
 coda_sum %>%
@@ -210,3 +220,8 @@ coda_sum %>%
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
   scale_y_continuous("Weights of past air temp") +
   theme_bw()
+ggsave(filename = "scripts/sam_models/mod01/fig_out/weights_of_airtemp.png",
+       dpi=300, width = 10, height = 8)
+
+# save model
+save(jm_coda, coda_sum, file = "scripts/sam_models/mod01/run_20211105.rda")
