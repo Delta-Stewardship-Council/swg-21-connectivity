@@ -57,7 +57,7 @@ summary(covars) # YESSSS, full data no missing
 # Bring in Chl-a ----------------------------------------------------------
 
 # Bring in response variables
-load("scripts/sam_models/Chla_all.Rda") # file called "total"
+load("bayes_models/Chla_all.Rda") # file called "total"
 
 # Add index (integer) of days since 1998-01-01
 # Remove station 11455420 - only 1 observation
@@ -70,6 +70,10 @@ all <- total %>%
          station_id = as.numeric(as.factor(station)))
 
 summary(all)
+
+# save out model data to use:
+write_rds(all, "bayes_models/mod_chla_data.rds")
+write_rds(covars, file = "bayes_models/mod_covariates_complete.rds")
 
 # past_topped is an index of the number of days in the past 30 that were inundated
 
