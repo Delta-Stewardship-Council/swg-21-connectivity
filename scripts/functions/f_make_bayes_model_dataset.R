@@ -3,228 +3,247 @@
 library(dplyr)
 library(readr)
 library(lubridate)
-library(ggplot2)
-
+library(glue)
 
 f_make_bayes_model_dataset <- function() {
 
+  ## INUNDATION: Inundation Data ------------------------------------------------
 
-# FLOW --------------------------------------------
-# pull in flow data
+  # (from Pascale's code inundation_days.R): will replace with f_load_inund after
+  # pascale adds f_get and f_clean functions
+  # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days
+  inund <- read_csv("data/inundation_days.csv") %>%
+    select(Date:Topped.days) # drop row id column
 
-## INUNDATION: Inundation Data ------------------------------------------------
+ ## FLOW: Get Verona Flow -----------
 
-# this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days (from Pascale's code inundation_days.R)
+  source("scripts/functions/f_load_flow.R")
+  verona <- f_load_flow()
 
-inund <- read_csv("data/inundation_days.csv") %>%
-  select(Date:Topped.days) # drop row id column
+  ## Merge FLOW & INUNDATION Data -------------------------------------------
 
-## DAILY FLOW: Verona Daily Flow ---------------------------------------------------
+  # merge for same period of record of inund data
+  flow_out <- left_join(verona, inund, by="Date") %>%
+    # drop columns
+    select(-c(agency_cd, Flow_cd)) %>%
+    # rename
+    rename(Flow_usgs_verona = Flow,
+           site_no_usgs = site_no)
 
-library(dataRetrieval)
+  ## DAYMET: Get DayMet Data ---------------------------------------------------------
 
-# discharge is "00060"
-verona <- dataRetrieval::readNWISdv(siteNumbers = "11425500", parameterCd = c("00060"))
+  load("scripts/functions/f_load_daymet.R")
 
-# fix names
-verona <- addWaterYear(verona)
-verona <- dataRetrieval::renameNWISColumns(verona)
 
-# quick plot
-(g1 <-ggplot(verona) +
-    geom_line(aes(x=Date, y=Flow)) +
-    geom_line(data=inund, aes(x=Date, y=YOLO), color="blue") +
+  # Bring in Air Temperature: CIMIS ------------------------------------------------
+
+  bryte <- read_csv("data/Bryte_CIMIS_daily.csv")
+
+  # R far out than historical max
+  # M missing
+  # Y out of historical range
+  # P
+  # H any solar radiation flagged M/S/Q
+  # S extreme solar radiation
+
+  # format date
+  bryte <- bryte %>%
+    mutate(Date = mdy(Date))
+
+  # make clean column names
+  library(janitor)
+  bryte <- clean_names(bryte)
+
+  # see what qc codes exist
+  table(bryte$qc_9, exclude = "ifany")
+
+  # filter to cols of interest and filter flagged data:
+  # if there's a letter, drop data?
+  bryte_filt <- bryte %>%
+    # select cols of interest
+    select(stn_id:date,
+           precip_mm, qc_9,
+           sol_rad_w_sq_m, qc_11,
+           max_air_temp_c, qc_15,
+           min_air_temp_c, qc_17,
+           avg_air_temp_c, qc_19) %>%
+    # filter to only data without flags
+    filter(is.na(qc_9) & is.na(qc_11) &
+             is.na(qc_15) & is.na(qc_17) &
+             is.na(qc_19))
+
+  # check
+  summary(bryte_filt)
+  table(bryte_filt$qc_9, exclude = "ifany")
+
+  # drop QA cols
+  bryte_filt <- select(bryte_filt,
+                       stn_id:date, precip_mm,
+                       sol_rad_w_sq_m,
+                       ends_with("air_temp_c"))
+
+  # plots
+  ggplot() + geom_line(data=bryte_filt, aes(x=date, y=sol_rad_w_sq_m))
+  ggplot() + geom_line(data=bryte_filt, aes(x=date, y=avg_air_temp_c))
+
+  # check temps
+  ggplot() +
+    geom_line(data=bryte_filt,
+              aes(x=date, y=max_air_temp_c), color="red4") +
+    geom_line(data=bryte_filt,
+              aes(x=date, y=min_air_temp_c), color="darkblue") +
+    geom_line(data=bryte_filt,
+              aes(x=date, y=avg_air_temp_c), color="gray40") +
     theme_minimal() +
-    labs(title="Flow at USGS Verona (11425500)",
-         subtitle = "Inundation Data: Yolo (blue)"))
-
-#ggsave("figures/usgs_daily_flow_at_verona.png", width = 11, height = 8.5, dpi=300)
-
-# no missing data in this period of flow
-
-# package checks for missing data
-library(naniar)
-gg_miss_var(verona) # no data missing
-gg_miss_var(inund) # no data missing
-
-## Merge FLOW & INUNDATION Data --------------------------------------------------------------
-
-# only merge for same period of record of inund data
-
-flow_out <- left_join(verona, inund, by="Date") %>%
-  # drop columns
-  select(-c(agency_cd, Flow_cd)) %>%
-  # rename
-  rename(Flow_usgs_verona = Flow,
-         site_no_usgs = site_no)
-
-summary(flow_out)
-
-gg_miss_var(flow_out)
-
-# DAYMET: Get DayMet Data ---------------------------------------------------------
-
-# Yolo
-lats <- 38.307857513
-lons <- -121.692428589
-
-library(daymetr)
-yolo_daymet <- download_daymet(site = "Yolo",
-                                   lat = lats,
-                                   lon =  lons,
-                                   start = 1994,
-                                   end = 2020, internal = TRUE)
+    labs(title="CIMIS (Bryte)",
+         subtitle = "Air Temperature (max=red, min=darkblue, avg=gray)",
+         x="", y="Air Temp (C)")
+  #ggsave("figures/cimis_bryte_daily_airtemp.png", width = 11,
+  #       height = 8.5, dpi=300)
 
 
-# rename variables, create a date column
-yolo_daymet_df <- yolo_daymet$data %>%
-  transmute(date = ymd(paste0(year, '01-01'))+ days(yday) -1,
-            daymet_precip_mm = prcp..mm.day., # mm ppt / day
-            daymet_tmax = tmax..deg.c., #max temp
-            daymet_tmin = tmin..deg.c., # min temp
-            daymet_tmean = (daymet_tmax + daymet_tmin) / 2, # mean temp
-            daymet_trange = daymet_tmax - daymet_tmin, # temp range
-            daymet_srad = srad..W.m.2., # soloar radiation
-            daymet_vpd = vp..Pa.)
+  # Plot Daymet vs. CIMIS ---------------------------------------------------
 
-gg_miss_var(yolo_daymet_df)
+  # join w daymet and plot?
+  cimis_daymet <- left_join(yolo_daymet_df, bryte_filt, by=c("date"))
 
-# save out:
-write_csv(yolo_daymet_df, "data/cimis_yolo_1994-2020.csv")
+  # whats missing?
+  gg_miss_var(cimis_daymet)
+  # def gaps in the CIMIS data
 
-# Bring in Air Temperature: CIMIS ------------------------------------------------
+  # plot
+  ggplot() +
+    geom_line(data=cimis_daymet, aes(x=date, y=daymet_tmean), color="darkblue") +
+    geom_line(data=cimis_daymet, aes(x=date, y=avg_air_temp_c), color="orange", alpha=0.8) +
+    theme_minimal() +
+    labs(title="Comparison of CIMIS Bryte and DayMet Air Temp",
+         subtitle = "CIMIS=orange, DayMet=blue", x="", y="Mean Air Temp (C)")
 
-bryte <- read_csv("data/Bryte_CIMIS_daily.csv")
+  # ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
 
-# R far out than historical max
-# M missing
-# Y out of historical range
-# P
-# H any solar radiation flagged M/S/Q
-# S extreme solar radiation
-
-# format date
-bryte <- bryte %>%
-  mutate(Date = mdy(Date))
-
-# make clean column names
-library(janitor)
-bryte <- clean_names(bryte)
-
-# see what qc codes exist
-table(bryte$qc_9, exclude = "ifany")
-
-# filter to cols of interest and filter flagged data:
-# if there's a letter, drop data?
-bryte_filt <- bryte %>%
-  # select cols of interest
-  select(stn_id:date,
-         precip_mm, qc_9,
-         sol_rad_w_sq_m, qc_11,
-         max_air_temp_c, qc_15,
-         min_air_temp_c, qc_17,
-         avg_air_temp_c, qc_19) %>%
-  # filter to only data without flags
-  filter(is.na(qc_9) & is.na(qc_11) &
-           is.na(qc_15) & is.na(qc_17) &
-           is.na(qc_19))
-
-# check
-summary(bryte_filt)
-table(bryte_filt$qc_9, exclude = "ifany")
-
-# drop QA cols
-bryte_filt <- select(bryte_filt,
-                     stn_id:date, precip_mm,
-                     sol_rad_w_sq_m,
-                     ends_with("air_temp_c"))
-
-# plots
-ggplot() + geom_line(data=bryte_filt, aes(x=date, y=sol_rad_w_sq_m))
-ggplot() + geom_line(data=bryte_filt, aes(x=date, y=avg_air_temp_c))
-
-# check temps
-ggplot() +
-  geom_line(data=bryte_filt,
-            aes(x=date, y=max_air_temp_c), color="red4") +
-  geom_line(data=bryte_filt,
-            aes(x=date, y=min_air_temp_c), color="darkblue") +
-  geom_line(data=bryte_filt,
-            aes(x=date, y=avg_air_temp_c), color="gray40") +
-  theme_minimal() +
-  labs(title="CIMIS (Bryte)",
-       subtitle = "Air Temperature (max=red, min=darkblue, avg=gray)",
-       x="", y="Air Temp (C)")
-#ggsave("figures/cimis_bryte_daily_airtemp.png", width = 11,
-#       height = 8.5, dpi=300)
-
-
-# Plot Daymet vs. CIMIS ---------------------------------------------------
-
-# join w daymet and plot?
-cimis_daymet <- left_join(yolo_daymet_df, bryte_filt, by=c("date"))
-
-# whats missing?
-gg_miss_var(cimis_daymet)
-# def gaps in the CIMIS data
-
-# plot
-ggplot() +
-  geom_line(data=cimis_daymet, aes(x=date, y=daymet_tmean), color="darkblue") +
-  geom_line(data=cimis_daymet, aes(x=date, y=avg_air_temp_c), color="orange", alpha=0.8) +
-  theme_minimal() +
-  labs(title="Comparison of CIMIS Bryte and DayMet Air Temp",
-       subtitle = "CIMIS=orange, DayMet=blue", x="", y="Mean Air Temp (C)")
-
-# ggsave(filename = "figures/cimis_vs_daymet_airtemp.png",width = 11, height = 8.5, dpi=300)
-
-# sol rad
-ggplot() +
-  geom_line(data=cimis_daymet, aes(x=date, y=sol_rad_w_sq_m), color="orange") +
-  geom_line(data=cimis_daymet, aes(x=date, y=daymet_srad), color="darkblue", alpha=0.8) +
-  theme_minimal() +
-  labs(title="Comparison of CIMIS Bryte and DayMet Solar Radiation", caption = "DayMet from: 38.307857513,
+  # sol rad
+  ggplot() +
+    geom_line(data=cimis_daymet, aes(x=date, y=sol_rad_w_sq_m), color="orange") +
+    geom_line(data=cimis_daymet, aes(x=date, y=daymet_srad), color="darkblue", alpha=0.8) +
+    theme_minimal() +
+    labs(title="Comparison of CIMIS Bryte and DayMet Solar Radiation", caption = "DayMet from: 38.307857513,
 -121.692428589", subtitle = "CIMIS=orange, DayMet=blue", x="", y="Solar Rad (sq.m)")
 
-# ggsave(filename = "figures/cimis_vs_daymet_solarrad.png",width = 11, height = 8.5, dpi=300)
+  # ggsave(filename = "figures/cimis_vs_daymet_solarrad.png",width = 11, height = 8.5, dpi=300)
 
-# JOIN Data ---------------------------------------------------------------
-# join daymet with flow data
-names(yolo_daymet_df)
+  # JOIN Data ---------------------------------------------------------------
+  # join daymet with flow data
+  names(yolo_daymet_df)
 
-# plot to see if data lines up
-ggplot() +
-  geom_path(data=flow_out,
-                 aes(x=Date, y="USGS"), color="blue") +
-  geom_path(data=yolo_daymet_df,
-                 aes(x=date, y="DayMet")) +
-  geom_path(data=bryte_filt,
-            aes(x=date, y="CIMIS"), color="orange") +
-  theme_classic()
+  # plot to see if data lines up
+  ggplot() +
+    geom_path(data=flow_out,
+              aes(x=Date, y="USGS"), color="blue") +
+    geom_path(data=yolo_daymet_df,
+              aes(x=date, y="DayMet")) +
+    geom_path(data=bryte_filt,
+              aes(x=date, y="CIMIS"), color="orange") +
+    theme_classic()
 
-# join
-mod_data_out <- left_join(flow_out, yolo_daymet_df, by=c("Date"="date"))
+  # join
+  mod_data_out <- left_join(flow_out, yolo_daymet_df, by=c("Date"="date"))
 
-summary(mod_data_out)
-# note: the NAs are due to leap years
+  summary(mod_data_out)
+  # note: the NAs are due to leap years
 
-#drop the NAs
-mod_data_out <- mod_data_out %>%
-  filter(Date > ymd("1997-12-31") & Date < ymd("2021-01-01"))
-naniar::gg_miss_var(mod_data_out)
-
-
-# Export Data -------------------------------------------------------------
-
-# write out
-write_csv(mod_data_out, "data/yolo_daymet_for_model.csv")
+  #drop the NAs
+  mod_data_out <- mod_data_out %>%
+    filter(Date > ymd("1997-12-31") & Date < ymd("2021-01-01"))
+  naniar::gg_miss_var(mod_data_out)
 
 
-## Pull in Phyto Data from Jessica & Liz -----------------------------------
+  # Export Data -------------------------------------------------------------
 
-load("scripts/sam_models/Chla_all.Rda") # file called "total"
+  # write out
+  write_csv(mod_data_out, "data/yolo_daymet_for_model.csv")
 
 
-tst <- read_csv("data/yolo_daymet_for_model.csv")
-cimis <- read_csv("data/cimis_yolo_1994-2020.csv")
-verona
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # Import Flow Temp and Solar Rads -----------------------------------------
+
+  # Read in yolo inundation dataset, with flow from verona and temp, etc
+  flo <- read_csv("data_clean/yolo_daymet_for_model.csv") %>%
+    filter(Date >= ymd("1998-01-01")) %>%
+    rename(date = Date) %>%
+    # select parameters of interest
+    select(date, Flow_usgs_verona, daymet_srad, daymet_tmax)
+  summary(flo)
+
+  # fill missing data with MICE
+  # see this https://datascienceplus.com/imputing-missing-data-with-r-mice-package/
+  library(mice)
+  flo_fill <- mice(flo,  m=5, # 5 iterations
+                   maxit=50, meth='pmm', seed=500)
+  flo_fill$imp$daymet_srad # check imputed data for a variable
+  flo_fill$method # only vars with NAs have a method
+
+  # now get completed dataset, pick first iteration.
+  flow_complete <- complete(flo_fill, 1) # change number for diff imputation
+  summary(flow_complete) # new version
+  summary(flo) # old version
+
+  # select the data
+  flow <- flow_complete %>%
+    mutate(Q = scale(Flow_usgs_verona),
+           Rad = scale(daymet_srad),
+           Temp = scale(daymet_tmax),
+           doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
+
+  # make days
+  days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
+
+  covars <- left_join(days, flow)
+  summary(covars) # YESSSS, full data no missing
+
+  # Bring in Chl-a ----------------------------------------------------------
+
+  # Bring in response variables
+  load("bayes_models/Chla_all.Rda") # file called "total"
+
+  # Add index (integer) of days since 1998-01-01
+  # Remove station 11455420 - only 1 observation
+  all <- total %>%
+    select(station, date, chl, Flow_usgs_verona, past_topped) %>%
+    filter(chl > 0 & station != '11455420') %>%
+    filter(complete.cases(.)) %>%
+    arrange(station, date) %>%
+    mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+           station_id = as.numeric(as.factor(station)))
+
+  summary(all)
+
+  # save out model data to use:
+  write_rds(all, "bayes_models/mod_chla_data.rds")
+  write_rds(covars, file = "bayes_models/mod_covariates_complete.rds")
+
+  # past_topped is an index of the number of days in the past 30 that were inundated

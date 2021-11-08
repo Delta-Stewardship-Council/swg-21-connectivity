@@ -1,12 +1,11 @@
-# clean flow data for modeling
+# load data function
 
 library(dplyr)
+library(contentid)
 library(readr)
 library(glue)
-library(contentid)
-library(janitor)
 
-f_clean_flow_verona <- function(gageID="11425500") {
+f_load_flow <- function(gageID="11425500") {
 
   # get raw data ID:
   flow <- contentid::store(glue("data_raw/raw_flow_usgs_{gageID}.csv"))
@@ -16,5 +15,8 @@ f_clean_flow_verona <- function(gageID="11425500") {
   # read in data
   flowdat <- read_csv(flow_file)
 
-  write_csv(flowdat, file=glue("data_clean/clean_flow_usgs_{gageID}.csv"))
+  print("Data loading complete.")
+
+  return(flowdat)
+
 }
