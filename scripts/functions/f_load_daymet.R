@@ -5,18 +5,18 @@ library(contentid)
 library(readr)
 library(glue)
 
-f_load_flow <- function(gageID="11425500") {
+f_load_daymet <- function(site="yolo") {
 
   # get raw data ID:
-  flow <- contentid::store(glue("data_raw/raw_flow_usgs_{gageID}.csv"))
+  daymet <- contentid::store(glue("data_clean/clean_daymet_{site}_1994-2020.csv"))
 
-  flow_file <- contentid::resolve("hash://sha256/1b36a8c933dc1d38ac1139d182df22818ae3a81c393ec6d659db8b30f8eb6db9")
+  daymet_file <- contentid::resolve("hash://sha256/e38981ce3149756bc3498e84b523caa77eab5bc82b81701f128f21f2c70e0745")
 
   # read in data
-  flowdat <- read_csv(flow_file)
+  daymet_dat <- read_csv(daymet_file)
 
   print("Data loading complete.")
 
-  return(flowdat)
+  return(daymet_dat)
 
 }
