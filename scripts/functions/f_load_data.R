@@ -1,3 +1,5 @@
+# example load data function
+
 load_data <- function() {
 
   library(dplyr)
