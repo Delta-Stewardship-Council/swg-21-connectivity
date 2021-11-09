@@ -17,81 +17,36 @@ library(lubridate)
 library(postjags)
 
 
-# Import Flow Temp and Solar Rads -----------------------------------------
 
+# Bring in Data For Model -------------------------------------------------
 
-# Read in yolo inundation dataset, with flow from verona and temp, etc
-flo <- read_csv("data/yolo_daymet_for_model.csv") %>%
-  filter(Date >= ymd("1998-01-01")) %>%
-  rename(date = Date) %>%
-  # select parameters of interest
-  select(date, Flow_usgs_verona, daymet_srad, daymet_tmax)
-summary(flo)
+source("scripts/functions/f_make_bayes_model_dataset.R")
+mod_df <- f_make_bayes_model_dataset()
 
-# fill missing data with MICE
-# see this https://datascienceplus.com/imputing-missing-data-with-r-mice-package/
-library(mice)
-flo_fill <- mice(flo,  m=5, # 5 iterations
-                 maxit=50, meth='pmm', seed=500)
-flo_fill$imp$daymet_srad # check imputed data for a variable
-flo_fill$method # only vars with NAs have a method
+# pull out datasets
+chla_all <- mod_df$chla_all
+covars <- mod_df$covars
 
-# now get completed dataset, pick first iteration.
-flow_complete <- complete(flo_fill, 1) # change number for diff imputation
-summary(flow_complete) # new version
-summary(flo) # old version
-
-# select the data
-flow <- flow_complete %>%
-  mutate(Q = scale(Flow_usgs_verona),
-         Rad = scale(daymet_srad),
-         Temp = scale(daymet_tmax),
-         doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
-
-# make days
-days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
-
-covars <- left_join(days, flow)
-summary(covars) # YESSSS, full data no missing
-
-# Bring in Chl-a ----------------------------------------------------------
-
-# Bring in response variables
-load("bayes_models/Chla_all.Rda") # file called "total"
-
-# Add index (integer) of days since 1998-01-01
-# Remove station 11455420 - only 1 observation
-all <- total %>%
-  select(station, date, chl, Flow_usgs_verona, past_topped) %>%
-  filter(chl > 0 & station != '11455420') %>%
-  filter(complete.cases(.)) %>%
-  arrange(station, date) %>%
-  mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
-         station_id = as.numeric(as.factor(station)))
-
-summary(all)
-
-# save out model data to use:
-write_rds(all, "bayes_models/mod_chla_data.rds")
-write_rds(covars, file = "bayes_models/mod_covariates_complete.rds")
-
-# past_topped is an index of the number of days in the past 30 that were inundated
+# Visualize Data ----------------------------------------------------------
 
 # check histogram of logged chlorophyll
-hist(log(all$chl))
+hist(log(chla_all$chl))
 
 # check sd among site mean chlorophyll, set as parameter for folded-t prior
-sd(tapply(all$chl, all$station_id, mean))
+sd(tapply(chla_all$chl, chla_all$station_id, mean))
 
-datlist <- list(chl = log(all$chl),
-                past_topped = all$past_topped,
+
+# Create Model Datalist ---------------------------------------------------
+
+datlist <- list(chl = log(chla_all$chl),
+                past_topped = chla_all$past_topped,
                 Q = c(covars$Q),
                 Rad = c(covars$Rad),
                 Temp = c(covars$Temp),
-                station_id = all$station_id,
-                Nstation = length(unique(all$station_id)),
-                doy1998 = all$doy1998,
-                N = nrow(all),
+                station_id = chla_all$station_id,
+                Nstation = length(unique(chla_all$station_id)),
+                doy1998 = chla_all$doy1998,
+                N = nrow(chla_all),
                 pA = c(1, 3, 3, 7, 7),
                 # mean of 1 day, mean of 3 days before that, etc
                 nlagA = 5, # index for for loop
@@ -103,6 +58,9 @@ datlist <- list(chl = log(all$chl),
                 alphaB = rep(1, 7),
                 alphaC = rep(1, 7))
 
+
+# Set up Initial Model Starts ---------------------------------------------
+
 # Initials functions for root node parameters
 inits <- function(){
   list(sig.eps = runif(1, 0, 15),
@@ -111,9 +69,14 @@ inits <- function(){
 }
 initslist <- list(inits(), inits(), inits())
 
+# run this if model has been successfully run already:
+
 # Or load saved.state
 load("scripts/sam_models/mod01/inits/sstate.Rda")
 initslist <- saved.state[[2]]
+
+
+# Run Model ---------------------------------------------------------------
 
 # Run model
 jm <- jags.model("scripts/sam_models/mod01/sam_model.JAGS",
@@ -123,6 +86,7 @@ jm <- jags.model("scripts/sam_models/mod01/sam_model.JAGS",
 
 update(jm, n.iter = 1000)
 
+# Sample Posterior
 jm_coda <- coda.samples(jm,
                         variable.names = c("Bstar", "wA", "wB", "wC",
                                            "deltaA", "deltaB", "deltaC",
@@ -131,6 +95,7 @@ jm_coda <- coda.samples(jm,
                         n.iter = 1000*15,
                         thin = 15)
 
+# Visualize
 mcmcplot(jm_coda)
 
 # Save state for rerunning
@@ -138,6 +103,9 @@ newinits <- initfind(coda = jm_coda)
 newinits[[1]]
 saved.state <- removevars(initsin = newinits, variables=c(1:5, 7, 9:11))
 save(saved.state, file = "scripts/sam_models/mod01/inits/sstate.Rda")
+
+
+# Look at Outputs ---------------------------------------------------------
 
 # betas
 caterplot(jm_coda,

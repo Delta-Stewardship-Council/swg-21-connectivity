@@ -21,7 +21,7 @@ library(ggplot2)
 library(janitor)
 
 # pull data: defaults to Verona daily discharge
-f_get_flow <- function(gageID="11425500", param="00060") {
+f_get_flow_verona <- function(gageID="11425500", param="00060") {
 
   # get data:
   print("Downloading data...")

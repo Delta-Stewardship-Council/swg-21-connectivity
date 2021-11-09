@@ -10,7 +10,7 @@ library(janitor)
 f_clean_daymet <- function(){
 
   # get raw data ID:
-  daymet <- contentid::store("data_raw/raw_daymet_yolo_1994-2020.csv")
+  (daymet <- contentid::store("data_raw/raw_daymet_yolo_1994-2020.csv"))
 
   daymet_file <- contentid::resolve("hash://sha256/b329d42680163f74726a8215fcb052a42cc744bbb5a29888701d591d76717735")
 
