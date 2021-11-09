@@ -32,13 +32,13 @@ int <- delta %>%
   select(Station, Date, Chlorophyll)
 
 # Read in USGS CAWSC data
-usgs <- read_csv("data/USGS_CAWSC_discrete_connectivity_clean.csv") %>%
+usgs <- read_csv("data/USGS_CAWSC_discrete_clean.csv") %>%
   filter(site_no %in% c(11455350, 11455385, 11455315, 11455420)) %>%
   select(site_no, sample_dt, contains("result_va_Chla")) %>%
   filter(!is.na(result_va_Chla_ugL) == TRUE)
 
 # Read in YOLO inundation and verona flow
-flo <- read_csv("data/yolo_data_for_model.csv") %>%
+flo <- read_csv("data/yolo_daymet_for_model.csv") %>%
   mutate(inun = ifelse(Topped.days == 0, 0, 1))
 # Calculate # of topped days in past 30 days
 flo$past_topped <- NA
