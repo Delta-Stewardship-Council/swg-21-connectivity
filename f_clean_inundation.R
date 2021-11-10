@@ -1,24 +1,29 @@
 ### clean fremont weir Sacramento river hieght
-### clean dayflow
-### calculate inundation days
-### add column for inundation yes (1) or no (0)
+library(dplyr)
+source("scripts/functions/f_get_fre.R")
+fre <- f_get_fre()
+fre$date <- as.Date(fre$datetime)
 
-fre.qc$Date <- as.Date(fre.qc$Date, "%m/%d/%Y")
-
-fre.qc.na<- na.omit(fre.qc[,c(1,2)]) # just remove NA value for now
+# remove unrealistic values (Peak Stage of Record 41.02')
+fre.qc<- fre %>%
+  filter(value > 2 & value < 41.03)
 
 # this is hourly data, so need to calc max per day
 discharge_sac <-
-  fre.qc.na %>%
-  group_by(Date) %>%
-  summarise(height_sac = max(Point))
+  fre.qc %>%
+  group_by(date) %>%
+  summarise(height_sac = max(value, na.rm = TRUE))
 
+### clean dayflow
 # load dayflow
-dayflow$Date <- as.Date(dayflow$Date)
+source("scripts/functions/f_get_dayflow.R")
+dayflow <- f_get_dayflow()
+dayflow$date <- as.Date(dayflow$date)
 
 # merge two water datasets
 All.flows <- merge(dayflow[,c(3,5)], Discharge.Sac, by = "Date")
 
+### calculate inundation days
 # definition for inundation days
 
 #for(i in 1:nrow(All.flows)){
@@ -37,6 +42,7 @@ f_clean_indundation <- function(i){
 
 lapply(seq(1, nrow(All.flows)), f_clean_indundation)
 
+### add column for inundation yes (1) or no (0)
 # flooding? yes (1), no (0)
 All.flows$inundation <- ifelse(All.flows$Inund.days > 0, 1, 0)
 
