@@ -14,6 +14,10 @@ discharge_sac <-
   group_by(date) %>%
   summarise(height_sac = max(value, na.rm = TRUE))
 
+# look for missing dates
+time.check= seq(as.Date('1995-02-23'),as.Date('2021-01-01'),by='day')
+length(time.check) # missing 57
+
 ### clean dayflow
 # load dayflow
 source("scripts/functions/f_get_dayflow.R")
@@ -21,7 +25,7 @@ dayflow <- f_get_dayflow()
 dayflow$date <- as.Date(dayflow$date)
 
 # merge two water datasets
-All.flows <- merge(dayflow[,c(3,5)], Discharge.Sac, by = "Date")
+All.flows <- merge(dayflow[,c(3,5)], Discharge.Sac, by = "date")
 
 ### calculate inundation days
 # definition for inundation days
