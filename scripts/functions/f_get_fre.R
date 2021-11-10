@@ -1,12 +1,15 @@
 ### load fremont weir Sacramento river height
-remotes::install_github("flowwest/CDECRetrieve")
+library(devtools)
+library(sessioninfo)
+devtools::install_github("ryanpeek/wateRshedTools")
+library(wateRshedTools)
 library(glue)
 library(janitor)
 
 f_get_fre <- function() {
 
   # download data from fre, sensor 1, duration is hourly
-  raw_fre <- cdec_query("FRE", "1", "H", "1995-02-23", "2021-01-01")
+  raw_fre <- get_cdec("FRE", 1, "H", "1995-02-23", "2021-01-01")
 
   print("Data downloaded!")
 
