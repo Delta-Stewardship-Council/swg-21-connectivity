@@ -95,6 +95,12 @@ jm_coda <- coda.samples(jm,
                         n.iter = 1000*15,
                         thin = 15)
 
+
+
+# Load Saved Model --------------------------------------------------------
+
+load("bayes_models/mod01/run_20211105.rda")
+
 # Visualize
 mcmcplot(jm_coda)
 
