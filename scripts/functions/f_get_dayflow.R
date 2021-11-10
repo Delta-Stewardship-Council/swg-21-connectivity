@@ -17,4 +17,4 @@ get_dayflow <- function(){
   # write out
   readr::write_csv(raw_dayflow, glue("data_raw/raw_dayflow.csv"))
 
-  }
+}
