@@ -1,4 +1,7 @@
 ### load dayflow
+library(glue)
+library(janitor)
+
 get_dayflow <- function(){
 
   # get data:
@@ -8,7 +11,7 @@ get_dayflow <- function(){
   print("Data downloaded!")
 
   # clean column names
-  raw_dayflow <- janitor::clean_names(raw_dayflow)
+  raw_dayflow <- janitor::make_clean_names(raw_dayflow)
 
   # write out
   readr::write_csv(raw_dayflow, glue("data_raw/raw_dayflow.csv"))
