@@ -99,7 +99,7 @@ f_make_bayes_model_dataset <- function() {
   # Remove station 11455420 - only 1 observation
   chla_all <- total %>%
     # only want chl
-    select(station, date, chl) %>%
+    select(station, date, chl, past_topped) %>%
     filter(chl > 0 & station != '11455420') %>%
     filter(complete.cases(.)) %>% # keep only complete records
     arrange(station, date) %>%
