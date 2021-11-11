@@ -29,19 +29,20 @@ discharge_sac_na$height_sac_na <- na_ma(discharge_sac_na$height_sac, k = 7, weig
 # load dayflow
 source("scripts/functions/f_get_dayflow.R")
 dayflow <- f_get_dayflow()
-dayflow$date <- as.Date(dayflow$date)
+dayflow$date <- as.Date(dayflow$Date, "%m/%d/%Y")
 
 # merge two water datasets
-All.flows <- merge(dayflow[,c(3,5)], Discharge.Sac, by = "date")
+All.flows <- merge(dayflow[,c(5,30)], discharge_sac_na[,c(1,4)], by = "date")
+check.again <- seq(as.Date('1996-10-01'), as.Date('2020-09-30'), by = 'day') # no missing dates!!!
 
 ### calculate inundation days
 # definition for inundation days
 
 #for(i in 1:nrow(All.flows)){
 f_clean_indundation <- function(i){
-  if(All.flows[i,"height_sac"] < 33.5){
+  if(All.flows[i,"height_sac_na"] < 33.5){
     All.flows[i,"inund_days"] <- 0}
-  else if(All.flows[i, "height_sac"] >= 33.5){
+  else if(All.flows[i, "height_sac_na"] >= 33.5){
     All.flows[i, "inund_days"] <- All.flows[i-1, "inund_days"]+1}
   else {
     All.flows[i, "inund_days"] <- 0 }
