@@ -17,6 +17,13 @@ discharge_sac <-
 # look for missing dates
 time.check= seq(as.Date('1995-02-23'),as.Date('2021-01-01'),by='day')
 length(time.check) # missing 57
+d <- discharge_sac$date
+time.check[!time.check %in% d]
+
+continous.dates <- data.frame (x = 1:9445, date = seq(as.Date('1995-02-23'),as.Date('2021-01-01'),by='day'))
+discharge_sac_na <- merge(discharge_sac, continous.dates, by = "date", all = TRUE)
+library(imputeTS)
+discharge_sac_na$height_sac_na <- na_ma(discharge_sac_na$height_sac, k = 7, weighting = "exponential", maxgap = Inf)
 
 ### clean dayflow
 # load dayflow
