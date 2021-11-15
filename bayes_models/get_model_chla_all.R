@@ -20,8 +20,9 @@ table(delta$Station)
 delta_map <- delta %>%
   filter(!is.na(Latitude)) %>%
   st_as_sf(coords = c("Longitude", "Latitude"),
-           crs = 4326, remove = FALSE)
-mapviewOptions(fgb=TRUE)
+           crs = 4326, remove = FALSE) %>%
+  distinct(Station, Latitude, Longitude, .keep_all = TRUE)
+mapviewOptions(fgb=FALSE)
 mapview(delta_map, zcol = "Source", burst = TRUE)
 
 # Select sites near Rio vista bridge
@@ -51,21 +52,55 @@ total <- data.frame(station = c(int$Station, usgs$site_no),
                     date = c(int$Date, usgs$sample_dt),
                     chl = c(int$Chlorophyll, usgs$result_va_Chla_ugL)) %>%
   left_join(flo, by = c("date" = "Date")) %>%
-  drop_na()
+  tidyr::drop_na()
 
-range(total$date) # n = 1041, 1999-01-05 to 2020-07-23
-range(flo$Date) # 1996-10-01 to 2020-09-30 for verona
-range(flo$Date[complete.cases(flo)]) # 1998-12-10 to 2020-09-30 for climate variables, but perhaps some NA
+range(total$date) # n = 1076, 1998-02-11 to 2020-08-17
+range(flo$Date) # 1998-01-01 to 2020-12-31 for verona
+range(flo$Date[complete.cases(flo)]) # 1998-01-31 to 2020-09-30 for climate variables, but perhaps some NA
+
+table(total$station) # includes C10, C10A, and USGS 36 in south bay
+
+# check data locations:
+delta_map %>% filter(Station %in% total$station) %>%
+  mapview(zcol="Station")
+
+# filter out stations not in area of interest
+total_filt <- total %>%
+  filter(!station %in% c("EMP C10", "EMP C10A", "USGS 36"))
+table(total_filt$station)
+
+# USGS stations
+# cache slough: 11455315
+# cache slough at Ryer: 11455350
+# cache slough above Ryer Near Rio Vista: 11455385
+# sac at Rio Vista: 11455420
+# get USGS data locations
+library(dataRetrieval)
+usgs_stations <- c("11455315", "11455350",
+                   "11455385", "11455420")
+usgs_loc <- purrr::map_df(usgs_stations, ~dataRetrieval::findNLDI(nwis=.x))
+usgs_loc <- usgs_loc %>%
+  rename(Station = identifier, Longitude=X, Latitude=Y) %>%
+  select(Station, Longitude, Latitude, geometry)
+
+# combine with filtered stations
+chla_map <- delta_map %>% filter(Station %in% total_filt$station) %>%
+  select(Station, Latitude, Longitude, geometry) %>%
+  bind_rows(., usgs_loc)
+
+# map to check: good!
+chla_map %>%
+  mapview(zcol="Station")
 
 
 # Visualize
 ggplot()+
-  geom_rect(data = total %>% filter(inun == 1),
+  geom_rect(data = total_filt %>% filter(inun == 1),
             aes(xmin = date, xmax = date,
                 ymin = -Inf, ymax = Inf,
                 color = factor(inun))) +
-  geom_point(data = total, aes(x = date, y = chl*300, col = "Chlorophyll")) +
-  geom_point(data = total, aes(x = date, y = Flow_usgs_verona, col = "Q")) +
+  geom_point(data = total_filt, aes(x = date, y = chl*300, col = "Chlorophyll")) +
+  geom_point(data = total_filt, aes(x = date, y = Flow_usgs_verona, col = "Q")) +
   labs(y = expression(paste("Q (", ft^3, " ", s^-1, ")"))) +
   scale_y_continuous(sec.axis = sec_axis(~./300,
                                          name = expression(paste("Chlorophyll", mu, "g/mL")))) +
@@ -76,4 +111,5 @@ ggplot()+
   guides(color = "none")
 
 
-save(total, file = "scripts/sam_models/Chla_all.Rda")
+# write out as rds
+write_rds(total_filt, file = "bayes_models/Chla_all.rds")
