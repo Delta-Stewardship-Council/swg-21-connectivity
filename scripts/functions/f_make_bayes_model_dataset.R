@@ -93,7 +93,7 @@ f_make_bayes_model_dataset <- function() {
   # Bring in Chl-a ----------------------------------------------------------
 
   # Bring in response variables
-  total <- read_rds("bayes_models/Chla_all.Rds") # file called "total"
+  total <- read_rds("bayes_models/Chla_all.rds") # file called "total"
 
   # Add index (integer) of days since 1998-01-01
   # Remove station 11455420 - only 1 observation
