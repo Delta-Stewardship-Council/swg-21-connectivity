@@ -1,39 +1,49 @@
 # Download data from USGS stations
-#USGS station IDs for 9 locations
 
-#Cache Slough stations used in current SAM
+#Cache Slough stations used in current SAM - 204 samples
 #11455315 - Liberty Island
 #14455350 - Cache at Ryer
 #14455385 - Cache abv Ryer Island
 
-#above Liberty Island - may be added later
+#Other stations that could be included at a later date
+#above Liberty Island - 190 samples
+
 #11455276 - Shag Slough
+#381829121413401
 #11455139 - Toe Drain South (south of Stair Step)
 #11455140 - Toe Drain North (north of Stair Step)
+#11455147 - Liberty Cut
+#381424121405601 - mouth of Prospect Slough
+#381944121405201 - Stair Step
+#382006121401601 - Liberty Island Conservation Bank
+#382005121392801 - Little Holland Tract north
+#11455167 - Little Holland Tract SE
+#11455166 - Little Holland Tract SW
 
-#downstream of Rio Vista Bridge - may be added later
+chla_more <- dataRetrieval::readWQPqw(c('USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ), '70953', startDate = "", endDate = "") %>%
+  janitor::clean_names()
+
+#downstream of Rio Vista Bridge - 133 samples
 #11455478 - Sac R at Decker
 #11455485 - Sac R at Toland
 #11455508 - Confluence
 
-# check what data is available for a site - fill in summaryYears:
+#mainstem Sac R u/s of Isleton - 191 samples
+#11447650 - Freeport Bridge
+#11447890 - Sac R ab Delta Cross Channel
+#11447905 - Sac R bl Delta Cross Channel
 
-#LIB <- readWQPsummary(siteid="USGS-11455315",
-                      #summaryYears=X, dataProfile="periodOfRecord")
 
-#CCH <- readWQPsummary(siteid="USGS-11455350",
-                      #summaryYears=X, dataProfile="periodOfRecord")
-
-#CCH41 <- readWQPsummary(siteid="USGS-11455385",
-                      #summaryYears=X, dataProfile="periodOfRecord")
-
+USGS_CAWSC_Chl <- whatWQPsites(siteid=c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ))
 
 # preview map
 #library(sf)
-#Lib_map <- LIB %>%
-#st_as_sf(coords=c("MonitoringLocationLatitude", "MonitoringLocationLongitude"),
-#crs=4326, remove=FALSE)
-#mapview::mapview(Lib_map)
+#library(mapview)
+
+USGS_CAWSC_Chl <- USGS_CAWSC_Chl %>%
+st_as_sf(coords=c("LongitudeMeasure", "LatitudeMeasure"),
+crs=4326, remove=FALSE)
+mapview(USGS_CAWSC_Chl)
 
 
 library(glue)
@@ -42,47 +52,30 @@ library(dplyr)
 library(ggplot2)
 library(janitor)
 
-#readNWISqw() will be deprecated and replaced by readWQPqw()
+# get data function
 
-#example of data pull
-chla <- readWQPqw(c('USGS-11455315', 'USGS-11455385', 'USGS-11455350'), '70953', startDate = "", endDate = "")
+f_get_USGS_CAWSC_chla <- function(){
 
-#write get data function
-
-# pull data: defaults to Cache Slough Stations
-
-f_get_USGS_CAWSC_chla <- function(gageID = c("11455315", "11455385", "11455350"), param="70953") {
-
-  # get data:
+  # get data - limited to stations identified on lines 4-6
   print("Downloading data...")
-  USGS_CAWSC_chla <- dataRetrieval::readWQPqw(siteNumbers = c('gageID'), parameterCd = c('param'), startDate = "", endDate = "")
-
-  # fix names
-  #USGS_CAWSC_chla <- addWaterYear(USGS_CAWSC_chla)
-  #USGS_CAWSC_chla <- dataRetrieval::renameNWISColum(USGS_CAWSC_chla)
-
+  chla <- dataRetrieval::readWQPqw(c('USGS-11455315', 'USGS-11455385', 'USGS-11455350'), '70953', startDate = "", endDate = "")
   print("Data downloaded!")
 
   # clean names
-  USGS_CAWSC_chla <- janitor::clean_names(USGS_CAWSC_chla)
+  chla <- janitor::clean_names(chla)
 
   # write out
-  readr::write_csv(USGS_CAWSC_chla, glue("data_raw/raw_chla_usgs_cawsc_{gageID}.csv"))
+  readr::write_csv(chla, glue("data_raw/raw_chla_usgs_cawsc.csv"))
 
   # print message!
-  print(glue("Data saved here: 'data_raw/raw_chla_usgs_cawsc_{gageID}.csv'"))
-
-  return(p1)
-
-}
+  print(glue("Data saved here: 'data_raw/raw_chla_usgs_cawsc.csv'"))
 
   # quick plot
-  #p1 <- ggplot(chla) +
-    #geom_line(aes(x=ActivityStartDate, y=ResultMeasureValue)) +
-    #labs(title=glue("USGS CAWSC chla {gageID}: {min(chla$ActivityStartDate)}-{max(chla$ActivityStartDate)}"))
+  p1 <- ggplot(chla) +
+    geom_line(aes(x=activity_start_date, y=result_measure_value)) +
+    labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)}-{max(chla$activity_start_date)}"))
 
+  p1
 
-
-
-
+}
 
