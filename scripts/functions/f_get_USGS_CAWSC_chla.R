@@ -1,13 +1,13 @@
-# Download data from USGS stations
+# Download USGS CAWSC discrete chl-a data
 
 #Cache Slough stations used in current SAM - 204 samples
 #11455315 - Liberty Island
 #14455350 - Cache at Ryer
 #14455385 - Cache abv Ryer Island
 
-#Other stations that could be included at a later date
-#above Liberty Island - 190 samples
+#Other station groups that could be included at a later date:
 
+#above Liberty Island - 190 samples
 #11455276 - Shag Slough
 #381829121413401
 #11455139 - Toe Drain South (south of Stair Step)
@@ -20,9 +20,6 @@
 #11455167 - Little Holland Tract SE
 #11455166 - Little Holland Tract SW
 
-chla_more <- dataRetrieval::readWQPqw(c('USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ), '70953', startDate = "", endDate = "") %>%
-  janitor::clean_names()
-
 #downstream of Rio Vista Bridge - 133 samples
 #11455478 - Sac R at Decker
 #11455485 - Sac R at Toland
@@ -34,6 +31,7 @@ chla_more <- dataRetrieval::readWQPqw(c('USGS-11455276', 'USGS-11455139', 'USGS-
 #11447905 - Sac R bl Delta Cross Channel
 
 
+#get basic metadata from water quality portal site
 USGS_CAWSC_Chl <- whatWQPsites(siteid=c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ))
 
 # preview map
@@ -76,6 +74,5 @@ f_get_USGS_CAWSC_chla <- function(){
     labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)}-{max(chla$activity_start_date)}"))
 
   p1
-
 }
 
