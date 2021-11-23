@@ -31,17 +31,19 @@
 #11447905 - Sac R bl Delta Cross Channel
 
 
-#get basic metadata from water quality portal site
-USGS_CAWSC_Chl <- whatWQPsites(siteid=c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ))
+#get basic metadata from water quality portal site:
+# commenting this out so function only pulls data...this is more exploratory
+# USGS_CAWSC_Chl <- whatWQPsites(siteid=c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ))
 
 # preview map
 #library(sf)
 #library(mapview)
 
-USGS_CAWSC_Chl <- USGS_CAWSC_Chl %>%
-st_as_sf(coords=c("LongitudeMeasure", "LatitudeMeasure"),
-crs=4326, remove=FALSE)
-mapview(USGS_CAWSC_Chl)
+# same here
+# USGS_CAWSC_Chl <- USGS_CAWSC_Chl %>%
+# st_as_sf(coords=c("LongitudeMeasure", "LatitudeMeasure"),
+# crs=4326, remove=FALSE)
+# mapview(USGS_CAWSC_Chl)
 
 
 library(glue)
@@ -52,11 +54,14 @@ library(janitor)
 
 # get data function
 
-f_get_USGS_CAWSC_chla <- function(){
+# defaults to these stations, but can change list or add to it
+f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', 'USGS-11455350')){
 
   # get data - limited to stations identified on lines 4-6
   print("Downloading data...")
-  chla <- dataRetrieval::readWQPqw(c('USGS-11455315', 'USGS-11455385', 'USGS-11455350'), '70953', startDate = "", endDate = "")
+  chla <- dataRetrieval::readWQPqw(siteNumbers = stations,
+                                   parameterCd = '70953',
+                                   startDate = "", endDate = "")
   print("Data downloaded!")
 
   # clean names
