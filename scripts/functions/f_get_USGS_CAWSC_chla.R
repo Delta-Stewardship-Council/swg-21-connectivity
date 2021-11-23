@@ -60,7 +60,7 @@ f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', '
   # get data - limited to stations identified on lines 4-6
   print("Downloading data...")
   chla <- dataRetrieval::readWQPqw(siteNumbers = stations,
-                                   parameterCd = '70953',
+                                   parameterCd = '70953', # this is the chla
                                    startDate = "", endDate = "")
   print("Data downloaded!")
 
@@ -76,7 +76,7 @@ f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', '
   # quick plot
   p1 <- ggplot(chla) +
     geom_line(aes(x=activity_start_date, y=result_measure_value)) +
-    labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)}-{max(chla$activity_start_date)}"))
+    labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)} to {max(chla$activity_start_date)}"))
 
   p1
 }
