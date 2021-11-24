@@ -65,7 +65,7 @@ initslist <- list(inits(), inits(), inits())
 # run this if model has been successfully run already:
 
 # Or load saved.state
-#load("bayes_models/mod01/inits/sstate.Rda")
+#load("bayes_models/mod03/inits/sstate.Rda")
 #initslist <- saved.state[[2]]
 
 
@@ -92,7 +92,7 @@ jm_coda <- coda.samples(jm,
 
 # Load Saved Model --------------------------------------------------------
 
-#load("bayes_models/mod01/run_20211124.rda")
+#load("bayes_models/mod03/run_20211124.rda")
 
 # Visualize
 mcmcplot(jm_coda)
