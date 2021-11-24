@@ -161,7 +161,7 @@ coda_sum %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_x_discrete(labels = c("past_topped", "Q", "Qant", "Rant", "Tant")) +
+  scale_x_discrete(labels = c("past_topped", "Q", "Qant", "Rad", "Rant", "Temp", "Tant")) +
   scale_y_continuous("Slope of covariates") +
   theme_bw()
 ggsave(filename = "bayes_models/mod02/fig_out/slope_of_betas_qant_sol_temp.png",
