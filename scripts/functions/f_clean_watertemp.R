@@ -22,10 +22,9 @@ f_clean_watertemp <- function() {
   # filter out certain latitudes and longitudes
   stations <- readr::read_csv(stations_file)
 
-  stations_sf <- stations %>%
-    sf::st_as_sf(coords=c("Longitude","Latitude"), crs=4326, remove=FALSE)
-
-  ## look at stations currently in dataset
+   ## look at stations currently in dataset
+  # stations_sf <- stations %>%
+    # sf::st_as_sf(coords=c("Longitude","Latitude"), crs=4326, remove=FALSE)
   # mapview::mapView(stations_sf)
 
   stations_filtered <- stations %>%
@@ -36,10 +35,9 @@ f_clean_watertemp <- function() {
                     Station != "BKS") %>%
     janitor::clean_names()
 
-  stations_filtered_sf <- stations_filtered %>%
-    sf::st_as_sf(coords=c("longitude","latitude"), crs=4326, remove=FALSE)
-
   ## look at remaining stations after filtered. may need to further filter down.
+  # stations_filtered_sf <- stations_filtered %>%
+    # sf::st_as_sf(coords=c("longitude","latitude"), crs=4326, remove=FALSE)
   # mapview::mapView(stations_filtered_sf)
 
   # water temp filtered
