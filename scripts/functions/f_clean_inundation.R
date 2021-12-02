@@ -2,6 +2,7 @@
 library(dplyr)
 library(imputeTS)
 library(here)
+library(contentid)
 
 # source("scripts/functions/f_get_fre.R")
 # fre <- f_get_fre() # takes a minute to run
@@ -55,11 +56,11 @@ f_clean_fre_inundation <- function(start='1995-02-23', end='2021-01-01'){
   All_flows <- merge(dayflow[,c(5,30)], discharge_sac_na[,c(1,4)], by = "date")
   check_again <- seq(as.Date('1996-10-01'), as.Date('2020-09-30'), by = 'day')
 
-  # nrow(All_flows)==length(check_again) # no missing dates!!!
+  nrow(All_flows)==length(check_again) # no missing dates!!!
 
   ### calculate inundation days
   # definition for inundation days
-  print("Now looping through and calculating inundation based on height (33.5 ft)...")
+  print("Now looping through and calculating inundation based on FRE height (33.5 ft) and dayflow of QYolo (4,000 cfs")
   for(i in 1:nrow(All_flows)){
     #f_clean_indundation <- function(i){
     if(All_flows[i,"height_sac_na"] < 33.5){
@@ -82,7 +83,7 @@ f_clean_fre_inundation <- function(start='1995-02-23', end='2021-01-01'){
   All_flows$inundation <- ifelse(All_flows$inund_days > 0, 1, 0)
 
   print("Data cleaned and run...now saving!")
-  write.csv(All_flows, "data_clean/clean_fre_inundation_days.csv", row.names = FALSE)
+  write.csv(All_flows, "data_clean/clean_inundation_days.csv", row.names = FALSE)
 
   print("Done!")
   return(All_flows)
