@@ -25,7 +25,8 @@ f_clean_watertemp <- function() {
   stations_sf <- stations %>%
     sf::st_as_sf(coords=c("Longitude","Latitude"), crs=4326, remove=FALSE)
 
-  mapview::mapView(stations_sf)
+  ## look at stations currently in dataset
+  # mapview::mapView(stations_sf)
 
   stations_filtered <- stations %>%
     dplyr::filter(Latitude <38.5 & Latitude > 38 &
@@ -38,7 +39,8 @@ f_clean_watertemp <- function() {
   stations_filtered_sf <- stations_filtered %>%
     sf::st_as_sf(coords=c("longitude","latitude"), crs=4326, remove=FALSE)
 
-  mapview::mapView(stations_filtered_sf)
+  ## look at remaining stations after filtered. may need to further filter down.
+  # mapview::mapView(stations_filtered_sf)
 
   # water temp filtered
     # Join filtered stations and remove certain columns
