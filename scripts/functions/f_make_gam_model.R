@@ -8,6 +8,8 @@ library(tidyr)
 library(zoo)
 library(car)
 library(MuMIn)
+library(psych)
+library(mgcv)
 
 f_make_gam_model_dataset <- function() {
 
@@ -36,36 +38,88 @@ f_make_gam_model_dataset <- function() {
     mutate(Q_1day = lag(flow_usgs_verona, 1),
            Q_mwk = rollapply(flow_usgs_verona, 7, mean, align='right', partial=TRUE),
            T_mwk = rollapply(daymet_tmax, 7, mean, align='right', partial=TRUE),
-           Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE)) %>%
+           Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE),
+           Inun_flag = ifelse(inund_days > 0, 1, 0)) %>%
     rename(Q_sday = flow_usgs_verona) %>%
-    select(doy1998, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk)
+    select(doy1998, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days)
 
 
   # Q from the day of Chl-a measurement
   chla_covars <- left_join(chla_all, covars_gam, by="doy1998")
 
-  x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, past_topped)
+  # checked for log-normality in Chl-a -> works
+  # hence GLM would be an option
+  hist(log(chla_all$chl))
+
+  # check for correlation between all predictors, and the response variable
+  x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days)
+  # plot it
   pairs(x)
 
-  lm_first = lm(log_chla ~ Q_sday + Q_1day + Q_mwk + T_mwk + Srad_mwk + past_topped, data = x)
+  # save the correlation plot as a tiff
+  tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
+  # plot with R2 values on the diagnolly opposite side
+  pairs.panels(x, hist.col = "white", cex.cor = 1)
+  dev.off()
+
+  # the model with all covars but no interactions
+  lm_first = lm(log_chla ~ Q_sday + Q_1day + Q_mwk + T_mwk + Srad_mwk + inund_days, data = x)
+  # pascale - fill in description - dispersion something? sorry, don't remember
   vif(lm_first)
 
-  lm_first = lm(log_chla ~ Q_sday + Q_mwk + T_mwk + Srad_mwk + past_topped, data = x)
+  # remove the covar with the biggest number; rerun vif
+  lm_first = lm(log_chla ~ Q_sday + Q_mwk + T_mwk + Srad_mwk + inund_days, data = x)
   vif(lm_first)
 
-  lm_first = lm(log_chla ~ Q_sday + Srad_mwk + past_topped, data = x)
+  # remove the next most correlated covar; rerun vif until all values below 3
+  lm_first = lm(log_chla ~ Q_sday + Srad_mwk + inund_days, data = x)
   vif(lm_first)
 
+  # box plots and dot plots to determine outliers in all covars and chla
   boxplot(chla_all$chl)
-  boxplot(x$past_topped)
+  dotchart(chla_all$chl, lcolor = "white", xlab = "Chla", ylab = "row")
+  boxplot(x$inund_days)
   boxplot(x$Srad_mwk)
   boxplot(x$Q_sday)
 
-  options(na.action = "na.fail")
-  dredge(lm_first)
-
+  # check for autocorrelation in predictors
   acf(chla_covars$log_chla)
   acf(chla_covars$Q_sday)
+
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/gam_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
+  op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(lm_first, add.smooth = FALSE, which = 1)
+  # save residuals
+  E <- resid(lm_first)
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(E, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(E)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(x$Q_sday, E, xlab = "Flow same day", ylab = "Residuals")
+  plot(x$Srad_mwk, E, xlab = "Solar Radiation mean week", ylab = "Residuals")
+  plot(x$inund_days, E, xlab = "Consecutive inundation days", ylab = "Residuals")
+  par(op)
+  dev.off()
+
+  # dry-wet flag - for diff. relationships for dry and wet
+  # try gls next
+  # include autocorrelation structure to residuals - 2 relate to time
+  # also include the circular time series indication - that jan is close to dec
+  # what family to use
+  # include water temperature
+  # GAM
+
+  # does the chl a variable have an underlying pattern?
+  gam.0 = gam(log_chla ~ s(doy1998, bs = "cr"), data = chla_covars)
+  plot(gam.0)
+
+  # dredge - a function to run all instances of a global model and evaluated
+  # them based off AIC - output commented below
+  options(na.action = "na.fail")
+  dredge(lm_first)
 
   # Global model call: lm(formula = log_chla ~ Q_sday + Srad_mwk + past_topped, data = x,
   #                       na.omit = TRUE)
@@ -83,13 +137,6 @@ f_make_gam_model_dataset <- function() {
   # Models ranked by AICc(x)
 
   # lm_0 = lm(log_chla ~ 1, data = x)
-
-  # make list to save out
-  # model_df <- list("chla_all"=chla_all, "covars"=covars)
-
-  # checked for log-normality in Chl-a -> works
-  # hence GLM would be an option
-  # hist(log(chla_all$chl))
 
   num_rows = nrow(chla_all)
 

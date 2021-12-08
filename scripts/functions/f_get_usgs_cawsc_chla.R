@@ -68,16 +68,4 @@ f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', '
   chla <- janitor::clean_names(chla)
 
   # write out
-  readr::write_csv(chla, glue("data_raw/raw_chla_usgs_cawsc.csv"))
-
-  # print message!
-  print(glue("Data saved here: 'data_raw/raw_chla_usgs_cawsc.csv'"))
-
-  # quick plot
-  p1 <- ggplot(chla) +
-    geom_line(aes(x=activity_start_date, y=result_measure_value)) +
-    labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)} to {max(chla$activity_start_date)}"))
-
-  p1
-}
-
+  readr::write_csv(chla, glue("data_raw/raw_chla_usgs_ca
