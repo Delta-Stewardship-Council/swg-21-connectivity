@@ -1,0 +1,139 @@
+Station,StationName,StartDateDataset,EndDateDataset,Agency,Latitude,Longitude,HydrologicArea,Basin,County,HabitatType
+ANC,ANTIOCH (USBR),1999-02-28,2016-06-09,USBR,38.017817,-121.802965,Sacramento River,Delta,Contra Costa,Tidal River Channel (brackish)
+ANH,SAN JOAQUIN RIVER AT ANTIOCH,1994-12-31,2017-07-20,DWR,38.0178299,-121.8029633,Sacramento River,San Joaquin R,Contra Costa,Tidal River Channel (brackish)
+BAC,BACON ISLAND AT OLD RIVER,2008-04-17,2016-11-30,DWR,37.96934509,-121.5721741,Sacramento River,Delta,San Joaquin,Tidal River Channel (freshwater)
+BDL,BELDON LANDING,2008-02-27,2017-12-27,DWR,38.1869,-121.9708,Sacramento River,Sacramento R,Solano,"Tidal River Channel (brackish, marsh)"
+BDT,SAN JOAQUIN R AT BRANDT BRIDGE,2005-04-06,2008-01-03,DWR,37.865,-121.3231,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+BET,BETHEL ISLAND AT PIPER SLOUGH,2006-03-30,2019-09-12,DWR,38.04109192,-121.6321869,Sacramento River,Delta,Contra Costa,Tidal River Channel (freshwater)
+BIR,MIDDLE R AT BACON ISLAND RD,2018-03-06,2019-12-30,DWR,37.943056,-121.53389,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+BKS,BARKER SLOUGH PUMPING PLANT (KG000000),2005-07-01,2019-12-30,DWR,38.2759,-121.7965,San Francisco Bay,Delta,Solano,Non-Tidal Slough
+BLL,BLACKLOCK (NE1),2001-09-16,2019-07-01,DWR,38.1801,-121.9069,Sacramento River,Sacramento R,Solano,"Tidal River Channel (brackish, marsh)"
+BLP,SAN JOAQUIN RIVER AT BLIND POINT,2010-02-17,2018-05-10,DWR,38.03245163,-121.7190399,Sacramento River,Delta,Contra Costa,Tidal River Channel (brackish)
+CCS,CACHE SLOUGH,1999-02-22,2013-12-25,USBR,38.2918,-121.742,Sacramento River,Delta,Solano,Tidal Slough
+CLC,CLIFTON COURT,2004-07-07,2019-12-30,DWR,37.8298,-121.5574,San Francisco Bay,Delta,Contra Costa,Non-Tidal Slough
+CLL,COLLINSVILLE,1999-02-23,2019-03-29,USBR,38.073981,-121.850123,Sacramento River,Delta,Solano,Tidal River Channel (brackish)
+CNT,CONTRA COSTA,1999-03-01,2009-12-09,USBR,37.99495,-121.702809,Sacramento River,Delta,Contra Costa,Aqueduct
+CPP,CORDELIA PUMPING PLANT (KG002111),2000-12-31,2009-06-30,DWR,38.2276,-122.1347,San Francisco Bay,Delta,Solano,Concrete-lined reservoir
+CSE,COLLINSVILLE ON SACRAMENTO RIVER,2009-05-19,2018-05-15,DWR,38.074,-121.8501,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+CYG,CYGNUS-CORDELIA SLOUGH,2010-04-29,2019-05-31,DWR,38.1527,-122.0908,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+DAR,DRAINAGE AT ARBOR ROAD,2016-01-22,2019-11-06,DWR,37.768959,-121.419414,Sacramento River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+DGL,DOUGHTY CUT ABOVE GRANT LINE CANAL,2006-02-17,2018-10-25,DWR,37.815,-121.425,San Joaquin River,San Joaquin R,San Joaquin,Non-Tidal Slough
+DLC,DELTA CROSS CHANNEL BTW SAC R & SNODGRAS,2009-12-01,2019-01-04,USGS,38.245,-121.505,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+DMC,DMC HEADWORKS,1999-02-22,2015-02-18,USBR,37.781567,-121.590239,Sacramento River,Delta,Alameda,Aqueduct
+DSJ,DUTCH SLOUGH AT JERSEY ISLAND,2009-12-09,2015-10-20,USGS,38.013,-121.671,San Joaquin River,San Joaquin R,Contra Costa,Tidal River Channel (brackish)
+DV7,DEL VALLE CHECK 7 (KB001638),2000-12-31,2003-10-21,DWR,37.6547,-121.7419,San Francisco Bay,East Bay,Alameda,Aqueduct
+DWS,SACRAMENTO DEEP WATER SHIPPING CHANNEL,2011-01-15,2014-10-02,USGS,38.25611,-121.66667,Sacramento River,Sacramento R,Yolo,Tidal Canal (freshwater)
+DYR,DYER RESERVOIR,2014-04-17,2019-12-30,DWR,37.757824,-121.674913,San Joaquin River,Delta,Contra Costa,Concrete-lined reservoir
+ECD,EAST CONTRA COSTA ID PP#1,2013-10-02,2019-12-28,DWR,37.917863,-121.625999,Sacramento River,Delta,Contra Costa,Tidal Canal (freshwater)
+EMM,EMMATON (USBR),1999-02-23,2012-06-20,USBR,38.084272,-121.738924,Sacramento River,Delta,Sacramento,Tidal River Channel (freshwater)
+FAL,FALSE RIVER NEAR OAKLEY,2007-02-09,2019-12-03,DWR,38.0558,-121.6669,San Joaquin River,Delta,Contra Costa,Tidal River Channel (brackish)
+FCT,FISHERMANS CUT,2015-02-27,2018-06-06,DWR,38.067822,-121.648838,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+FLT,GOODYEAR SLOUGH OUTFALL @ NAVAL FLEET,2010-10-06,2017-09-01,DWR,38.08037934,-122.1020479,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+FPT,SACRAMENTO RIVER AT FREEPORT,2009-12-04,2016-08-25,USGS,38.45,-121.5,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+FRK,FRANK'S TRACT MID TRACT,2015-06-05,2017-03-01,DWR,38.046417,-121.5981,San Joaquin River,Delta,Contra Costa,Tidal Flooded Island (freshwater)
+FRP,FARRAR PARK,1999-02-25,2007-07-10,USBR,38.011698,-121.639129,Sacramento River,Delta,San Joaquin,Tidal River Channel (freshwater)
+GCT,GRANTLINE CANAL AT TRACY RD BRIDGE,2005-10-31,2019-12-30,DWR,37.82014465,-121.4498596,San Joaquin River,San Joaquin R,San Joaquin,Tidal Canal (freshwater)
+GES,SACRAMENTO RIVER BELOW GEORGIANA SLOUGH,2009-12-03,2015-07-01,USGS,38.2389,-121.5234,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+GLC,GRANTLINE CANAL (USGS),2007-07-05,2015-03-23,DWR,37.8196,-121.5485,San Joaquin River,San Joaquin R,San Joaquin,Tidal Canal (freshwater)
+GLE,GRANT LINE CANAL EAST,2013-04-09,2019-11-18,DWR,37.820258,-121.4348562,San Joaquin River,San Joaquin R,San Joaquin,Tidal Canal (freshwater)
+GLN,GREEN'S LANDING,1998-10-08,2003-10-06,USBR,38.345,-121.546,Sacramento River,Sacramento R,Sacramento,Non-Tidal River Channel (freshwater)
+GOD,GODFATHER II ON SUISUN SLOUGH,2010-08-19,2018-07-06,DWR,38.1238,-122.0812,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+GSS,GEORGIANA SLOUGH AT SACRAMENTO RIVER,2009-12-03,2015-07-02,USGS,38.237,-121.518,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+GYS,GOODYEAR SLOUGH,1994-08-14,2018-10-05,DWR,38.118,-122.095,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+GZB,GRIZZLY BAY BUOY,2018-07-02,2019-11-26,DWR,38.123145,-122.007582,San Francisco Bay,Delta,Solano,Tidal Embayment (brackish)
+GZL,GRIZZLY BAY,2015-07-29,2016-03-29,DWR,38.12425,-122.038117,San Francisco Bay,Delta,Solano,Tidal Embayment (brackish)
+HBP,HARVEY O BANKS PUMPING P (KA000331),2000-12-31,2019-12-30,DWR,37.801944,-121.620278,Sacramento River,Delta,Contra Costa,Aqueduct
+HLL,HOLLAND TRACT,1999-02-25,2008-11-16,USBR,38.006986,-121.580617,Sacramento River,Delta,Contra Costa,Tidal River Channel (freshwater)
+HLT,MIDDLE RIVER NEAR HOLT,2006-07-06,2010-05-13,DWR,38.0031,-121.5108,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+HOL,HOLLAND CUT NEAR BETHEL ISLAND,2006-07-10,2018-03-14,DWR,38.0164,-121.5819,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+HON,HONKER BAY,2015-07-28,2019-06-03,DWR,38.0724,-121.9392,San Francisco Bay,Delta,Solano,Tidal Embayment (brackish)
+HUN,HUNTER CUT AT MONTEZUMA SLOUGH,2010-04-08,2019-12-30,DWR,38.156,-122.0527,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+HWB,MINER SLOUGH AT HWY 84 BRIDGE,2009-11-30,2015-09-03,USGS,38.2917,-121.6308,Sacramento River,Sacramento R,Solano,Tidal River Channel (freshwater)
+IBS,IBIS,2001-09-16,2018-12-06,DWR,38.157,-122.113,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+JER,JERSEY POINT,1999-02-25,2010-12-13,USBR,38.052155,-121.688971,Sacramento River,Delta,Contra Costa,Tidal River Channel (freshwater)
+LIB,LIBERTY ISLAND @ APPROX CNTR S END,2008-01-09,2015-07-08,USGS,38.2421,-121.6849,Sacramento River,Sacramento R,Solano,Tidal River Channel (freshwater)
+LIS,YOLO BYPASS AT LISBON,2008-07-16,2019-12-26,DWR,38.47478104,-121.5882263,Sacramento River,Sacramento R,Yolo,Tidal River Channel (freshwater)
+LPS,LITTLE POTATO SLOUGH AT TERMINOUS,2009-12-02,2014-08-07,USGS,38.0964,-121.4961,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MAB,MIDDLE RIVER ABOVE BARRIER,2014-01-14,2019-11-17,DWR,37.88518143,-121.4727631,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MAL,SACRAMENTO RIVER AT MALLARD ISLAND,1987-02-02,2018-07-30,DWR,38.04280472,-121.9200897,Sacramento River,Sacramento R,Contra Costa,Tidal River Channel (brackish)
+MDM,MIDDLE RIVER AT MIDDLE RIVER,2009-12-01,2015-08-03,USGS,37.943,-121.534,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+MHO,MIDDLE RIVER NEAR HOWARD ROAD BRIDGE,2010-10-25,2018-10-03,DWR,37.876222,-121.383306,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+MHR,MIDDLE RIVER AT HOWARD ROAD BRIDGE,2006-03-29,2006-09-18,DWR,37.877,-121.384,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MIR,MINER SLOUGH NEAR SACRAMENTO RIVER,2015-06-15,2019-10-31,DWR,38.236027,-121.666055,Sacramento River,Sacramento R,Solano,Tidal River Channel (freshwater)
+MKN,NF MOKELUMNE R BLW SNODGRASS SLOUGH,2015-07-14,2019-12-30,DWR,38.223138,-121.50677,San Joaquin River,Mokelumne R,San Joaquin,Tidal River Channel (freshwater)
+MOK,MOKELUMNE R @ SAN JOAQUIN RIVER,2008-06-16,2017-06-20,DWR,38.1061,-121.5711,San Joaquin River,Mokelumne R,San Joaquin,Tidal River Channel (freshwater)
+MRU,MIDDLE RIVER AT UNDINE ROAD,2013-04-26,2019-12-30,DWR,37.8339,-121.386,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MRX,MIDDLE RIVER NEAR TRACY BLVD,2016-03-30,2017-07-07,DWR,37.881415,-121.467395,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MRZ,MARTINEZ,1994-07-01,2018-10-24,DWR,38.02763748,-122.1404877,San Francisco Bay,East Bay,Contra Costa,Tidal River Channel (brackish)
+MSD,SAN JOAQUIN RIVER AT MOSSDALE BRIDGE,2001-09-16,2017-10-02,DWR,37.786,-121.306,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MSL,MONTEZUMA SLOUGH AT ROARING R,2006-01-07,2014-12-31,DWR,38.0934,-121.88720000000001,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+MTB,MIDDLE RIVER AT TRACY BLVD,2000-03-17,2017-01-30,DWR,37.881,-121.456,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+MUP,MIDDLE RIVER AT UNION POINT,2010-03-25,2017-09-19,DWR,37.890778,-121.488361,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+NMR,NORTH MOKELUMNE R AT W WALNUT GROVE RD,2006-01-07,2015-07-09,USGS,38.2232,-121.5071,San Joaquin River,Mokelumne R,San Joaquin,Tidal River Channel (freshwater)
+NSL,NATIONAL STEEL,2001-09-16,2015-11-24,DWR,38.1221,-121.8881,Sacramento River,Sacramento R,Solano,"Tidal River Channel (brackish, marsh)"
+OAD,OLD RIVER NEAR DMC ABOVE DAM,2006-02-17,2017-11-29,DWR,37.81032181,-121.5421066,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+OBD,OLD RIVER NEAR DMC BELOW DAM,2006-04-18,2008-07-21,DWR,37.81096268,-121.5439377,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+OBI,OLD RIVER AT BACON ISLAND (USGS),2008-03-01,2019-03-26,DWR,37.96936798,-121.5722198,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+ODM,OLD RIVER AT DELTA MENDOTA CANAL,2009-12-14,2015-07-04,DWR,37.8102951,-121.5421448,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+OH1,OLD RIVER AT HEAD,1999-04-12,2019-12-30,DWR,37.80755234,-121.3312531,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+OH4,OLD RIVER AT HIGHWAY 4,2009-12-01,2015-07-12,USGS,37.891109,-121.569168,San Joaquin River,Delta,Contra Costa,Tidal River Channel (freshwater)
+OLD,OLD RIVER NEAR TRACY,2005-04-06,2018-07-26,DWR,37.80480957,-121.4495621,Sacramento River,Delta,San Joaquin,Tidal River Channel (freshwater)
+ORI,OLD RIVER AT CLIFTON COURT INTAKE,2011-03-04,2019-10-14,DWR,37.828,-121.5526,San Joaquin River,San Joaquin R,Contra Costa,Tidal River Channel (freshwater)
+ORM,OLD RIVER UPSTREAM OF MOUNTAIN HOUSE CRK,2015-03-17,2019-09-12,DWR,37.79384,-121.51738,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+ORQ,OLD RIVER @ QUIMBLY IS NEAR BETHEL IS,2006-07-06,2014-04-23,DWR,38.0272,-121.5645,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+ORX,OLD RIVER ABOVE DOUGHTY CUT,2013-04-16,2019-09-13,DWR,37.810997,-121.386576,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+OSJ,OLD RIVER AT FRANKS TRACT NEAR TERMINOUS,2006-07-06,2019-07-16,DWR,38.0711,-121.5789,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+PCO,PARADISE CUT ABV OLD R,2012-06-27,2019-12-30,DWR,37.801944399999996,-121.412306,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+PCT,PORT CHICAGO,2001-03-21,2018-05-13,USBR,38.056788,-121.999971,Sacramento River,Delta,Contra Costa,Tidal River Channel (brackish)
+PDC,PARADISE CUT,2014-04-16,2019-09-15,DWR,37.8020598,-121.4122564,San Joaquin River,San Joaquin R,San Joaquin,Non-Tidal Slough
+PPT,PRISONERS POINT,1997-04-01,2015-08-31,DWR,38.066,-121.562,Sacramento River,Delta,San Joaquin,Tidal River Channel (Freshwater)
+PRI,SAN JOAQUIN R AT PRISONERS PT NR TERMINO,2006-06-27,2017-11-08,USGS,38.0594,-121.5572,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+PTS,PITTSBURG,1999-04-06,2018-02-01,USBR,38.042975,-121.892482,Sacramento River,Delta,Contra Costa,Tidal River Channel (brackish)
+RCS,RIDGE CUT SLOUGH AT KNIGHTS LANDING,2002-01-03,2019-11-14,DWR,38.793556,-121.725349,Sacramento River,Sacramento R,Yolo,Tidal River Channel (freshwater)
+RIP,STANISLAUS RIVER AT RIPON,2011-10-27,2018-12-07,USGS,37.7296524,-121.1104965,San Joaquin River,Stanislaus R,San Joaquin,Tidal River Channel (freshwater)
+RIV,RIO VISTA,1999-02-22,2017-04-07,USBR,38.159203,-121.684543,Sacramento River,Delta,Solano,Tidal River Channel (freshwater)
+ROR,ROARING RIVER,2008-05-15,2013-04-10,DWR,38.092,-121.889,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+RPN,RIPON,1999-02-26,2009-10-15,USBR,37.729859,-121.110135,San Joaquin River,Stanislaus R,San Joaquin,Tidal River Channel (freshwater)
+RRI,ROUGH AND READY ISLAND,2000-08-28,2019-08-15,DWR,37.963,-121.365,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+RSL,ROCK SLOUGH ABV CONTRA COSTA CANAL,2012-11-26,2015-05-26,DWR,37.97631073,-121.6375961,San Joaquin River,Delta,Contra Costa,Tidal Canal (freshwater)
+RVB,SACRAMENTO RIVER AT RIO VISTA BRIDGE,2007-05-30,2015-06-26,DWR,38.159737,-121.686355,Sacramento River,Sacramento R,Solano,Tidal River Channel (freshwater)
+RYC,SUISUN BAY ? CUTOFF NEAR RYER,2015-07-28,2017-01-05,DWR,38.083971,-121.995878,San Francisco Bay,Delta,Solano,Tidal Embayment (brackish)
+RYF,CACHE SLOUGH ABV RYER ISLAND FERRY,2019-10-22,2019-12-20,USGS,38.193854,-121.658005,Sacramento River,Cache Cr,Solano,Tidal River Channel (freshwater)
+RYI,CACHE SLOUGH AT RYER ISLAND,2009-12-02,2015-07-08,USGS,38.2128,-121.6692,Sacramento River,Sacramento R,Solano,Tidal River Channel (freshwater)
+SAL,SAN ANDREAS LANDING,1999-02-23,2018-07-06,USBR,38.103301,-121.591315,Sacramento River,Delta,San Joaquin,Tidal River Channel (freshwater)
+SDI,SACRAMENTO RIVER AT DECKER ISLAND,2010-01-20,2015-07-07,USGS,38.0934,-121.736,Sacramento River,Sacramento R,Solano,Tidal River Channel (brackish)
+SGA,SUGAR CUT,2014-04-29,2019-09-25,DWR,37.7928598,-121.4214954,San Joaquin River,San Joaquin R,San Joaquin,Non-Tidal Slough
+SJC,SAN JOAQUIN RIVER NEAR BUCKLEY COVE,2018-03-21,2019-12-30,DWR,37.980266,-121.385717,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+SJD,SAN JOAQUIN RIVER ABOVE DOS REIS,2013-08-06,2019-11-18,DWR,37.8223312,-121.3177244,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+SJG,SAN JOAQUIN RIVER AT GARWOOD BRIDGE,2009-12-01,2018-09-06,USGS,37.935,-121.329,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+SJJ,SAN JOAQUIN RIVER AT JERSEY POINT (USGS),2009-12-01,2014-10-31,USGS,38.052,-121.689,San Joaquin River,San Joaquin R,Contra Costa,Tidal River Channel (brackish)
+SJL,SAN JOAQUIN R BLW OLD R NEAR LATHROP,2004-10-13,2015-12-30,DWR,37.8111496,-121.3240356,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+SJR,SAN JOAQUIN R MCCUNE STATION NR VERNALIS,2005-07-27,2019-02-06,DWR,37.67929,-121.26511,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+SMR,SOUTH MOKELUMNE R AT W WALNUT GROVE RD,2010-12-20,2014-03-06,USGS,38.2255,-121.4911,San Joaquin River,Mokelumne R,San Joaquin,Tidal River Channel (freshwater)
+SNC,SUNRISE CLUB,2001-09-16,2019-04-05,DWR,38.185,-122.083,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+SOI,SACRAMENTO R DOWNSTREAM OF ISLETON,2015-06-16,2019-09-04,DWR,38.17548,-121.656863,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+SR3,THREE MILE SLOUGH AT SAN JOAQUIN R,2016-02-11,2019-09-09,DWR,38.090109,-121.686771,Sacramento River,San Joaquin R,Sacramento,Tidal River Channel (freshwater)
+SRH,SACRAMENTO RIVER AT HOOD,1998-12-22,2019-06-05,DWR,38.36798096,-121.5199585,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+SRV,SACRAMENTO RIVER AT RIO VISTA (USGS),2009-12-04,2018-09-01,USGS,38.16,-121.686,Sacramento River,Sacramento R,Solano,Tidal River Channel (freshwater)
+SSI,SACRAMENTO R NR SHERMAN ISLAND,2015-07-29,2017-03-15,DWR,38.074097,-121.761736,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+SSS,STEAMBOAT SLOUGH BTW SAC R AND SUTTER SL,2014-05-22,2016-04-27,USGS,38.285,-121.587,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+STI,STATEN ISLAND,1999-02-23,2018-12-17,USBR,38.116919,-121.498851,Sacramento River,Delta,San Joaquin,Tidal River Channel (freshwater)
+SUR,SUGAR CUT,2012-06-26,2019-11-21,DWR,37.78847,-121.419333,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+SUS,STEAMBOAT SLOUGH BLW SUTTER SLOUGH,2015-06-10,2019-12-30,DWR,38.2525,-121.6014,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+SUT,SUTTER SLOUGH AT COURTLAND,2014-05-22,2016-05-06,USGS,38.3286,-121.5772,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+SWE,SACRAMENTO R AT WALNUT GROVE EC,2015-08-19,2019-12-30,DWR,38.241851,-121.514771,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+SXS,STEAMBOAT SLOUGH NR SACRAMENTO R,2015-06-15,2019-01-09,DWR,38.191267,-121.637881,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+TEA,TEAL CLUB AT FRANK HORAN SLOUGH,2006-01-07,2016-07-25,DWR,38.1766,-122.0872,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+TMS,THREE MILE SLOUGH,2006-04-13,2019-05-12,DWR,38.106,-121.7,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+TPI,TOM PAINE SLOUGH ABV INTAKE STRUCTURE,2014-07-02,2019-12-05,DWR,37.7901001,-121.4185104,San Joaquin River,San Joaquin R,San Joaquin,Non-Tidal Slough
+TRN,TURNER CUT NEAR HOLT,2002-12-31,2018-03-14,DWR,37.9928,-121.4542,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+TSL,THREEMILE SLOUGH AT SAN JOAQUIN RIVER,2008-06-16,2019-04-16,DWR,38.1033,-121.6861,Sacramento River,Sacramento R,Sacramento,Tidal River Channel (freshwater)
+TWA,OLD RIVER AT TRACY WILDLIFE ASSOCIATION,2011-01-13,2019-12-30,DWR,37.8028,-121.4574,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+TWI,SAN JOAQUIN RIVER AT TWITCHELL ISLAND,2007-01-09,2016-12-31,DWR,38.0969,-121.6691,San Joaquin River,San Joaquin R,Sacramento,Tidal River Channel (freshwater)
+UNI,UNION ISLAND,1999-02-26,2019-10-23,USBR,37.822101,-121.37499,Sacramento River,Delta,San Joaquin,Non-Tidal River Channel (freshwater)
+VCU,VICTORIA CANAL NEAR BYRON,2006-02-15,2010-12-14,DWR,37.8717,-121.5283,San Joaquin River,Delta,San Joaquin,Tidal River Channel (freshwater)
+VER,VERNALIS (USBR),1999-02-26,2019-02-17,USBR,37.679376,-121.265002,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+VIC,VICTORIA ISLAND,1999-02-25,2017-12-18,USBR,37.890763,-121.488324,Sacramento River,Delta,San Joaquin,Non-Tidal River Channel (freshwater)
+VNS,SAN JOAQUIN RIVER NEAR VERNALIS,2014-09-17,2019-08-26,USGS,37.67604065,-121.2663269,San Joaquin River,San Joaquin R,San Joaquin,Tidal River Channel (freshwater)
+VOL,VOLANTI,2000-05-23,2012-06-15,DWR,38.181,-122.046,Sacramento River,Delta,Solano,"Tidal River Channel (brackish, marsh)"
+WCI,WEST CANAL AT CLIFTON COURT INTAKE,2011-09-20,2019-09-07,DWR,37.8316,-121.554,San Joaquin River,San Joaquin R,Contra Costa,Tidal River Channel (freshwater)

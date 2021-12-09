@@ -14,7 +14,7 @@ library(ggplot2)
 library(janitor)
 
 # pull data: defaults to Verona daily discharge
-f_get_temp_srad_cimis <- function(stationID="Bryte") {
+f_get_temp_srad_cimis <- function(stationID="bryte") {
 
   # get data:
   cimis <- read.csv("data/Bryte_CIMIS_daily.csv")
@@ -30,5 +30,5 @@ f_get_temp_srad_cimis <- function(stationID="Bryte") {
   # print message!
   print(glue("Data saved here: 'data_raw/raw_temp_srad_cimis_{stationID}.csv'"))
 
-  return(cimis)
+  #return(cimis)
 }
