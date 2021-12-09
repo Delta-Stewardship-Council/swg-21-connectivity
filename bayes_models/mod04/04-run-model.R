@@ -67,9 +67,9 @@ initslist <- list(inits(), inits(), inits())
 # Or load saved.state
 load("bayes_models/mod04/inits/sstate.Rda")
 inits_2 <- function(){
-  list(sig.eps = runif(1, 0, 1),
+  list(sig.eps = runif(1, 0, 15),
        tau = runif(1, 0, 1),
-       B = rnorm(3, 0, 1)) # for 3 B parameters, adjust as needed
+       B = rnorm(3, 0, 1000)) # for 3 B parameters, adjust as needed
 }
 initslist <- list(list(sig.eps = saved.state[[2]][[2]]$sig.eps, tau = saved.state[[2]][[2]]$tau, B = inits_2()$B), list(sig.eps = saved.state[[2]][[3]]$sig.eps, tau = saved.state[[2]][[3]]$tau, B = inits_2()$B), inits_2())
 
