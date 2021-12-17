@@ -96,23 +96,23 @@ f_make_gam_model_dataset <- function() {
   acf(chla_covars$log_chla)
   acf(chla_covars$Q_sday)
 
-  # validate the final model by plotting residuals and save to a tiff
-  tiff(filename = "figures/gam_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
-  op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
-  # Plot 1: Residuals vs. Fitted values; should be centered around 0
-  plot(lm_first, add.smooth = FALSE, which = 1)
-  # save residuals
-  E <- resid(lm_first)
-  # Plot 2: histogram of the residuals; should be centered around 0
-  hist(E, xlab = 'Residuals', main = "")
-  # Plot 3: is there autocorrelation in the residuals?
-  acf(E)
-  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
-  plot(x$Q_sday, E, xlab = "Flow same day", ylab = "Residuals")
-  plot(x$Srad_mwk, E, xlab = "Solar Radiation mean week", ylab = "Residuals")
-  plot(x$inund_days, E, xlab = "Consecutive inundation days", ylab = "Residuals")
-  par(op)
-  dev.off()
+  # # validate the final model by plotting residuals and save to a tiff
+  # tiff(filename = "figures/gam_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
+  # op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
+  # # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  # plot(lm_first, add.smooth = FALSE, which = 1)
+  # # save residuals
+  # E <- resid(lm_first)
+  # # Plot 2: histogram of the residuals; should be centered around 0
+  # hist(E, xlab = 'Residuals', main = "")
+  # # Plot 3: is there autocorrelation in the residuals?
+  # acf(E)
+  # # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  # plot(x$Q_sday, E, xlab = "Flow same day", ylab = "Residuals")
+  # plot(x$Srad_mwk, E, xlab = "Solar Radiation mean week", ylab = "Residuals")
+  # plot(x$inund_days, E, xlab = "Consecutive inundation days", ylab = "Residuals")
+  # par(op)
+  # dev.off()
 
   # dry-wet flag - for diff. relationships for dry and wet
   # try gls next
