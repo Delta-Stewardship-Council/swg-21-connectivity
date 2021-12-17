@@ -96,7 +96,7 @@ jm_coda <- coda.samples(jm,
 
 # Load Saved Model --------------------------------------------------------
 
-#load("bayes_models/mod04/run_20211124.rda")
+#load("bayes_models/mod04/run_20211206.rda")
 
 # Visualize
 mcmcplot(jm_coda)
