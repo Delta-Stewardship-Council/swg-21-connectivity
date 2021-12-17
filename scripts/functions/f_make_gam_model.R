@@ -60,11 +60,11 @@ f_make_gam_model_dataset <- function() {
   # plot it
   pairs(x)
 
-  # save the correlation plot as a tiff
-  tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
-  # plot with R2 values on the diagnolly opposite side
-  pairs.panels(x, hist.col = "white", cex.cor = 1)
-  dev.off()
+  # # save the correlation plot as a tiff
+  # tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
+  # # plot with R2 values on the diagnolly opposite side
+  # pairs.panels(x, hist.col = "white", cex.cor = 1)
+  # dev.off()
 
   # the model with all covars but no interactions
   lm_first = lm(log_chla ~ Q_sday + Q_1day + Q_mwk + T_mwk + Srad_mwk + inund_days, data = x)
@@ -96,23 +96,23 @@ f_make_gam_model_dataset <- function() {
   acf(chla_covars$log_chla)
   acf(chla_covars$Q_sday)
 
-  # validate the final model by plotting residuals and save to a tiff
-  tiff(filename = "figures/gam_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
-  op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
-  # Plot 1: Residuals vs. Fitted values; should be centered around 0
-  plot(lm_first, add.smooth = FALSE, which = 1)
-  # save residuals
-  E <- resid(lm_first)
-  # Plot 2: histogram of the residuals; should be centered around 0
-  hist(E, xlab = 'Residuals', main = "")
-  # Plot 3: is there autocorrelation in the residuals?
-  acf(E)
-  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
-  plot(x$Q_sday, E, xlab = "Flow same day", ylab = "Residuals")
-  plot(x$Srad_mwk, E, xlab = "Solar Radiation mean week", ylab = "Residuals")
-  plot(x$inund_days, E, xlab = "Consecutive inundation days", ylab = "Residuals")
-  par(op)
-  dev.off()
+  # # validate the final model by plotting residuals and save to a tiff
+  # tiff(filename = "figures/gam_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
+  # op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
+  # # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  # plot(lm_first, add.smooth = FALSE, which = 1)
+  # # save residuals
+  # E <- resid(lm_first)
+  # # Plot 2: histogram of the residuals; should be centered around 0
+  # hist(E, xlab = 'Residuals', main = "")
+  # # Plot 3: is there autocorrelation in the residuals?
+  # acf(E)
+  # # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  # plot(x$Q_sday, E, xlab = "Flow same day", ylab = "Residuals")
+  # plot(x$Srad_mwk, E, xlab = "Solar Radiation mean week", ylab = "Residuals")
+  # plot(x$inund_days, E, xlab = "Consecutive inundation days", ylab = "Residuals")
+  # par(op)
+  # dev.off()
 
   # dry-wet flag - for diff. relationships for dry and wet
   # try gls next
@@ -137,7 +137,7 @@ f_make_gam_model_dataset <- function() {
   acf(lm_first$residuals)
 
   gls.0 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x,
-      correlation = corAR1(form =~ doy1998))
+               correlation = corAR1(form =~ doy1998))
 
   acf(gls.0$residuals)
 
