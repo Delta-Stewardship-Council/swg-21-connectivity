@@ -5,7 +5,7 @@ model{
 
   # regression
     mu[i] <- B[1] +
-             B[2] * inund_days[i] +
+             B[2] * inund_days[doy1998[i]] +
              B[3] * Q[doy1998[i]] +
              B[4] * Qant[i] +
              B[5] * Rad[doy1998[i]] +
