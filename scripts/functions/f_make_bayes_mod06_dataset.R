@@ -23,7 +23,8 @@ f_make_bayes_mod06_dataset <- function() {
   wtemp <- read_rds("data_clean/clean_watertemp_continuous.rds") %>% # lots of random NAs in here on join
     filter(station == "RIV") %>%
     select(date,temp) %>%
-    rename(wtemp_RIV = temp)
+    group_by(date) %>%
+    summarise(wtemp_RIV = max(temp))
 
   ## FLOW: Get Verona Flow -----------
 
@@ -38,7 +39,8 @@ f_make_bayes_mod06_dataset <- function() {
     rename(flow_usgs_verona = flow,     # rename
            site_no_usgs = site_no) %>%
     # drop post 2020 data
-    filter(date >= ymd("1998-01-01"), date < as.Date("2020-10-01"))
+    #filter(date >= ymd("1998-01-01"), date < as.Date("2020-10-01"))
+    filter(date >= ymd("1999-02-24"), date < as.Date("2019-12-31"))
 
   ## Merge WATER TEMP WITH FLOW & INUNDATION Data ------------------------------
 
@@ -65,7 +67,9 @@ f_make_bayes_mod06_dataset <- function() {
     tidyr::fill(daymet_tmean, .direction = "down") %>%
     tidyr::fill(daymet_trange, .direction = "down") %>%
     tidyr::fill(daymet_srad, .direction = "down") %>%
-    tidyr::fill(daymet_vpd, .direction = "down")
+    tidyr::fill(daymet_vpd, .direction = "down") %>%
+    tidyr::fill(wtemp_RIV, .direction = "down") %>%
+    tidyr::fill(inund.days, .direction = "down")
 
   # make 7-day average of daily mean for Rad and Water temp, also constrain time period to
   # Water temp's dates
@@ -95,11 +99,12 @@ f_make_bayes_mod06_dataset <- function() {
            Srad_mwk = scale(Srad_mwk),
            Wtemp_RIV_mwk = scale(Wtemp_RIV_mwk),
            Temp = scale(daymet_tmax),
-           doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
+           doy1999 = as.numeric(difftime(date, ymd("1999-02-23"), "day")))
+           #doy1998 = as.numeric(difftime(date, ymd("1997-12-31"), "day")))
 
   # make complete days for index
-  days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
-
+  #days <- data.frame(date = seq(as.Date("1998-01-01"), as.Date("2020-09-30"), "day"))
+  days <- data.frame(date = seq(as.Date("1999-02-24"), as.Date("2019-12-30"), "day"))
   # Join
   covars <- left_join(days, flow_scaled)
 
@@ -118,8 +123,9 @@ f_make_bayes_mod06_dataset <- function() {
     filter(chl > 0 & station != '11455420') %>%
     filter(complete.cases(.)) %>% # keep only complete records
     arrange(station, date) %>%
+    filter(date >= ymd("1999-02-24"), date < as.Date("2019-12-31")) %>%
     # add a diff time as above for join purposes
-    mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+    mutate(doy1999 = as.numeric(difftime(date, as.Date("1999-02-24"), "day")) + 1,
            station_id = as.numeric(as.factor(station)))
 
   # make list to save out
