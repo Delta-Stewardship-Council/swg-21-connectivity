@@ -11,8 +11,6 @@ f_make_bayes_mod06_dataset <- function() {
 
   ## INUNDATION: Inundation Data ------------------------------------------------
 
-  # (from Pascale's code inundation_days.R): will replace with f_load_inund after
-  # pascale adds f_get and f_clean functions
   # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days
   # LY: Note that the dataset also has inundation (0/1) but we focus on # days inundation
   inund <- read_csv("data_clean/clean_inundation_days.csv") %>% # lots of random NAs in here on join
