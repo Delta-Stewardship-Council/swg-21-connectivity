@@ -155,3 +155,8 @@ ggsave(filename = "bayes_models/mod04_Qant/fig_out/slope_of_betas_qant_20211216.
 
 # save model
 save(jm_coda, coda_sum, file = "bayes_models/mod04_Qant/run_20211216.rda")
+
+# save model summary
+sink("bayes_models/mod04_Qant/fig_out/jm_coda_summary.txt")
+summary(jm_coda)
+sink()

@@ -169,3 +169,8 @@ ggsave(filename = "bayes_models/mod04/fig_out/weights_of_qant_20211206.png",
 
 # save model
 save(jm_coda, coda_sum, file = "bayes_models/mod04/run_20211206.rda")
+
+# save model summary
+sink("bayes_models/mod04/fig_out/jm_coda_summary.txt")
+summary(jm_coda)
+sink()
