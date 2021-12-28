@@ -38,6 +38,7 @@ sd(tapply(chla_all$chl, chla_all$station_id, mean))
 # look at chl by station
 ggplot(as.data.frame(chla_all), aes(x = station, y = log(chl))) + geom_boxplot()
 
+
 # Create Model Datalist ---------------------------------------------------
 
 datlist <- list(chl = log(chla_all$chl),
@@ -92,6 +93,17 @@ jm_coda <- coda.samples(jm,
                         n.iter = 1000*15,
                         thin = 15)
 
+wanted <- c("deviance", "Dsum", "Bstar",
+            "sig", "tau", "sig.eps", "tau.eps",
+            "Estar")
+library(jagsUI)
+# Summary of marginal posterior distributions
+( out <- jags(datlist, initslist, wanted, "bayes_models/mod04/sam_model.JAGS", DIC=FALSE,
+              n.chains=3, n.adapt=100, n.iter=1000, n.burnin=0) )
+# Calculate cross correlations among variables from MCMC output
+library(coda)
+crosscorr(out$samples) # we see that the posteriors of Srad_mwk and Wtemp_RIV_mwk are negatively correlated (-0.79), and
+# those for Q and inund_days are negatively correlated (-0.63)
 
 
 # Load Saved Model --------------------------------------------------------
