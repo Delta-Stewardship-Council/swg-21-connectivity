@@ -12,8 +12,6 @@ library(psych)
 library(mgcv)
 library(ggplot2)
 
-f_make_gam_model_dataset <- function() {
-
   # Bring in Chl-a ----------------------------------------------------------
 
   # Bring in response variables
@@ -56,7 +54,7 @@ f_make_gam_model_dataset <- function() {
   hist(log(chla_all$chl))
 
   # check for correlation between all predictors, and the response variable
-  x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, Inun_flag, doy1998)
+  x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
   # plot it
   pairs(x)
 
@@ -86,48 +84,20 @@ f_make_gam_model_dataset <- function() {
   boxplot(x$Srad_mwk)
   boxplot(x$Q_sday)
 
-  inun.days.yr = covars_gam %>% group_by(water_year) %>%
-    summarise(ttl_days = max(inund_days))
-  ggplot(inun.days.yr, aes(water_year, ttl_days)) + theme_classic(base_size = 12) +
-    labs(x = "Water Year", y = "Total Inundation Days") +
-    geom_col(color = "lightgray", fill = "blue", width = 0.8)
+  # inun.days.yr = covars_gam %>% group_by(water_year) %>%
+  #   summarise(ttl_days = max(inund_days))
+  # ggplot(inun.days.yr, aes(water_year, ttl_days)) + theme_classic(base_size = 12) +
+  #   labs(x = "Water Year", y = "Total Inundation Days") +
+  #   geom_col(color = "lightgray", fill = "blue", width = 0.8)
 
   # check for autocorrelation in predictors
   acf(chla_covars$log_chla)
   acf(chla_covars$Q_sday)
 
-  # # validate the final model by plotting residuals and save to a tiff
-  # tiff(filename = "figures/gam_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
-  # op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
-  # # Plot 1: Residuals vs. Fitted values; should be centered around 0
-  # plot(lm_first, add.smooth = FALSE, which = 1)
-  # # save residuals
-  # E <- resid(lm_first)
-  # # Plot 2: histogram of the residuals; should be centered around 0
-  # hist(E, xlab = 'Residuals', main = "")
-  # # Plot 3: is there autocorrelation in the residuals?
-  # acf(E)
-  # # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
-  # plot(x$Q_sday, E, xlab = "Flow same day", ylab = "Residuals")
-  # plot(x$Srad_mwk, E, xlab = "Solar Radiation mean week", ylab = "Residuals")
-  # plot(x$inund_days, E, xlab = "Consecutive inundation days", ylab = "Residuals")
-  # par(op)
-  # dev.off()
-
-  # dry-wet flag - for diff. relationships for dry and wet
-  # try gls next
-  # include autocorrelation structure to residuals - 2 relate to time
   # also include the circular time series indication - that jan is close to dec
   # what family to use
   # include water temperature
   # GAM
-
-  # does the chl a variable have an underlying pattern?
-  gam.0 = gam(log_chla ~ s(doy1998, bs = "cr"), data = chla_covars)
-  plot(gam.0)
-
-
-  lm_first = lm(log_chla ~ Q_sday + T_mwk + inund_days, data = x)
 
   # dredge - a function to run all instances of a global model and evaluated
   # them based off AIC - output commented below
@@ -136,19 +106,69 @@ f_make_gam_model_dataset <- function() {
 
   acf(lm_first$residuals)
 
-  gls.0 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x,
-               correlation = corAR1(form =~ doy1998))
-
+  # possible correlation structures
+  gls.0 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x)
   acf(gls.0$residuals)
 
-  anova(update(gls.0, method="ML"))
-
   gls.1 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x,
-               correlation = corARMA(form = ~ 1 | doy1998, p=1, q=2))
+               correlation = corAR1(form =~ doy1998))
+  nresid = residuals(gls.1, type = "normalized")
+  acf(nresid)
 
-  acf(gls.1$residuals)
+  # YOU WIN!! Temperature gives better AIC than Solar radiation
+  gls.2 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x,
+               correlation = corARMA(form =~ doy1998, p=1, q=1))
+  nresid = residuals(gls.2, type = "normalized")
+  acf(nresid)
 
-  anova(update(gls.1, method="ML"))
+  gls.4 <- gls(log_chla ~ Q_sday + Srad_mwk + inund_days, na.action = na.omit, data = x,
+               correlation = corARMA(form =~ doy1998, p=1, q=1))
+  nresid = residuals(gls.4, type = "normalized")
+  acf(nresid)
+
+  gls.3 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x,
+               correlation = corARMA(form =~ doy1998, p=2, q=1))
+  nresid = residuals(gls.3, type = "normalized")
+  acf(nresid)
+
+  anova(gls.0, gls.1, gls.2, gls.3)
+
+  # dropping Temperature gives better AIC
+  # hence gls 5 is final model
+  gls.5 <- gls(log_chla ~ Q_sday + inund_days, na.action = na.omit, data = x,
+               correlation = corARMA(form =~ doy1998, p=1, q=1))
+
+  # update final model by "Maximum Likelyhood" method instead of REML
+  gls.final = update(gls.5, method="ML")
+  # check residuals are not autocorrelated
+  nresid = residuals(gls.final, type = "normalized")
+  acf(nresid)
+  # run ANOVA to get p-values
+  anova(gls.final)
+
+  # interaction gives a worse AIC hence no interaction
+  gls.6 = gls(log_chla ~ inund_days + Q_sday + inund_days:Q_sday, na.action = na.omit, data = x, correlation = corARMA(form =~ doy1998, p=1, q=1))
+
+
+  # validate the final model by plotting residuals and save to a tiff
+  #tiff(filename = "figures/gls_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
+  op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gls.final), nresid, xlab = "Fitted values", ylab = "Norm. Residuals")
+  #plot(gls.final, add.smooth = FALSE, which = 1)
+  # save residuals
+  nresid = residuals(gls.final, type = "normalized")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(nresid, xlab = 'Norm. Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(nresid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(x$Q_sday, nresid, xlab = "Flow same day", ylab = "Norm. Residuals")
+  plot(x$inund_days, nresid, xlab = "Consecutive inundation days", ylab = "Norm. Residuals")
+  par(op)
+  #dev.off()
+
+
 
   # Global model call: lm(formula = log_chla ~ Q_sday + Srad_mwk + past_topped, data = x,
   #                       na.omit = TRUE)
@@ -167,7 +187,7 @@ f_make_gam_model_dataset <- function() {
 
   # lm_0 = lm(log_chla ~ 1, data = x)
 
-  num_rows = nrow(chla_all)
+  #  num_rows = nrow(chla_all)
 
   # unique(covars$past_topped)
 
@@ -176,8 +196,3 @@ f_make_gam_model_dataset <- function() {
   # write_rds(chla_all, "bayes_models/mod_chla_data.rds")
   # write_rds(covars, file = "bayes_models/mod_covariates_complete.rds")
   # cat("Model datasets saved in list:\nmodel_df$covars and model_df$chla_all")
-
-  # return data
-  return(model_df)
-}
-
