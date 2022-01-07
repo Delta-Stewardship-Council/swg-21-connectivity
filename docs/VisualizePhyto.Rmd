@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(here)
 ```
 
 ## Read the phytoplankton data
@@ -16,7 +17,7 @@ library(ggplot2)
 library(tidyverse)
 library(lubridate)
 
-phyto.hist = read.csv("../data/EMP_Phytoplankton_1975_2016_Data.csv") %>%
+phyto.hist = read.csv(here("data/EMP_Phytoplankton_1975_2016_Data.csv")) %>%
   mutate(date = mdy(SampleDate)) %>% 
 #  filter(StationCode %in% c("D22","D24", "C3A"))
   filter(StationCode == "C3A")
@@ -32,10 +33,10 @@ Integrated continuous water temperature dataset
 
 ```{r}
 
-cimis.lht = read.csv("../data/LHT_CIMIS_daily.csv") %>% 
+cimis.lht = read.csv(here("data/LHT_CIMIS_daily.csv")) %>% 
   mutate(fdate = mdy(Date))
 
-cimis.brt = read.csv("../data/Bryte_CIMIS_daily.csv") %>% 
+cimis.brt = read.csv(here("data/Bryte_CIMIS_daily.csv")) %>% 
   mutate(fdate = mdy(Date))
 
 ggplot(cimis.lht, aes(x = fdate, y = Max.Air.Temp..C.)) + geom_point() + theme_bw()
