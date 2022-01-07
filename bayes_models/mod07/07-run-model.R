@@ -53,18 +53,9 @@ datlist_t <- list(chl = log(chla_all$chl),
                   inund_days = inund_days_2,
                   station_id = as.integer(chla_all$station_id))
 Nstation <- 7
-inits <- function(){
-  list(
-    sig.eps = runif(1, 0, 15),
-    tau = runif(1, 0, 1),
-    B1 = rnorm(1, 0, 1000),
-    B2 = rnorm(1, 0, 1000),
-    B3 = rnorm(1, 0, 1000),
-    B4 = rnorm(1, 0, 1000),
-    B5 = rnorm(1, 0, 1000)
-  ) # for 4 B parameters, adjust as needed
-}
 
+
+# Do the rethinking model -------------------------------
 rm4 <- ulam(
   alist(
     # likelihood
@@ -79,11 +70,11 @@ rm4 <- ulam(
     #Estar[station_id] <- eps[station_id] - mean(eps[1:Nstation]) ,
     ## for Estar[1]: precis(rm4, depth = 2)[1,1] - mean(precis(rm4, depth = 2)[c(1:7),1])
     # Diffuse normal priors for regression coefficients
-    B1 ~ normal(0, 1000) ,
-    B2 ~ normal(0, 1000) ,
-    B3 ~ normal(0, 1000) ,
-    B4 ~ normal(0, 1000) ,
-    B5 ~ normal(0, 1000) ,
+    B1 ~ normal(0, 1/sqrt(0.001)) ,
+    B2 ~ normal(0, 1/sqrt(0.001)) ,
+    B3 ~ normal(0, 1/sqrt(0.001)) ,
+    B4 ~ normal(0, 1/sqrt(0.001)) ,
+    B5 ~ normal(0, 1/sqrt(0.001)) ,
     # Identifiable parameter vector
     # Bstar1 <- B1 +  mean(eps[1:Nstation]) ,
     # Bstar2 <- B2 ,
@@ -99,10 +90,12 @@ rm4 <- ulam(
     sigeps ~ dstudent(2, mu = 0, sigma = 1/sqrt(10))
       #dhalft(2, mu = 0, sigma = 1/sqrt(10))
   ) ,
-  data=datlist_t, chains = 3, control=list(adapt_delta=0.99)) #, sample = TRUE, cmdstan = TRUE)
+  data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE) #, sample = TRUE, cmdstan = TRUE)
 
 precis(rm4, depth = 2)
-trankplot(rm4, ncols = 2)
+
+# plot prior
+curve( dgamma( x, 0.01, 0.01 ) , from=0 , to=20 )
 
 # Try a different version
 rm_reparm <- ulam(
@@ -113,24 +106,39 @@ rm_reparm <- ulam(
     mu <- a_bar + z_station[station_id] * sig_a + B2 * Q + B3 * Srad_mwk + B4 * Wtemp_RIV_mwk + B5 * inund_days ,
 
     # Priors for random effects; reparameterized rethinking version
-    a_bar ~ normal(0, 1000) , # unreparameterized rethinking version: a[station_id] ~ normal(a_bar, sig_a)
+    a_bar ~ normal(0, 1/sqrt(0.001)) , # unreparameterized rethinking version: a[station_id] ~ normal(a_bar, sig_a)
     z_station[station_id] ~ normal(0,1) ,
     # Diffuse folded-t prior for random-effect standard deviation; how to add truncated distrib?
-    sig_a ~ dstudent(2, mu = 0, sigma = 1/sqrt(10)) ,
+    sig_a ~ dstudent(2, mu = 0, sigma = 1/sqrt(10)) , # see pg. 304: & T[0,],
     #dhalft(2, mu = 0, sigma = 1/sqrt(10))
 
     # Diffuse normal priors for regression coefficients
-    B2 ~ normal(0, 1000) ,
-    B3 ~ normal(0, 1000) ,
-    B4 ~ normal(0, 1000) ,
-    B5 ~ normal(0, 1000) ,
+    B2 ~ normal(0, 1/sqrt(0.001)) ,
+    B3 ~ normal(0, 1/sqrt(0.001)) ,
+    B4 ~ normal(0, 1/sqrt(0.001)) ,
+    B5 ~ normal(0, 1/sqrt(0.001)) ,
 
     # Diffuse gamma prior for observation-level precisions
     tau ~ gamma(0.01, 0.01)
   ) ,
-  data=datlist_t, chains = 3, control=list(adapt_delta=0.99), iter = 5000, cmdstan = TRUE) # , sample = TRUE)
+  data=datlist_t, chains = 4, warmup = 1000, iter = 7000, control=list(adapt_delta=0.99), log_lik = TRUE) # control=list(adapt_delta=0.99, cmdstan = TRUE, sample = TRUE)
 
-precis(rm4, depth = 2)
+# marginal posterior distributions of parameters
+precis(rm_reparm, depth = 2)
+trankplot(rm_reparm, ncols = 2)
+# investigate var-cov
+pairs(rm_reparm@stanfit)
+round( vcov( rm_reparm ) , 3 )
+
+post <- extract.samples(rm_reparm)
+precis(post)
+plot( coeftab( rm4, rm_reparm ) , pars=c("B2","B3") )
+# for these model selection approaches, need to have log_lik = TRUE in ulam call
+WAIC(rm_reparm)
+compare(rm4, rm_reparm, function = LOO) # to use LOOIS
+plot(compare(rm4, rm_reparm))
+
+
 # Create Model Datalist ---------------------------------------------------
 
 datlist <- list(chl = log(chla_all$chl),
@@ -230,16 +238,7 @@ sum_Qinund <- out$sims.list$Bstar[,2] + out$sims.list$Bstar[,5]
 dens( sum_Qinund , lwd=2 , xlab="sum of Q and inund" )
 dev.off()
 
-mu <- with(out$sims.list, Bstar[,1] +
-             Bstar[,2] * mean(out$sims.list$Bstar[,2]) +
-             Bstar[,3] * mean(out$sims.list$Bstar[,3]) +
-             Bstar[,4] * mean(out$sims.list$Bstar[,4]) +
-             Bstar[,4] * mean(out$sims.list$Bstar[,5]) +
-             mean(out$sims.list$sig.eps)
-)
-out$sd$Bstar[3] / out$mean$Bstar[3]
-out$sd$Bstar[4] / out$mean$Bstar[4]
-sd(mu) / mean(mu)
+
 # Load Saved Model --------------------------------------------------------
 
 load("bayes_models/mod06/run_20211220.rda")
