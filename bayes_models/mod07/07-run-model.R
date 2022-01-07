@@ -90,7 +90,7 @@ rm4 <- ulam(
     sigeps ~ dstudent(2, mu = 0, sigma = 1/sqrt(10))
       #dhalft(2, mu = 0, sigma = 1/sqrt(10))
   ) ,
-  data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE) #, sample = TRUE, cmdstan = TRUE)
+  data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE, warmup = 1000, iter = 7000, cmdstan = TRUE) #, sample = TRUE, cmdstan = TRUE)
 
 precis(rm4, depth = 2)
 
