@@ -1,4 +1,7 @@
 ### load fremont weir Sacramento river height (stage)
+
+# see here: "https://portal.edirepository.org/nis/dataviewer?packageid=edi.840.1&entityid=186964642c42e5a8b8e44fc87ff10bbf", (1998-2021 Yolo)
+
 #library(devtools)
 #library(sessioninfo)
 #devtools::install_github("ryanpeek/wateRshedTools")
