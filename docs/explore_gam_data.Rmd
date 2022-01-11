@@ -1,0 +1,116 @@
+---
+title: "explore_gam_data"
+author: "Catarina Pien"
+date: "1/10/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Packages
+```{r}
+library(tidyverse)
+library(readr)
+library(lubridate)
+library(viridis)
+library(psych) # for pairs
+```
+
+
+Read in data
+```{r}
+covars <- read_csv("data_model/gam_data_covars.csv") %>%
+  mutate(month = lubridate::month(date)) 
+
+alldata <- read_csv("data_model/gam_data_covars_chla.csv")%>%
+  mutate(month = lubridate::month(date),
+         year = lubridate::year(date)) 
+```
+
+
+# Look at outliers/patterns in data
+
+## Chla
+```{r}
+chl_clean <- alldata %>%
+  filter(!is.na(chlorophyll))
+
+ggplot(chl_clean) + geom_histogram(aes(chlorophyll))
+ggplot(chl_clean) + geom_point(aes(date, chlorophyll, color = month), size = 3) + scale_color_viridis()
+ggplot(chl_clean) + geom_boxplot(aes(x = factor(month), y = chlorophyll))
+ggplot(chl_clean) + geom_boxplot(aes(x = factor(year), y = chlorophyll)) + theme(axis.text.x = element_text(angle = 90))
+```
+
+## Flood metrics
+```{r}
+flood_data <- covars %>%
+  select(c(date, month, daymet_precip_mm, Q_sday, flow_yolo, height_sac_na, inund_days))
+flood_long <- pivot_longer(flood_data, cols = 3:7, names_to = "variable", values_to = "value")
+
+ggplot(flood_long) + geom_point(aes(x = date, y = value, color = variable), alpha = 0.5)
+
+ggplot(flood_long) + geom_point(aes(x = date, y = value, color = variable), alpha = 0.5) + facet_wrap(variable~., scales = "free_y")
+```
+
+## Other metrics
+```{r}
+
+```
+
+
+## Correlations
+```{r}
+ggplot(filter(flood_data, daymet_precip_mm>0), aes(daymet_precip_mm, height_sac_na)) + geom_point()
+
+ggplot(filter(flood_data, daymet_precip_mm>0), aes(daymet_precip_mm, inund_days, color = month)) + geom_point() + scale_color_viridis()
+
+ggplot(filter(flood_data, daymet_precip_mm>0), aes(daymet_precip_mm, flow_yolo)) + geom_point()
+
+ggplot(flood_data, aes(Q_sday, flow_yolo, color = month)) + geom_point() + scale_color_viridis()
+
+ggplot(filter(covars, sol_rad_w_sq_m<1000), aes(max_air_temp_c, sol_rad_w_sq_m)) + geom_point()
+
+ggplot(covars, aes(daymet_tmax, Q_sday)) + geom_point()
+
+# Useful plot (seasonality of temp vs stage height)
+ggplot(covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = month)) + scale_color_viridis()
+```
+
+# Model exploration 
+
+## Create a unique date dataset, and a dataset containing only days with chla data.
+* sample, slice, mean, pick a station hierarchy?
+```{r}
+data_unique_date = alldata %>% group_by(doy1998) %>% sample_n(1) %>%
+  mutate(log_chla = log(chlorophyll))
+
+chla_covars = data_unique_date %>%
+  filter(!is.na(log_chla))
+```
+
+## See span and distribution of data
+```{r}
+ggplot(chla_covars) + geom_point(aes(date, log_chla))
+ggplot(chla_covars) + geom_histogram(aes(log_chla))
+```
+
+## Check for correlation between all vars
+```{r}
+# check for correlation between all predictors, and the response variable
+x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
+
+(corr_plot <- pairs.panels(x, hist.col = "white", cex.cor = 1.5, pch = 21, stars = TRUE))
+```
+
+Save correlation plot
+```{r}
+ tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
+ # plot with R2 values on the diagnolly opposite side
+corr_plot
+ dev.off()
+```
+
