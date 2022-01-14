@@ -87,7 +87,8 @@ f_load_gam_data <- function() {
     filter(!(is.na(date)))
 
   final_chla_covars_data <- final_chla_covars %>%
-    filter(!(is.na(date)))
+    filter(!(is.na(date)))%>%
+    rename(chl = chlorophyll)
 
   # export data ----------------------------------------
   #return(daymet_flow_inun_cimis)
