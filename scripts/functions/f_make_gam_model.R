@@ -99,12 +99,7 @@ library(ggplot2)
   # include water temperature
   # GAM
 
-  # dredge - a function to run all instances of a global model and evaluated
-  # them based off AIC - output commented below
-  options(na.action = "na.fail")
-  dredge(lm_first)
-
-  acf(lm_first$residuals)
+  #
 
   # possible correlation structures
   gls.0 <- gls(log_chla ~ Q_sday + T_mwk + inund_days, na.action = na.omit, data = x)
