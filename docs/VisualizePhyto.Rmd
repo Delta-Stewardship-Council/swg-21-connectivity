@@ -1,0 +1,90 @@
+---
+title: "VisualizePhyto"
+author: "Shruti"
+date: "10/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+```
+
+## Read the phytoplankton data
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(lubridate)
+
+phyto.hist = read.csv(here("data/EMP_Phytoplankton_1975_2016_Data.csv")) %>%
+  mutate(date = mdy(SampleDate)) %>% 
+#  filter(StationCode %in% c("D22","D24", "C3A"))
+  filter(StationCode == "C3A")
+
+ggplot(phyto.hist, aes(x=date, y=Green.Algae)) + geom_point() + facet_wrap(~StationCode, scales = "free") + theme_bw()
+
+```
+## Exploring the temperature datasets
+
+Air temperature CIMIS dataset at Bryte and Little Hastings Tract
+
+Integrated continuous water temperature dataset
+
+```{r}
+
+cimis.lht = read.csv(here("data/LHT_CIMIS_daily.csv")) %>% 
+  mutate(fdate = mdy(Date))
+
+cimis.brt = read.csv(here("data/Bryte_CIMIS_daily.csv")) %>% 
+  mutate(fdate = mdy(Date))
+
+ggplot(cimis.lht, aes(x = fdate, y = Max.Air.Temp..C.)) + geom_point() + theme_bw()
+
+ggplot(cimis.brt, aes(x = fdate, y = Max.Air.Temp..C.)) + geom_point() + theme_bw()
+
+# load the integrated continuous water temperature data
+load("../data/ContinuousWaterTemp_1985_2019.rda")
+
+```
+
+# plot the stations for the integrated water temperature datasets
+
+```{r}
+library(sf)
+library(mapview)
+library(tidyverse)
+mapviewOptions(fgb=TRUE)
+
+# read the station data file for the water temperature data
+ICWT.stations = read.csv("../data/Tint_StationsMetadata.csv")
+
+
+ICWT.stations.map <- ICWT.stations %>%
+  filter(!is.na(Latitude)) %>%
+  select(Station, StartDateDataset, EndDateDataset, Agency, Latitude, Longitude) %>%
+  st_as_sf(coords=c("Longitude", "Latitude"),
+           crs=4326, remove=FALSE)
+
+mapview(ICWT.stations.map, zcol="Station")
+```
+
+Good stations to consider:
+
+1. SRH (Sacramento River at Hood) - 1999-2019
+2. RCS (Ridge Cut SLough at Knights Landing) - 2002-2019
+3. BKS (Barker Slough Pumpling Plant) - 2005-2019
+4. RIV (Rio Vista) - 1999-2017
+
+
+## The Yolo Flow Inundation Dataset
+
+with inundation days, weir topping, flow information, etc.
+
+```{r}
+
+inund.yolo = read.csv("../data/yolo_flow_inund_fremont.csv")
+
+
+```
+
