@@ -67,6 +67,12 @@ f_load_gam_data <- function() {
   daymet_flow_inun_cimis_intwq <- full_join(daymet_flow_inun_cimis, int_wq, by = c("date", "doy1998"))
   # Need to add chlorophyll still
 
+  # Check that there are data for everyday ------------------------------
+  # Ask Ryan about how to fix the leap year days
+check <- daymet_flow_inun_cimis %>%
+  mutate(diff = date-lag(date,1)) %>%
+  filter(diff>1)
+
   # Create additional lag variables -----------------------------------------
   final_covars <- daymet_flow_inun_cimis %>%
     mutate(Q_1day = lag(flow_verona, 1),
@@ -94,4 +100,5 @@ f_load_gam_data <- function() {
   #return(daymet_flow_inun_cimis)
   readr::write_csv(final_data, "data_model/gam_data_covars.csv")
   readr::write_csv(final_chla_covars_data, "data_model/gam_data_covars_chla.csv")
+  readr::write_csv(inun, "data_model/inundation_with_doy1998.csv")
 }
