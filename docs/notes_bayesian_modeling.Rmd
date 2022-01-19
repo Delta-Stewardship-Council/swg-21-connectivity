@@ -1,0 +1,41 @@
+---
+title: "notes_bayesian_modeling"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(here)
+library(glue)
+
+```
+
+# Bayesian Modeling Overview
+
+The objective
+
+Why
+
+
+## Covariates of Interest
+
+
+## Model 01 (JAGS)
+
+## Model 02 (JAGS)
+
+## Model 03 (JAGS)
+
+## Model 04 (JAGS)
+
+## Model 05 (Rethinking)
+
+## Model 06 ()
+
+# Stats Links
+
+ - https://statmodeling.stat.columbia.edu/2014/02/12/think-identifiability-bayesian-inference/
+ 
+ - https://bookdown.org/content/4857/models-with-memory.html
+ 
