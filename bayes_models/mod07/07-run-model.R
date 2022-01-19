@@ -17,7 +17,7 @@ library(naniar)
 library(lubridate)
 #library(postjags)
 library(rethinking)
-library(LaplacesDemon)
+library(gtools)
 
 # Bring in Data For Model -------------------------------------------------
 
@@ -38,6 +38,22 @@ sd(tapply(chla_all$chl, chla_all$station_id, mean))
 # look at chl by station
 ggplot(as.data.frame(chla_all), aes(x = station, y = log(chl))) + geom_boxplot()
 
+# Create Model Datalist for Qant ---------------------------------------------------
+
+datlist <- list(chl = log(chla_all$chl),
+                Q = c(covars$Q),
+                Srad_mwk = c(covars$Srad_mwk),
+                Wtemp_RIV_mwk = c(covars$Wtemp_RIV_mwk),
+                inund_days = c(covars$inund.days),
+                station_id = chla_all$station_id,
+                Nstation = length(unique(chla_all$station_id)),
+                doy1999 = chla_all$doy1999,
+                N = nrow(chla_all))
+#pA = c(1, 3, 3, 7, 7),
+# mean of 1 day, mean of 3 days before that, etc
+#nlagA = 5, # index for for loop
+#alphaA = rep(1, 5)) # for prior
+
 # Adjust Data for use with rethinking model -------------------------------
 Q_2 <- covars$Q[c(chla_all$doy1999),]
 Srad_mwk_2 <- covars$Srad_mwk[c(chla_all$doy1999),]
@@ -46,12 +62,29 @@ inund_days_2 <- covars$inund.days[c(chla_all$doy1999)]
 Nstation_2 <- rep(length(unique(chla_all$station_id)), length(chla_all$chl))
 N_2 <- rep(nrow(chla_all), length(chla_all$chl))
 
+# use lag of
+nlagA <- 5
+pA = c(1, 3, 3, 7, 7)
+qTemp <- matrix(0, nrow = length(datlist$chl), ncol = nlagA)
+for(i in 1:length(datlist_t$chl)){
+for(k in 1:nlagA){
+qTemp[i,k] <-
+mean(datlist$Q[(datlist$doy1999[i]-sum(pA[1:k])):(datlist$doy1999[i]-sum(pA[1:k])+pA[k] - 1)]) #*wA[k]
+  }
+}
+
+
 datlist_t <- list(chl = log(chla_all$chl),
                   Q = Q_2,
                   Srad_mwk = Srad_mwk_2,
                   Wtemp_RIV_mwk = Wtemp_RIV_mwk_2,
                   inund_days = inund_days_2,
-                  station_id = as.integer(chla_all$station_id))
+                  station_id = as.integer(chla_all$station_id),
+                  qTemp1 = qTemp[,1], # yesterday
+                  qTemp2 = qTemp[,2], # 4 d ago
+                  qTemp3 = qTemp[,3], # 7 d ago
+                  qTemp4 = qTemp[,4], # 14 d ago
+                  qTemp5 = qTemp[,5]) # 21 d ago
 Nstation <- 7
 
 
@@ -66,15 +99,18 @@ rm4 <- ulam(
     # Priors for random effects
     # non-identifiable random effects
     eps[station_id] ~ normal(0, sigeps) ,
+
     # identifiable random effects
     #Estar[station_id] <- eps[station_id] - mean(eps[1:Nstation]) ,
     ## for Estar[1]: precis(rm4, depth = 2)[1,1] - mean(precis(rm4, depth = 2)[c(1:7),1])
+
     # Diffuse normal priors for regression coefficients
     B1 ~ normal(0, 1/sqrt(0.001)) ,
     B2 ~ normal(0, 1/sqrt(0.001)) ,
     B3 ~ normal(0, 1/sqrt(0.001)) ,
     B4 ~ normal(0, 1/sqrt(0.001)) ,
     B5 ~ normal(0, 1/sqrt(0.001)) ,
+
     # Identifiable parameter vector
     # Bstar1 <- B1 +  mean(eps[1:Nstation]) ,
     # Bstar2 <- B2 ,
@@ -82,6 +118,25 @@ rm4 <- ulam(
     # Bstar4 <- B4 ,
     # Bstar5 <- B5 ,
     ## for Bstar[1]: precis(rm4, depth = 2)[8,1] + mean(precis(rm4, depth = 2)[c(1:7),1])
+
+    ### Weighting for Qant
+    # nlagA <- 5,
+    # # Sum of the deltas for each covariate
+    # sumA <- sum(deltaA[c(1:nlagA)]),
+    #
+    # # a way to avoid using ddirich distrib function in JAGS
+    # # use a variable drawn from gamma distrib
+    # # use a weight from the dirich distribution
+    # # use weight from that point / sum of all deltas
+    #
+    # # set Priors for weights using the delta trick
+    # #daily variable weights
+    # for(k in 1:nlagA){
+    # wA[k] <- deltaA[k]/sumA
+    # deltaA[k] ~ dgamma(alphaA[k],1)
+    # },
+    ### End Weighting for Qant
+
     # Diffuse gamma prior for observation-level precisions
     tau ~ gamma(0.01, 0.01) ,
 
@@ -96,6 +151,71 @@ precis(rm4, depth = 2)
 
 # plot prior
 curve( dgamma( x, 0.01, 0.01 ) , from=0 , to=20 )
+
+# Add in the Qant lags as separate covariates and attach weights
+rm5 <- ulam(
+  alist(
+    # likelihood
+    chl ~ dnorm(mu, 1/sqrt(tau)) ,
+    # regression
+    mu <- B1 + B2 * Q + B3 * Srad_mwk + B4 * Wtemp_RIV_mwk + B5 * inund_days + eps[station_id] + B6 * qTemp1 + ,
+
+    # Priors for random effects
+    # non-identifiable random effects
+    eps[station_id] ~ normal(0, sigeps) ,
+
+    # identifiable random effects
+    #Estar[station_id] <- eps[station_id] - mean(eps[1:Nstation]) ,
+    ## for Estar[1]: precis(rm4, depth = 2)[1,1] - mean(precis(rm4, depth = 2)[c(1:7),1])
+
+    # Diffuse normal priors for regression coefficients
+    B1 ~ normal(0, 1/sqrt(0.001)) ,
+    B2 ~ normal(0, 1/sqrt(0.001)) ,
+    B3 ~ normal(0, 1/sqrt(0.001)) ,
+    B4 ~ normal(0, 1/sqrt(0.001)) ,
+    B5 ~ normal(0, 1/sqrt(0.001)) ,
+
+    # Identifiable parameter vector
+    # Bstar1 <- B1 +  mean(eps[1:Nstation]) ,
+    # Bstar2 <- B2 ,
+    # Bstar3 <- B3 ,
+    # Bstar4 <- B4 ,
+    # Bstar5 <- B5 ,
+    ## for Bstar[1]: precis(rm4, depth = 2)[8,1] + mean(precis(rm4, depth = 2)[c(1:7),1])
+
+    ### Weighting for Qant
+    nlagA <- 5,
+    alphaA = rep(1, 5),
+    # Sum of the deltas for each covariate
+    sumA <- sum(deltaA[c(1:nlagA)]),
+
+    # a way to avoid using ddirich distrib function in JAGS
+    # use a variable drawn from gamma distrib
+    # use a weight from the dirich distribution
+    # use weight from that point / sum of all deltas
+
+    # set Priors for weights using the delta trick
+    #daily variable weights
+    for(k in 1:nlagA){
+    wA[k] <- deltaA[k]/sumA
+    deltaA[k] ~ dgamma(alphaA[k],1)
+    },
+
+    # Sum antecedent components across all timesteps
+    Qant[i] <- sum(qTemp1[i,]*wA[1] + qTemp1[i,]*wA[2] + qTemp3[i,]*wA[3] + qTemp4[i,]*wA[4] + qTemp5[i,]*wA[5]),
+    ### End Weighting for Qant
+
+    # Diffuse gamma prior for observation-level precisions
+    tau ~ gamma(0.01, 0.01) ,
+
+    # Diffuse folded-t prior for random-effect standard deviation
+    # Most effective for smaller number of groups; how to add truncated distrib?
+    sigeps ~ dstudent(2, mu = 0, sigma = 1/sqrt(10))
+    #dhalft(2, mu = 0, sigma = 1/sqrt(10))
+  ) ,
+  data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE, warmup = 1000, iter = 7000, cmdstan = TRUE) #, sample = TRUE, cmdstan = TRUE)
+
+precis(rm4, depth = 2)
 
 # Try a different version
 rm_reparm <- ulam(
@@ -139,21 +259,6 @@ compare(rm4, rm_reparm, function = LOO) # to use LOOIS
 plot(compare(rm4, rm_reparm))
 
 
-# Create Model Datalist ---------------------------------------------------
-
-datlist <- list(chl = log(chla_all$chl),
-                Q = c(covars$Q),
-                Srad_mwk = c(covars$Srad_mwk),
-                Wtemp_RIV_mwk = c(covars$Wtemp_RIV_mwk),
-                inund_days = c(covars$inund.days),
-                station_id = chla_all$station_id,
-                Nstation = length(unique(chla_all$station_id)),
-                doy1999 = chla_all$doy1999,
-                N = nrow(chla_all))
-                #pA = c(1, 3, 3, 7, 7),
-                # mean of 1 day, mean of 3 days before that, etc
-                #nlagA = 5, # index for for loop
-                #alphaA = rep(1, 5)) # for prior
 
 
 # Set up Initial Model Starts ---------------------------------------------
