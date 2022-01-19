@@ -10,7 +10,7 @@ editor_options:
 
     Here we read in cleaned dataset, plot data, look at outliers and correlations between variables. 
 
-*Last updated 1/14/2022 by C. Pien
+*Last updated 1/19/2022 by C. Pien
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -36,34 +36,73 @@ alldata <- read_csv("data_model/gam_data_covars_chla.csv")%>%
          year = lubridate::year(date)) 
 ```
 
+## Temporarily use this until data are cleaned up above.
+```{r}
+inundation_doy1998 <- read_csv("data_model/inundation_with_doy1998.csv")
+
+covars <- readRDS("bayes_models/mod_covariates_complete.rds") %>% 
+  select(-yolo, -height_sac, -inund_days, -inun, -past_topped) %>%
+  left_join(inundation_doy1998, by = c("doy1998", "date")) %>%
+  mutate(month =  month(date))
+
+chla_all <- readRDS("bayes_models/Chla_all.rds")%>%
+    # only want chl
+    select(station, date, chl) %>%
+    filter(chl > 0 & station != '11455420') %>%
+    filter(complete.cases(.)) %>% # keep only complete records
+    arrange(station, date) %>%
+    # add a diff time as above for join purposes
+    mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+           station_id = as.numeric(as.factor(station))) %>%
+    mutate(log_chla = log(chl))
+
+final_covars <- covars %>%
+    mutate(Q_1day = lag(flow_usgs_verona, 1), #this one is not working
+           Q_mwk = rollapply(flow_usgs_verona, 7, mean, align='right', partial=TRUE),
+           T_mwk = rollapply(daymet_tmax, 7, mean, align='right', partial=TRUE),
+           Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE)) %>%
+    rename(Q_sday = flow_usgs_verona)
+
+chla_uniq_date = chla_all %>% group_by(doy1998) %>% sample_n(1)
+
+chla_covars <- left_join(chla_uniq_date, final_covars, by=c("doy1998", "date"))
+```
+
 
 # Look at outliers/patterns in data
 **We should investigate and clean up any outliers**
 
 ## Chla
 ```{r}
-chl_clean <- alldata %>%
+chl_clean <- chl_all %>%
   filter(!is.na(chl))
 
 ggplot(chl_clean) + geom_histogram(aes(chl))
 ggplot(chl_clean) + geom_point(aes(date, chl, color = month), size = 3) + scale_color_viridis()
 ggplot(chl_clean) + geom_boxplot(aes(x = factor(month), y = chl))
 ggplot(chl_clean) + geom_boxplot(aes(x = factor(water_year), y = chl)) + theme(axis.text.x = element_text(angle = 90))
+par(mfrow = c(1,1))
 dotchart(chla_all$chl, lcolor = "white", xlab = "Chla", ylab = "row")
 ```
 
+## Covariates
 ```{r}
-model_covars <- covars %>%
+model_covars <- final_covars %>%
   select(c(date, month, water_year, daymet_precip_mm, Q_sday, flow_yolo, height_sac_na, inund_days, daymet_tmax, daymet_srad))
 
+# make data long to plot everything faceted
 data_long <- pivot_longer(model_covars, cols = 4:10, names_to = "variable", values_to = "value")
 
+# all variables on one plot
 ggplot(data_long) + geom_point(aes(x = date, y = value, color = variable), alpha = 0.5)
 
+# point plot over time
 ggplot(data_long) + geom_point(aes(x = date, y = value, color = variable), alpha = 0.5) + facet_wrap(variable~., scales = "free_y")
 
+# boxplot by month
 ggplot(data_long) + geom_boxplot(aes(x = factor(month), y = value, fill = variable)) + facet_wrap(variable~., scales = "free_y") + theme_bw()
 
+# boxplot by water year
 ggplot(data_long) + geom_boxplot(aes(x = factor(water_year), y = value, fill = variable)) + facet_wrap(variable~., scales = "free_y") + theme_bw() + theme(axis.text.x = element_text(angle = 90))
 ```
 
@@ -88,7 +127,7 @@ ggplot(filter(model_covars, daymet_srad<1000), aes(daymet_tmax, daymet_srad, col
 ggplot(model_covars, aes(daymet_tmax, Q_sday)) + geom_point(aes(color = month))+ scale_color_viridis()
 
 # Useful plot (seasonality of temp vs stage height)
-ggplot(model_covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = month)) 
+ggplot(model_covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = month)) + scale_color_viridis() 
 ```
 
 # Model exploration 
@@ -96,11 +135,13 @@ ggplot(model_covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = m
 ## Create a unique date dataset, and a dataset containing only days with chla data.
 * sample, slice, mean, pick a station hierarchy?
 ```{r}
-data_unique_date = alldata %>% group_by(doy1998) %>% sample_n(1) %>%
-  mutate(log_chla = log(chl))
+# uncomment this once we are using cleaned dataset
 
-chla_covars = data_unique_date %>%
-  filter(!is.na(log_chla))
+# data_unique_date = alldata %>% group_by(doy1998) %>% sample_n(1) %>%
+#   mutate(log_chla = log(chl))
+# 
+# chla_covars = data_unique_date %>%
+#   filter(!is.na(log_chla))
 ```
 
 ## See span and distribution of data 
@@ -125,10 +166,5 @@ x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad
  # plot with R2 values on the diagnolly opposite side
 corr_plot
  dev.off()
-```
-
-
-```{r}
-
 ```
 
