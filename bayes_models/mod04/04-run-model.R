@@ -104,10 +104,20 @@ library(jagsUI)
 library(coda)
 crosscorr(out$samples) # we see that the posteriors for Q and Qant are highly negatively correlated (-0.95)
 
+# Plot correlation in posterior between Q and Qant
 png("bayes_models/mod04/fig_out/corr_posteriors_Q_Qant.png",
     height = 5, width = 6, units = "in", res = 300)
 par(cex = 1.25)
 with(out$sims.list, plot(Bstar[,2], Bstar[,3], xlab = "Q", ylab = "Qant"))
+dev.off()
+
+# Look at the sum of their posterior and compare to the individual posteriors
+# Q and Qant
+png("bayes_models/mod04/fig_out/dens_posterior_QQant.png",
+    height = 5, width = 6, units = "in", res = 300)
+par(cex = 1.25)
+sum_QQant <- out$sims.list$Bstar[,2] + out$sims.list$Bstar[,3]
+dens( sum_QQant , lwd=2 , xlab="sum of Q and Qant" )
 dev.off()
 # Load Saved Model --------------------------------------------------------
 
