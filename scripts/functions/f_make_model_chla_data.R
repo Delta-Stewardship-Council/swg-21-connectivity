@@ -7,6 +7,7 @@ library(dplyr)
 library(readr)
 library(lubridate)
 library(glue)
+library(tidyr)
 library(ggplot2)
 
 f_make_model_chla_data <- function(){
@@ -20,87 +21,58 @@ f_make_model_chla_data <- function(){
   wq_sel <- wq %>%
     filter(station %in% c("USGS 657", "USGS 659", "USGS 662",
                           "USBR 16", "USBR 44", "USBR 44", "USBR 34")) %>%
-    select(station, date, chlorophyll)
+    select(station, date, chla = chlorophyll)
 
   # Read in USGS CAWSC data: scripts/functions/f_clean_usgs_cawsc_chla.R
-  usgs <- read_csv("data_clean/clean_chla_usgs_cawsc.csv") %>%
-    filter(site_no %in% c(11455350, 11455385, 11455315, 11455420))
+  usgs_chla <- read_csv("data_clean/clean_chla_usgs_cawsc.csv") %>%
+    filter(site_no %in% c(11455350, 11455385, 11455315, 11455420)) %>%
+    rename(station = site_no, chla = chla_value) %>%
+    mutate(station = as.character(station))
 
-
-
+  # merge two by matching/renaming and cbinding
+  chla_comb <- bind_rows(wq_sel, usgs_chla) %>%
+    fill(chla_units, .direction = "updown")
 
   # Read in YOLO inundation and verona flow
-  flo <- read_csv("data/yolo_daymet_for_model.csv") %>%
-    mutate(inun = ifelse(Topped.days == 0, 0, 1))
+  #df_old <- read_csv("data/yolo_daymet_for_model.csv") # original
+  inun <- read_csv("data_clean/clean_inundation_days.csv")
   # Calculate # of topped days in past 30 days
-  flo$past_topped <- NA
-  for(i in 31:nrow(flo)) {
-    flo$past_topped[i] <- sum(flo$inun[(i-31):(i-1)])
+  inun$past_topped <- NA
+  for(i in 31:nrow(inun)) {
+    inun$past_topped[i] <- sum(inun$inundation[(i-31):(i-1)])
   }
 
-  # Stack the two data sources
-  total <- data.frame(station = c(int$Station, usgs$site_no),
-                      date = c(int$Date, usgs$sample_dt),
-                      chl = c(int$Chlorophyll, usgs$result_va_Chla_ugL)) %>%
-    left_join(flo, by = c("date" = "Date")) %>%
-    tidyr::drop_na()
+  verona <- read_csv("data_clean/clean_flow_usgs_11425500.csv")
+  daymet <- read_csv("data_clean/clean_daymet_yolo_1994-2020.csv") #%>%
 
-  range(total$date) # n = 1076, 1998-02-11 to 2020-08-17
-  range(flo$Date) # 1998-01-01 to 2020-12-31 for verona
-  range(flo$Date[complete.cases(flo)]) # 1998-01-31 to 2020-09-30 for climate variables, but perhaps some NA
+  # merge data
+  df_mod <- left_join(chla_comb, daymet) %>%
+    left_join(inun) %>%
+    left_join(verona) %>%
+    tidyr::drop_na(daymet_tmax)
 
-  table(total$station) # includes C10, C10A, and USGS 36 in south bay
+  summary(df_mod)
 
-  # check data locations:
-  delta_map %>% filter(Station %in% total$station) %>%
-    mapview(zcol="Station")
-
-  # filter out stations not in area of interest
-  total_filt <- total %>%
-    filter(!station %in% c("EMP C10", "EMP C10A", "USGS 36"))
-  table(total_filt$station)
-
-  # USGS stations
-  # cache slough: 11455315
-  # cache slough at Ryer: 11455350
-  # cache slough above Ryer Near Rio Vista: 11455385
-  # sac at Rio Vista: 11455420
-  # get USGS data locations
-  library(dataRetrieval)
-  usgs_stations <- c("11455315", "11455350",
-                     "11455385", "11455420")
-  usgs_loc <- purrr::map_df(usgs_stations, ~dataRetrieval::findNLDI(nwis=.x))
-  usgs_loc <- usgs_loc %>%
-    rename(Station = identifier, Longitude=X, Latitude=Y) %>%
-    select(Station, Longitude, Latitude, geometry)
-
-  # combine with filtered stations
-  chla_map <- delta_map %>% filter(Station %in% total_filt$station) %>%
-    select(Station, Latitude, Longitude, geometry) %>%
-    bind_rows(., usgs_loc)
-
-  # map to check: good!
-  chla_map %>%
-    mapview(zcol="Station")
-
+  range(df_mod$date) # n = 612, 1997-01-28 to 2020-12-03
 
   # Visualize
-  ggplot()+
-    geom_rect(data = total_filt %>% filter(inun == 1),
+  ggplot() +
+    geom_rect(data = df_mod %>% filter(inundation == 1),
               aes(xmin = date, xmax = date,
                   ymin = -Inf, ymax = Inf,
-                  color = factor(inun))) +
-    geom_point(data = total_filt, aes(x = date, y = chl*300, col = "Chlorophyll")) +
-    geom_point(data = total_filt, aes(x = date, y = Flow_usgs_verona, col = "Q")) +
+                  color = inund.days)) +
+    geom_point(data = df_mod, aes(x = date, y = chla*300, color = chla)) +
+    geom_point(data = df_mod, aes(x = date, y = flow), color="skyblue") +
     labs(y = expression(paste("Q (", ft^3, " ", s^-1, ")"))) +
     scale_y_continuous(sec.axis = sec_axis(~./300,
-                                           name = expression(paste("Chlorophyll", mu, "g/mL")))) +
-    scale_x_date(limits = c(as.Date("1999-01-01"), as.Date("2021-01-01"))) +
-    scale_color_manual(values = c("pink", "forestgreen", "darkblue")) +
+                                           name = expression(paste("Chlorophyll (", mu, "g/mL)")))) +
+    #scale_x_date(limits = c(as.Date("1998-10-01"), as.Date("2021-10-01"))) +
+    scale_color_viridis_c() +
     theme_bw(base_size = 12) +
-    theme(axis.title.x = element_blank()) +
-    guides(color = "none")
+    theme(axis.title.x = element_blank()) #+
+    #guides(color = "none")
 
 
   # write out as rds
-  write_rds(total_filt, file = "bayes_models/Chla_all.rds")
+  write_rds(df_mod, file = "data_model/chla_w_all_data.rds")
+}
