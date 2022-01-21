@@ -6,19 +6,25 @@ library(glue)
 library(contentid)
 library(janitor)
 
-f_clean_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', 'USGS-11455350')){
+f_clean_usgs_cawsc_chla <- function(){
 
   # get raw data ID:
   chla <- contentid::store("data_raw/raw_chla_usgs_cawsc.csv")
 
-  chla_file <- contentid::resolve("hash://sha256/a9084e31c1ac7faaea11e490b44040cf9ee379e5af3d9c82130c7dc59f7d1ee2")
+  chla_file <- contentid::resolve("hash://sha256/aebeffcb5f1299729a5b351cffed4042f7ea4f7768a254dc484a84231fcb6e6f")
 
   # read in data
   chla_dat <- read_csv(chla_file) %>%
     clean_names() %>%
-    janitor::remove_constant() # remove columns that are identical or constant
-    # filter to 1996 to current
-    #filter(date >= as.Date("1996-10-01"))
+    janitor::remove_constant() %>%  # remove columns that are identical or constant
+    #clean/rename cols
+    rename(station=monitoring_location_identifier) %>%
+    mutate(site_no = as.integer(gsub(pattern = "USGS-", x = station, replacement = ""))) %>%
+    select(site_no, chla_value = result_measure_value,
+           chla_units = detection_quantitation_limit_measure_measure_unit_code,
+           date = activity_start_date)
 
-  write_csv(chla_dat, file=glue("data_clean/clean_chla_usgs_cawsc.csv"))
+
+   write_csv(chla_dat, file=glue("data_clean/clean_chla_usgs_cawsc.csv"))
 }
+#f_clean_usgs_cawsc_chla()
