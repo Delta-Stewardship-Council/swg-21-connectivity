@@ -164,7 +164,50 @@ x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad
 ```{r}
  tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
  # plot with R2 values on the diagnolly opposite side
-corr_plot
+corr_plot <- pairs.panels(x, hist.col = "white", cex.cor = 1, pch = 21, stars = TRUE)
  dev.off()
 ```
 
+### add water year day
+```{r}
+devtools::install_github("ryanpeek/wateRshedTools")
+library(wateRshedTools)
+
+model_covars <- add_WYD(model_covars, "date")
+
+chla_covars <- add_WYD(chla_covars, "date")
+```
+
+### add inundation year category
+```{r}
+model_covars$inundation <- ifelse(model_covars$inund_days > 0, 1, 0)
+
+WY_summary <- model_covars %>% group_by(WY) %>% summarise(sum = sum(inundation))
+
+WY_summary$IY <- ifelse(WY_summary$sum > 0, "Yes", "No") #drop 2021 and 2022 (not in all datasets)
+
+model_covars <- merge(model_covars,  WY_summary, by = "WY")
+
+model_covars <-subset(model_covars, WY < 2021)
+```
+
+### trying some more plots for Jan 24th
+```{r}
+tiff(filename = "figures/DOWY_Q_WY_inund.tiff", width = 10, height = 8, units = "in", res = 300)
+
+ggplot(model_covars, aes(DOWY, Q_sday, colour = factor(WY), size = inund_days)) + geom_point() + facet_grid(cols = vars(IY))
+
+ dev.off()
+ 
+tiff(filename = "figures/Q_inund_tmax_precip.tiff", width = 10, height = 8, units = "in", res = 300)
+
+ggplot(model_covars, aes(Q_sday, inund_days, colour = daymet_tmax, size = daymet_precip_mm)) + geom_point()
+
+ dev.off()
+ 
+tiff(filename = "figures/Q_chl_srad_inund.tiff", width = 10, height = 8, units = "in", res = 300)
+
+ggplot(chla_covars, aes(Q_sday, chl, colour = daymet_srad, size = inund_days)) + geom_point() + ylim(0,30)
+
+ dev.off()
+```

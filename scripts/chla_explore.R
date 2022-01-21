@@ -135,45 +135,44 @@ LIB <- left_join(cawsc_chla_nuts_test, dailyLIB, by=c("date", "monitoring_locati
 
 LIB_only <- filter(LIB, monitoring_location_identifier == "11455315")
 
-#check chla, DIN, turb, Q relationships
+LIB_only <- filter(LIB, date >= "2015-02-02")
+
+LIB_only <- filter(LIB, date <= "2021-11-02")
+
+#check Liberty - 11455315 chla, DIN, turb, Q relationships
 
 par(mfrow=c(4,1))
 par("mar")
-par(mar=c(1,1,1,1))
+par(mar=c(1,4,1,2))
 
-plot_Q <- plot(dailyLIB$date, dailyLIB$mean_Q, pch = 16, col = 2)
+plot_Q <- plot(dailyLIB$date, dailyLIB$mean_Q, ylab = "Q (cfs)", main = "Liberty - 11455315", pch = 16, col = "darkcyan")
 
-plot_turb <- plot(dailyLIB$date, dailyLIB$mean_turb, pch = 16, col = 2)
 
-plot_chla <- plot(LIB_only$date, LIB_only$chla_ugL, pch = 16, col = 2)
+plot_turb <- plot(dailyLIB$date, ylab = "turbidity (FNU)",dailyLIB$mean_turb, pch = 16, col = "darkcyan")
 
-plot_DIN <- plot(LIB_only$date, LIB_only$DIN_mgL, pch = 16, col = 2)
+plot_chla <- plot(LIB_only$date, LIB_only$chla_ugL,ylab = "chl-a (ugL)", pch = 16, col = "darkcyan", xlim = as.Date(c("2015-02-02", "2022-01-19")))
 
-chla_Q_plot <- ggplot()+geom_point(data = LIB_only, aes(x=mean_Q, y=chla_ugL))
-
-chla_nut_plot <- ggplot()+geom_point(data = LIB_only, aes(x=DIN_mgL, y=chla_ugL))
-
-Q_turb_plot <- ggplot()+geom_point(data = LIB_only, aes(x=mean_turb, y=mean_Q))
-
-chla_Q_plot
-
-chla_nut_plot
-
-Q_turb_plot
-
-chla_turb_plot
-
-Q_nut_plot
+plot_DIN <- plot(LIB_only$date, LIB_only$DIN_mgL, ylab = "DIN (mgL)", pch = 16, col = "darkcyan", xlim = as.Date(c("2015-02-02", "2022-01-19")))
 
 chla_Q_plot <- ggplot(data = LIB_only, aes(x=mean_Q, y=chla_ugL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=5000, label.y=20) + stat_cor(aes(label=..rr.label..), label.x=5000, label.y=30)+ ylab("chl-a") +xlab("Q")+theme_bw()
 
-chla_nut_plot <- ggplot(data = LIB_only, aes(x=DIN_mgL, y=chla_ugL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=0.3, label.y=30) + stat_cor(aes(label=..rr.label..), label.x=0.3, label.y=20)+ ylab("chl-a") +xlab("Q")+theme_bw()
+chla_Q_plot
+
+chla_nut_plot <- ggplot(data = LIB_only, aes(x=DIN_mgL, y=chla_ugL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=0.3, label.y=30) + stat_cor(aes(label=..rr.label..), label.x=0.3, label.y=20)+ ylab("chl-a") +xlab("DIN")+theme_bw()
+
+chla_nut_plot
 
 Q_turb_plot <- ggplot(data = LIB_only, aes(x=mean_Q, y=mean_turb)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=20000, label.y=30) + stat_cor(aes(label=..rr.label..), label.x=15000, label.y=20)+ ylab("turb") +xlab("Q")+theme_bw()
 
+Q_turb_plot
+
 chla_turb_plot <- ggplot(data = LIB_only, aes(x=mean_turb, y=chla_ugL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=10, label.y=30) + stat_cor(aes(label=..rr.label..), label.x=10, label.y=20)+ ylab("chla") +xlab("turb")+theme_bw()
 
+chla_turb_plot
+
 Q_nut_plot <- ggplot(data = LIB_only, aes(x=mean_Q, y=DIN_mgL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=10000, label.y=0.5) + stat_cor(aes(label=..rr.label..), label.x=10000, label.y=0.3)+ ylab("DIN") +xlab("Q")+theme_bw()
+
+Q_nut_plot
 
 #create data table for CCH and CCH41. look into why Q_tf didn't join in
 
@@ -196,8 +195,6 @@ dvCCH_select <- select(dvCCH, Date, X_72137_00003)
 dvCCH_clean <-rename(dvCCH_select, date = Date, Q_tf = X_72137_00003)
 
 #clean CCH41 dataframe
-
-head(uvCCH)
 
 uvCCH_select <-select(uvCCH, site_no, dateTime, X_00060_00000, X_BGC.PROJECT_63680_00000, X_72137_00000, tz_cd)
 
@@ -231,15 +228,15 @@ CCH_only <- filter(CCH, monitoring_location_identifier == "11455350")
 
 par(mfrow=c(4,1))
 par("mar")
-par(mar=c(1,1,1,1))
+par(mar=c(1,4,1,2))
 
-plot_Q <- plot(dailyCCH$date, dailyCCH$mean_Q, pch = 16, col = 2)
+plot_Q <- plot(dailyCCH$date, dailyCCH$mean_Q, ylab = "Q (cfs)", main = "Cache at Ryer - 11455350", pch = 16, col = "aquamarine3")
 
-plot_turb <- plot(dailyCCH$date, dailyCCH$mean_turb, pch = 16, col = 2)
+plot_turb <- plot(dailyCCH$date, dailyCCH$mean_turb, ylab = "turbidity (FNU)", pch = 16, col = "aquamarine3")
 
-plot_chla <- plot(CCH_only$date, CCH_only$chla_ugL, pch = 16, col = 2)
+plot_chla <- plot(CCH_only$date, CCH_only$chla_ugL, ylab = "chl-a (ugL)",  pch = 16, col = "aquamarine3", xlim = as.Date(c("2013-02-01", "2019-04-29")))
 
-plot_DIN <- plot(CCH_only$date, CCH_only$DIN_mgL, pch = 16, col = 2)
+plot_DIN <- plot(CCH_only$date, CCH_only$DIN_mgL, ylab = "DIN (mgL)", pch = 16, col = "aquamarine3", xlim = as.Date(c("2013-02-01", "2019-04-29")))
 
 chla_Q_plot <- ggplot(data = CCH_only, aes(x=mean_Q, y=chla_ugL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=5000, label.y=20) + stat_cor(aes(label=..rr.label..), label.x=5000, label.y=30)+ ylab("chl-a") +xlab("Q")+theme_bw()
 
@@ -325,15 +322,15 @@ CCH41_only <- filter(CCH41, monitoring_location_identifier == "11455385")
 
 par(mfrow=c(4,1))
 par("mar")
-par(mar=c(1,1,1,1))
+par(mar=c(1,4,1,2))
 
-plot_Q <- plot(dailyCCH41$date, dailyCCH41$mean_Q, pch = 16, col = 2)
+plot_Q <- plot(dailyCCH41$date, dailyCCH41$mean_Q, ylab = "Q (cfs)", main = "Cache - 11455385", pch = 16, col = "chartreuse3")
 
-plot_turb <- plot(dailyCCH41$date, dailyCCH41$mean_turb, pch = 16, col = 2)
+plot_turb <- plot(dailyCCH41$date, dailyCCH41$mean_turb, ylab = "turbidity (FNU)", pch = 16, col = "chartreuse3")
 
-plot_chla <- plot(CCH41_only$date, CCH41_only$chla_ugL, pch = 16, col = 2)
+plot_chla <- plot(CCH41_only$date, CCH41_only$chla_ugL, ylab = "chl-a (ugL)", pch = 16, col = "chartreuse3", xlim = as.Date(c("2018-07-03", "2022-01-20")))
 
-plot_DIN <- plot(CCH41_only$date, CCH41_only$DIN_mgL, pch = 16, col = 2)
+plot_DIN <- plot(CCH41_only$date, CCH41_only$DIN_mgL, ylab = "DIN (mgL)", pch = 16, col = "chartreuse3", xlim = as.Date(c("2018-07-03", "2022-01-20")))
 
 chla_Q_plot <- ggplot(data = CCH41_only, aes(x=mean_Q, y=chla_ugL)) + geom_point() + geom_smooth(method = "lm") + stat_regline_equation(label.x=5000, label.y=20) + stat_cor(aes(label=..rr.label..), label.x=5000, label.y=30)+ ylab("chl-a") +xlab("Q")+theme_bw()
 
