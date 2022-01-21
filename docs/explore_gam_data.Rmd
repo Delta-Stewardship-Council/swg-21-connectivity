@@ -1,0 +1,213 @@
+---
+title: "explore_gam_data"
+author: "Catarina Pien"
+date: "1/10/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+    Here we read in cleaned dataset, plot data, look at outliers and correlations between variables. 
+
+*Last updated 1/19/2022 by C. Pien
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Packages
+```{r}
+library(tidyverse)
+library(readr)
+library(lubridate)
+library(viridis)
+library(psych) # for pairs
+```
+
+
+# Read in data
+```{r}
+covars <- read_csv("data_model/gam_data_covars.csv") %>%
+  mutate(month = lubridate::month(date)) 
+
+alldata <- read_csv("data_model/gam_data_covars_chla.csv")%>%
+  mutate(month = lubridate::month(date),
+         year = lubridate::year(date)) 
+```
+
+## Temporarily use this until data are cleaned up above.
+```{r}
+inundation_doy1998 <- read_csv("data_model/inundation_with_doy1998.csv")
+
+covars <- readRDS("bayes_models/mod_covariates_complete.rds") %>% 
+  select(-yolo, -height_sac, -inund_days, -inun, -past_topped) %>%
+  left_join(inundation_doy1998, by = c("doy1998", "date")) %>%
+  mutate(month =  month(date))
+
+chla_all <- readRDS("bayes_models/Chla_all.rds")%>%
+    # only want chl
+    select(station, date, chl) %>%
+    filter(chl > 0 & station != '11455420') %>%
+    filter(complete.cases(.)) %>% # keep only complete records
+    arrange(station, date) %>%
+    # add a diff time as above for join purposes
+    mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+           station_id = as.numeric(as.factor(station))) %>%
+    mutate(log_chla = log(chl))
+
+final_covars <- covars %>%
+    mutate(Q_1day = lag(flow_usgs_verona, 1), #this one is not working
+           Q_mwk = rollapply(flow_usgs_verona, 7, mean, align='right', partial=TRUE),
+           T_mwk = rollapply(daymet_tmax, 7, mean, align='right', partial=TRUE),
+           Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE)) %>%
+    rename(Q_sday = flow_usgs_verona)
+
+chla_uniq_date = chla_all %>% group_by(doy1998) %>% sample_n(1)
+
+chla_covars <- left_join(chla_uniq_date, final_covars, by=c("doy1998", "date"))
+```
+
+
+# Look at outliers/patterns in data
+**We should investigate and clean up any outliers**
+
+## Chla
+```{r}
+chl_clean <- chl_all %>%
+  filter(!is.na(chl))
+
+ggplot(chl_clean) + geom_histogram(aes(chl))
+ggplot(chl_clean) + geom_point(aes(date, chl, color = month), size = 3) + scale_color_viridis()
+ggplot(chl_clean) + geom_boxplot(aes(x = factor(month), y = chl))
+ggplot(chl_clean) + geom_boxplot(aes(x = factor(water_year), y = chl)) + theme(axis.text.x = element_text(angle = 90))
+par(mfrow = c(1,1))
+dotchart(chla_all$chl, lcolor = "white", xlab = "Chla", ylab = "row")
+```
+
+## Covariates
+```{r}
+model_covars <- final_covars %>%
+  select(c(date, month, water_year, daymet_precip_mm, Q_sday, flow_yolo, height_sac_na, inund_days, daymet_tmax, daymet_srad))
+
+# make data long to plot everything faceted
+data_long <- pivot_longer(model_covars, cols = 4:10, names_to = "variable", values_to = "value")
+
+# all variables on one plot
+ggplot(data_long) + geom_point(aes(x = date, y = value, color = variable), alpha = 0.5)
+
+# point plot over time
+ggplot(data_long) + geom_point(aes(x = date, y = value, color = variable), alpha = 0.5) + facet_wrap(variable~., scales = "free_y")
+
+# boxplot by month
+ggplot(data_long) + geom_boxplot(aes(x = factor(month), y = value, fill = variable)) + facet_wrap(variable~., scales = "free_y") + theme_bw()
+
+# boxplot by water year
+ggplot(data_long) + geom_boxplot(aes(x = factor(water_year), y = value, fill = variable)) + facet_wrap(variable~., scales = "free_y") + theme_bw() + theme(axis.text.x = element_text(angle = 90))
+```
+
+## Correlations between variables
+```{r}
+# precip - stage height
+ggplot(filter(model_covars, daymet_precip_mm>0), aes(daymet_precip_mm, height_sac_na)) + geom_point()
+
+# precip - inundation days
+ggplot(filter(model_covars, daymet_precip_mm>0), aes(daymet_precip_mm, inund_days, color = month)) + geom_point() + scale_color_viridis()
+
+# precip - flow_yolo
+ggplot(filter(model_covars, daymet_precip_mm>0), aes(daymet_precip_mm, flow_yolo)) + geom_point()
+
+# flow_verona - flow_yolo
+ggplot(model_covars, aes(Q_sday, flow_yolo, color = month)) + geom_point() + scale_color_viridis()
+
+# radiation - temp
+ggplot(filter(model_covars, daymet_srad<1000), aes(daymet_tmax, daymet_srad, color = month)) + geom_point()
+
+# temp - flow
+ggplot(model_covars, aes(daymet_tmax, Q_sday)) + geom_point(aes(color = month))+ scale_color_viridis()
+
+# Useful plot (seasonality of temp vs stage height)
+ggplot(model_covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = month)) + scale_color_viridis() 
+```
+
+# Model exploration 
+
+## Create a unique date dataset, and a dataset containing only days with chla data.
+* sample, slice, mean, pick a station hierarchy?
+```{r}
+# uncomment this once we are using cleaned dataset
+
+# data_unique_date = alldata %>% group_by(doy1998) %>% sample_n(1) %>%
+#   mutate(log_chla = log(chl))
+# 
+# chla_covars = data_unique_date %>%
+#   filter(!is.na(log_chla))
+```
+
+## See span and distribution of data 
+Nice and normal!
+```{r}
+ggplot(chla_covars) + geom_point(aes(date, log_chla))
+ggplot(chla_covars) + geom_histogram(aes(log_chla))
+```
+
+## Check for correlation between all vars
+Strong correlations between all flow metrics. 
+```{r}
+# check for correlation between all predictors, and the response variable
+x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
+
+(corr_plot <- pairs.panels(x, hist.col = "white", cex.cor = 1.5, pch = 21, stars = TRUE))
+```
+
+### Save correlation plot
+```{r}
+ tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
+ # plot with R2 values on the diagnolly opposite side
+corr_plot <- pairs.panels(x, hist.col = "white", cex.cor = 1, pch = 21, stars = TRUE)
+ dev.off()
+```
+
+### add water year day
+```{r}
+devtools::install_github("ryanpeek/wateRshedTools")
+library(wateRshedTools)
+
+model_covars <- add_WYD(model_covars, "date")
+
+chla_covars <- add_WYD(chla_covars, "date")
+```
+
+### add inundation year category
+```{r}
+model_covars$inundation <- ifelse(model_covars$inund_days > 0, 1, 0)
+
+WY_summary <- model_covars %>% group_by(WY) %>% summarise(sum = sum(inundation))
+
+WY_summary$IY <- ifelse(WY_summary$sum > 0, "Yes", "No") #drop 2021 and 2022 (not in all datasets)
+
+model_covars <- merge(model_covars,  WY_summary, by = "WY")
+
+model_covars <-subset(model_covars, WY < 2021)
+```
+
+### trying some more plots for Jan 24th
+```{r}
+tiff(filename = "figures/DOWY_Q_WY_inund.tiff", width = 10, height = 8, units = "in", res = 300)
+
+ggplot(model_covars, aes(DOWY, Q_sday, colour = factor(WY), size = inund_days)) + geom_point() + facet_grid(cols = vars(IY))
+
+ dev.off()
+ 
+tiff(filename = "figures/Q_inund_tmax_precip.tiff", width = 10, height = 8, units = "in", res = 300)
+
+ggplot(model_covars, aes(Q_sday, inund_days, colour = daymet_tmax, size = daymet_precip_mm)) + geom_point()
+
+ dev.off()
+ 
+tiff(filename = "figures/Q_chl_srad_inund.tiff", width = 10, height = 8, units = "in", res = 300)
+
+ggplot(chla_covars, aes(Q_sday, chl, colour = daymet_srad, size = inund_days)) + geom_point() + ylim(0,30)
+
+ dev.off()
+```
