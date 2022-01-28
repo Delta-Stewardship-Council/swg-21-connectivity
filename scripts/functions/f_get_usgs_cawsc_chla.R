@@ -55,7 +55,7 @@ library(janitor)
 # get data function
 
 # defaults to these stations, but can change list or add to it
-f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', 'USGS-11455350')){
+f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455420', 'USGS-11455315', 'USGS-11455385', 'USGS-11455350')){
 
   # get data
   print("Downloading data...")
@@ -77,10 +77,9 @@ f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', '
   print(glue("Data saved here: 'data_raw/raw_chla_usgs_cawsc.csv'"))
 
   # quick plot
-  p1 <- ggplot(chla) +
-    geom_line(aes(x=activity_start_date, y=result_measure_value)) +
-    labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)} to {max(chla$activity_start_date)}"))
-
-  p1
+  # p1 <- ggplot(chla) +
+  #   geom_line(aes(x=activity_start_date, y=result_measure_value)) +
+  #   labs(title=glue("USGS CAWSC chla: {min(chla$activity_start_date)} to {max(chla$activity_start_date)}"))
+  #p1
 }
 
