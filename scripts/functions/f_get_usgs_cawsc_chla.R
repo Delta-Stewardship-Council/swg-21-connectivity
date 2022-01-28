@@ -33,17 +33,17 @@
 
 #get basic metadata from water quality portal site:
 # commenting this out so function only pulls data...this is more exploratory
-# USGS_CAWSC_Chl <- whatWQPsites(siteid=c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-38142412140560', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11447890', 'USGS-11447905' ))
+USGS_CAWSC_Chl <- whatWQPsites(siteid=c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-381424121405601', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', "USGS-11455166", 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', "USGS-11455420", "USGS-11455146", "USGS-11455143", "USGS-382010121402301"))
 
 # preview map
 #library(sf)
 #library(mapview)
 
 # same here
-# USGS_CAWSC_Chl <- USGS_CAWSC_Chl %>%
-# st_as_sf(coords=c("LongitudeMeasure", "LatitudeMeasure"),
-# crs=4326, remove=FALSE)
-# mapview(USGS_CAWSC_Chl)
+USGS_CAWSC_Chl <- USGS_CAWSC_Chl %>%
+st_as_sf(coords=c("LongitudeMeasure", "LatitudeMeasure"),
+crs=4326, remove=FALSE)
+mapview(USGS_CAWSC_Chl)
 
 
 library(glue)
@@ -57,15 +57,18 @@ library(janitor)
 # defaults to these stations, but can change list or add to it
 f_get_usgs_cawsc_chla <- function(stations=c('USGS-11455315', 'USGS-11455385', 'USGS-11455350')){
 
-  # get data - limited to stations identified on lines 4-6
+  # get data
   print("Downloading data...")
-  chla <- dataRetrieval::readWQPqw(siteNumbers = stations,
-                                   parameterCd = '70953', # this is the chla
-                                   startDate = "", endDate = "")
+
+  chla <- dataRetrieval::readWQPqw(siteNumbers = c('USGS-11455315','USGS-11455350', 'USGS-11455385', 'USGS-11455276', 'USGS-11455139', 'USGS-11455140', 'USGS-11455147', 'USGS-381424121405601', 'USGS-381944121405201', 'USGS-382006121401601', 'USGS-382005121392801', 'USGS-11455167', 'USGS-11455166', 'USGS-381829121413401', 'USGS-11455478', 'USGS-11455485', 'USGS-11455508', 'USGS-11447650', 'USGS-11455420', 'USGS-11455146', 'USGS-11455143', 'USGS-382010121402301'), parameterCd = '70953') # this is the chla startDate = "", endDate = ""))
+
+  #count(chla, ResultStatusIdentifier)
   print("Data downloaded!")
 
   # clean names
   chla <- janitor::clean_names(chla)
+
+
 
   # write out
   readr::write_csv(chla, glue("data_raw/raw_chla_usgs_cawsc.csv"))
