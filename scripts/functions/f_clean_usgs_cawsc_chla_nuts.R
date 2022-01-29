@@ -5,6 +5,7 @@ library(readr)
 library(glue)
 library(contentid)
 library(janitor)
+library(tidyr)
 
 f_clean_usgs_cawsc_chla_nuts <- function(){
 
@@ -56,8 +57,6 @@ cawsc_nuts_chla_id <- contentid::resolve("hash://sha256/a89baaac631ceb2060b4dd31
 
  cawsc_nuts_chla_clean <- cawsc_nuts_chla_clean %>% select(source, station, latitude, longitude, date, datetime, chlorophyll, diss_ammonia, diss_nitrate_nitrite, diss_orthophos) #%>%
 
-
- #cawsc_nuts_chla_clean %>% col_types = list(.default = col_number(), Source = col_character(), Station = col_character(), Date = col_date(), Datetime = col_datetime(), Chlorophyll = col_number(), DissAmmonia = col_number(), DissNitrateNitrite = col_number(), DissOrthophos = col_number())
 
   write_csv(cawsc_nuts_chla_clean, file=glue("data_clean/clean_chla_nuts_usgs_cawsc.csv"))
 
