@@ -16,8 +16,6 @@ f_load_daily_covars_models <- function() {
 
   # Get contentids ---------------------------------------------------------
   print("Downloading data...")
-  int_wq_id <- contentid::store("data_clean/clean_integrated_wq.csv")
-  int_wq_file <- contentid::resolve(int_wq_id)
   inun_id <- contentid::store("data_clean/clean_inundation_days.csv")
   inun_file <- contentid::resolve(inun_id)
   flow_id <- contentid::store("data_clean/clean_flow_usgs_11425500.csv")
