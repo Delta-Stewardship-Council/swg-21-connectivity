@@ -23,7 +23,7 @@ f_load_wq_chla_nuts <- function() {
 
   # export data ----------------------------------------
 
-  readr::write_csv(join, "data_clean/clean_chla_nuts.csv")
+  readr::write_csv(join, "data_model/model_chla_nuts_discretewq.csv")
   }
 
 f_load_wq_chla_nuts()
