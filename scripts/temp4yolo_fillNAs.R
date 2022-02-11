@@ -1,11 +1,14 @@
+# load library 
 library("dplyr")
 library(imputeTS)
 library(lubridate)
 
-# temp_98_18_daily_master from temp4yolo.R
+# load data
+# temp_98_18_continuous_dup from temp4yolo.R
+temp_98_18_daily_master <- read.csv("temp_98_18_daily_master_du_removed.csv")
 
 head(temp_98_18_daily_master)
-
+temp_98_18_daily_master$date <- as.Date(temp_98_18_daily_master$date)
 min(temp_98_18_daily_master$date)
 max(temp_98_18_daily_master$date)
 
@@ -16,31 +19,14 @@ continous.dates <- data.frame (x = 1:7320, date = seq(as.Date('1998-01-16'),as.D
 temp_98_18_continuous <- merge(temp_98_18_daily_master, continous.dates, by = "date", all = TRUE)
 
 colSums(is.na(temp_98_18_continuous))
-sum(duplicated(temp_98_18_continuous$date))#1138
-temp_dup <- temp_98_18_continuous[duplicated(temp_98_18_continuous$date), ]# both logger and fish WQ on the same day
-
-## opted to keep logger data when there was a duplicate, this can have a more complex rule set?
-# create columns for IDing duplicates in both directions
-temp_98_18_continuous$dup1 <- duplicated(temp_98_18_continuous$date)
-temp_98_18_continuous$dup2 <- duplicated(temp_98_18_continuous$date, fromLast = TRUE)
-temp_98_18_continuous$dup <- ifelse(temp_98_18_continuous$dup1 == TRUE | temp_98_18_continuous$dup2 == TRUE, 1, 0)
-
-# subset
-temp_98_18_continuous$drop <- ifelse(temp_98_18_continuous$dup == 1 & temp_98_18_continuous$method == "RSTR_logger", 1, 0)
-
-temp_98_18_continuous_dup <- subset(temp_98_18_continuous, drop == 0)
-
-temp_98_18_continuous_dup <- temp_98_18_continuous_dup[,-c(9:13)]
-
-write.csv(temp_98_18_continuous_dup, "temp_98_18_continuous_dup.csv")
 
 ## fill NAs less than or equal to a seven day gap
-temp_98_18_continuous_dup <- transform(temp_98_18_continuous_dup, date = as.Date(date))
+temp_98_18_continuous <- transform(temp_98_18_continuous, date = as.Date(date))
 
-dat.data <- temp_98_18_continuous_dup[!is.na(temp_98_18_continuous_dup$mean),]
+dat.data <- temp_98_18_continuous[!is.na(temp_98_18_continuous$mean),]
 head(dat.data)
 
-dat.NA <- temp_98_18_continuous_dup[is.na(temp_98_18_continuous_dup$mean),]
+dat.NA <- temp_98_18_continuous[is.na(temp_98_18_continuous$mean),]
 head(dat.NA)
 
 ###### Assigns id to consecutive date groups ############
@@ -83,6 +69,8 @@ imput_dat$method <- ifelse(imput_dat$Category == "7&Under", "imputeTS", imput_da
 # need to remove data that is not within parameters
 imput_dat$mean <- ifelse(imput_dat$Category == "Over7", NA, imput_dat$mean)
 
+imput_dat <- imput_dat[,-c(2,10,13)]
+
 # check dates for large gaps (not sure that overtopping periods will be well correlated with Sac R...)
 dat.NA_Over7 <- subset(imput_dat, Category == "Over7")
 dat.NA_Over7$Category <- as.factor(dat.NA_Over7$Category)
@@ -93,47 +81,21 @@ summary_Over7 <- dat.NA_Over7 %>%
 # March 1998 (11 days)
 # December 2006 (9 days)
 
-# bring in data from Rio Vista bridge (CDEC)
-temp_RIV <- read.csv("RIV_25.csv") #only goes back to Feb 1999
-head(temp_RIV)
-str(temp_RIV)
-# sort out date/time
-temp_RIV$DATE.TIME <- as.POSIXct(temp_RIV$DATE.TIME, format = "%Y-%m-%d %H:%M")
-temp_RIV$date <- format(temp_RIV$DATE.TIME, format = "%Y-%m-%d")
-temp_RIV$time <- format(temp_RIV$DATE.TIME, format = "%H:%M")
-# get C from F
-temp_RIV$VALUE <- as.numeric(temp_RIV$VALUE)
-temp_RIV$Temp.C <- ((temp_RIV$VALUE - 32) *5/9)
-hist(temp_RIV$VALUE)
-temp <- subset(temp_RIV, Temp.C<=30 & Temp.C>=0)
-hist(temp$Temp.C)
+# bring in data from Rio Vista bridge and Lisbon Wier(CDEC)
+temp_daily_RIV <- read.csv("temp_daily_RIV.csv")
+temp_daily_LIS <- read.csv("temp_daily_LIS.csv")
 
-unique(temp$DATA_FLAG)# all NA
-
-# make daily
-temp_daily <- temp %>%
-  group_by(date) %>%
-  summarize(n())
-
-time.check= seq(as.Date('1999-02-22'),as.Date('2022-02-07'),by='day') #39 missing
-
-cv <- function(x) 100*( sd(x)/mean(x))
-temp_date <- temp[,c(10,12)]
-
-temp_daily_RIV <- temp_date %>%
-  group_by(date) %>%
-  summarise_each(funs(mean, max, min, sd, cv))
-
-temp_4_Over7 <- merge(temp_daily_RIV, temp_daily, by = "date", all = TRUE)
-write.csv(temp_4_Over7, "temp_daily_RIV.csv")
+temp_daily_RIV$date <- as.Date(temp_daily_RIV$date)
+temp_daily_RIV <- subset(temp_daily_RIV, date < '2018-01-31')
 
 # make data for lm
 input <- imput_dat[,c(2,3)]
 colnames(input) <- c("date", "yolo")
-temp_4_Over7$date <- as.Date(temp_4_Over7$date)
-dat4model <- merge(input, temp_4_Over7[,c(1,2)], by = "date", all.x = TRUE)
 
-fit <- lm(yolo~mean, data = dat4model)
+dat4model <- merge(input, temp_daily_RIV[,c(1,2)], by = "date", all.x = TRUE)
+
+dat4model_na <- na.omit(dat4model)
+fit <- lm(yolo~mean, data = dat4model_na)
 summary(fit)# Adjusted R-squared:  0.8684
 
 df_fill <- dat4model %>%
@@ -149,6 +111,56 @@ imput_dat_Over7$mean <- ifelse(is.na(imput_dat_Over7$mean), imput_dat_Over7$pred
 
 # rename n and remove group
 colnames(imput_dat_Over7)[8] <- "n"
-imput_dat_Over7 <- imput_dat_Over7[,-c(2,12:13)]
+imput_dat_Over7 <- imput_dat_Over7[,-c(2,12)]
 
 write.csv(imput_dat_Over7, "yolo_temp_98_18.csv")
+
+# use LIS to fill in after Jan 2018
+# check relationship
+head(temp_daily_LIS)
+dat.test <- merge(input, temp_daily_LIS[,c(1,2)], by = "date", all = TRUE)
+dat.test_na <- na.omit(dat.test)
+summary(lm(yolo~mean, data = dat.test_na)) #Adjusted R-squared:  0.8906
+
+max(imput_dat_Over7$date)
+fit.lis <- lm(yolo~mean, data = dat.test_na)
+   
+lis_fill <- dat.test %>%
+  mutate(pred = predict(fit.lis, .))
+
+lis_fill <- subset(lis_fill, date > '2018-01-30')
+lis_fill <- lis_fill[,c(1,4)]
+colnames(lis_fill)[2] <- "mean"
+lis_fill$max <- "NA"
+lis_fill$min <- "NA"
+lis_fill$sd <- "NA"
+lis_fill$cv <- "NA"
+lis_fill$n <- "NA"
+lis_fill$method <- "lm_LIS"
+lis_fill$Length <- nrow(lis_fill)
+lis_fill$Category <- "Over7"
+
+imput_dat_98_20 <- rbind(imput_dat_Over7, lis_fill)
+
+write.csv(imput_dat_98_20, "yolo_temp_98_20.csv")
+
+# now fix remaining NAs in 1998
+imput_na <- imput_dat_98_20[is.na(imput_dat_98_20$mean),]
+min(imput_na$date)#1998-03-19
+max(imput_na$date)#1998-12-03
+
+# look at other years where both weirs overtopped...
+imput_dat_06 <- subset(imput_dat_98_20, date >= '2006-03-19' & date <='2006-12-03') # nope, 117 days estimated from RIV
+
+imput_dat_17 <- subset(imput_dat_98_20, date >= '2017-01-01' & date <='2017-07-13')
+unique(imput_dat_17$method) #RSTR_logger
+
+imput_dat_17$day <- format(imput_dat_17$date, "%j")
+imput_dat_98 <- subset(imput_dat_98_20, date >= '1998-01-01' & date <='1998-07-13')
+
+imput_dat_98$day <- format(imput_dat_98$date, "%j")
+
+imput_test_4_98 <- merge(imput_dat_98[,c(1,2,11)], imput_dat_17[,c(1,2,11)], by = "day", all = TRUE)
+plot(imput_test_4_98$mean.x, imput_test_4_98$mean.y)
+
+summary(lm(mean.x~mean.y, data = na.omit(imput_test_4_98)))#0.8073
