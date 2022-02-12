@@ -1,3 +1,5 @@
+library(dplyr)
+
 setwd("C:/Users/pgoertler/Downloads/OneDrive_1_2-7-2022")
 # now Sherwood harbor (Sacramento river)
 shw_temp <- read.csv("SHWHarbor_Temp.csv") #made for Goertler et al 2017
@@ -40,8 +42,8 @@ shw_19 <- read.csv("Sherwood_2019_WaterTempMaster.csv")
 shw_20 <- read.csv("Sherwood_2020_WaterTempMaster.csv")
 shw_16<- read.csv("SHR_WTMaster_2016.csv")
 
-colnames(shw_15)[1] <- "Date.Time"
-colnames(shw_15)[3] <- "water_temp"
+colnames(shw_20)[1] <- "Date.Time"
+colnames(shw_20)[3] <- "water_temp"
 
 shw_15_20 <- rbind(shw_15[,c(1,3)], shw_17[,c(1,3)], shw_18[,c(1,3)], shw_19[,c(1,3)], shw_20[,c(1,3)], shw_16[,c(1,3)])
 
@@ -101,3 +103,27 @@ write.csv(shw_98_20, "shw_98_20_raw_water_temp.csv")
 #2018 2018-01-01 to 2018-12-31, 15 minute
 #2019 2019-01-01 to 2019-12-31, 15 minute
 #2020 2020-01-01 to 2020-12-31, 15 minute
+
+# summarize (true) interval (e.g., how many measurements per day)
+# some is already daily and some is not
+shw_98_20 <- shw_98_20[,-2]
+colSums(is.na(shw_98_20))
+
+temp_daily <- shw_98_20 %>%
+  group_by(date) %>%
+  summarize(n())
+
+duplicates <- subset(temp_daily, `n()`>96) # shouldn't be greater than 96 (15 minute interval)
+shw_98_20_na = subset(shw_98_20, date != '2017-12-14')
+
+cv <- function(x) 100*( sd(x)/mean(x))
+
+temp_98_20_daily <- shw_98_20_na %>%
+  group_by(date) %>%
+  summarise_each(funs(mean, max, min, sd, cv))
+
+temp_98_20_daily <- merge(temp_98_20_daily, temp_daily, by = "date", all.x = TRUE)
+
+temp_98_20_daily$method <- "RSTR_logger"
+
+write.csv(temp_98_20_daily, "SHWharbor_98_20_daily_logger.csv")

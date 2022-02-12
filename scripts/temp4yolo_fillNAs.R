@@ -6,15 +6,18 @@ library(lubridate)
 # load data
 # temp_98_18_continuous_dup from temp4yolo.R
 temp_98_18_daily_master <- read.csv("temp_98_18_daily_master_du_removed.csv")
+# temp_98_20_daily from temp4SHWharbor.R
+temp_98_18_daily_master <- read.csv("SHWharbor_98_20_daily_logger.csv")
 
 head(temp_98_18_daily_master)
 temp_98_18_daily_master$date <- as.Date(temp_98_18_daily_master$date)
 min(temp_98_18_daily_master$date)
 max(temp_98_18_daily_master$date)
 
-time.check= seq(as.Date('1998-01-16'),as.Date('2018-01-30'),by='day') #7320
+time.check= seq(as.Date('1998-01-16'),as.Date('2018-01-30'),by='day') #7320 for yolo
+time.check= seq(as.Date('1998-01-23'),as.Date('2020-12-31'),by='day') #8379 for sherwood
 
-continous.dates <- data.frame (x = 1:7320, date = seq(as.Date('1998-01-16'),as.Date('2018-01-30'),by='day'))
+continous.dates <- data.frame (x = 1:length(time.check), date = seq(min(temp_98_18_daily_master$date),max(temp_98_18_daily_master$date),by='day'))
 
 temp_98_18_continuous <- merge(temp_98_18_daily_master, continous.dates, by = "date", all = TRUE)
 
@@ -57,6 +60,7 @@ dat.data$min <- ifelse(dat.data$n.. == 1 & dat.data$method == "RSTR_logger", NA,
 
 # clarify data types while keeping time series
 dat.data$Category <- ifelse(dat.data$n.. == 1 & dat.data$method == "RSTR_logger", "daily_mean", dat.data$Category)
+# this step only for yolo
 dat.data$Category <- ifelse(dat.data$n.. == 1 & dat.data$method == "WQ_w_fish", "single_measure", dat.data$Category)
 
 imput_dat <- rbind(dat.data, dat.NA.complete)
@@ -86,23 +90,27 @@ temp_daily_RIV <- read.csv("temp_daily_RIV.csv")
 temp_daily_LIS <- read.csv("temp_daily_LIS.csv")
 
 temp_daily_RIV$date <- as.Date(temp_daily_RIV$date)
+# only for yolo
 temp_daily_RIV <- subset(temp_daily_RIV, date < '2018-01-31')
 
 # make data for lm
-input <- imput_dat[,c(2,3)]
+input <- imput_dat[,c(1,2)]
 colnames(input) <- c("date", "yolo")
+colnames(input) <- c("date", "sac")
 
 dat4model <- merge(input, temp_daily_RIV[,c(1,2)], by = "date", all.x = TRUE)
 
 dat4model_na <- na.omit(dat4model)
-fit <- lm(yolo~mean, data = dat4model_na)
-summary(fit)# Adjusted R-squared:  0.8684
+fit <- lm(yolo~mean, data = dat4model_na)# Adjusted R-squared:  0.8684
+fit <- lm(sac~mean, data = dat4model_na)# Adjusted R-squared:  0.9534
+summary(fit)
 
 df_fill <- dat4model %>%
   mutate(pred = predict(fit, .)) #%>%
   # Replace NA with pred
   #mutate(yolo = ifelse(is.na(yolo), pred, yolo))
 plot(df_fill$yolo, df_fill$pred)
+plot(df_fill$sac, df_fill$pred)
 
 # add to imput
 imput_dat_Over7 <- merge(imput_dat, df_fill[,c(1,4)], by = "date", all = TRUE)
@@ -110,12 +118,13 @@ imput_dat_Over7$method <- ifelse(imput_dat_Over7$Category == "Over7" & imput_dat
 imput_dat_Over7$mean <- ifelse(is.na(imput_dat_Over7$mean), imput_dat_Over7$pred, imput_dat_Over7$mean)
 
 # rename n and remove group
-colnames(imput_dat_Over7)[8] <- "n"
-imput_dat_Over7 <- imput_dat_Over7[,-c(2,12)]
+colnames(imput_dat_Over7)[7] <- "n"
+imput_dat_Over7 <- imput_dat_Over7[,-11]
 
 write.csv(imput_dat_Over7, "yolo_temp_98_18.csv")
+write.csv(imput_dat_Over7, "SHWharbor_temp_98_20.csv")
 
-# use LIS to fill in after Jan 2018
+# use LIS to fill in after Jan 2018 (only for yolo)
 # check relationship
 head(temp_daily_LIS)
 dat.test <- merge(input, temp_daily_LIS[,c(1,2)], by = "date", all = TRUE)
@@ -163,4 +172,10 @@ imput_dat_98$day <- format(imput_dat_98$date, "%j")
 imput_test_4_98 <- merge(imput_dat_98[,c(1,2,11)], imput_dat_17[,c(1,2,11)], by = "day", all = TRUE)
 plot(imput_test_4_98$mean.x, imput_test_4_98$mean.y)
 
-summary(lm(mean.x~mean.y, data = na.omit(imput_test_4_98)))#0.8073
+summary(lm(mean.x~mean.y, data = na.omit(imput_test_4_98)))#0.7733
+
+plot(imput_test_4_98$day, imput_test_4_98$mean.x, col = "blue", ylim = c(0,30))
+par(new=TRUE)
+plot(imput_test_4_98$day, imput_test_4_98$mean.y, col = "red", ylim = c(0,30))
+
+#maybe impute the 11 days in March and use an average summer temp to do the rest?
