@@ -74,6 +74,11 @@ investigate<- cooks_dist[with(cooks_dist,order(-cooks)),]
 investigate <- investigate[1:103,]
 
 # look at timing of outliers
+tiff(filename = "figures/outlier_sac_vs_yolo.tiff", width = 10, height = 8, units = "in", res = 300)
+
 plot(all_flows_test$date, all_flows_test$YOLO, xlim = as.Date(c("1996-10-01", "2020-09-30")), ylim = c(0,19083), col = all_flows_test$col, pch = all_flows_test$pch)
 par(new = TRUE)
-plot(investigate$date, investigate$YOLO, xlim = as.Date(c("1996-10-01", "2020-09-30")), ylim = c(0,19083), pch = 18)
+plot(investigate$date, investigate$YOLO, xlim = as.Date(c("1996-10-01", "2020-09-30")), ylim = c(0,19083), pch = 18, xlab = "", ylab = "")
+legend("topleft", c("above average", "below avrage", "Cook's outlier", "not outlier", "higher than expected (>3%)"), pch = c(0,0,1,2,18), col = c("red", "blue", "black", "black", "black"))
+
+dev.off()
