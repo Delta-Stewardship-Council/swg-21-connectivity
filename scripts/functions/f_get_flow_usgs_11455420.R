@@ -8,26 +8,26 @@ library(janitor)
 
 # get data function - data retrieval is in Pacific Standard Time
 
-f_get_SRV <- function(siteNumbers=11455420, parameterCd = c('00065', '72137'), startDate = "1996-10-01", endDate = "2021-09-30", tz = "Etc/GMT+8"){
+f_get_11455420 <- function(siteNumbers=11455420, parameterCd = c('00065', '72137'), startDate = "1996-10-01", endDate = "2021-09-30", tz = "Etc/GMT+8"){
 
   # get data
   print("Downloading data...")
-  tidedat <- dataRetrieval::readNWISuv(siteNumbers, parameterCd, startDate, endDate, tz)
+  SRVdat <- dataRetrieval::readNWISuv(siteNumbers, parameterCd, startDate, endDate, tz)
 
   # fix names
 
-  tidedat <- dataRetrieval::renameNWISColumns(tidedat)
+  SRVdat <- dataRetrieval::renameNWISColumns(SRVdat)
 
   print("Data downloaded!")
 
   # clean names
-  tidedat <- janitor::clean_names(tidedat)
+  SRVdat <- janitor::clean_names(SRVdat)
 
   # write out
-  readr::write_csv(tidedat, glue("data_raw/raw_flow_usgs_11455420.csv"))
+  readr::write_csv(SRVdat, glue("data_raw/raw_flow_usgs_11455420.zip"))
 
   # print message!
-  print(glue("Data saved here: 'data_raw/raw_flow_usgs_11455420.csv'"))
+  print(glue("Data saved here: 'data_raw/raw_flow_usgs_11455420.zip'"))
 }
 
-f_get_SRV()
+f_get_11455420

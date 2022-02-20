@@ -7,16 +7,16 @@ library(contentid)
 library(janitor)
 library(tidyr)
 
-f_clean_SRV_stage_flow <- function(){
+f_clean_flow_usgs_11455420 <- function(){
 
   # get raw data ID:
- SRV <- contentid::store("data_raw/raw_flow_usgs_11455420.csv")
-
-  SRV_id <- contentid::resolve("hash://sha256/0812810f047455a283d48de40ed81305907bc53cf2929e24db74381e5934945e")
+ SRV <- contentid::store("data_raw/raw_flow_usgs_11455420.zip")
+SRV
+  SRV_id <- contentid::resolve("hash://sha256/7c2b6318b8b2efccc4ede3021a33f1c32c0a7c9498877e4d29a378e461bee89a")
 
   # read in data
 
-  SRVuv <- read_csv("data_raw/raw_flow_usgs_11455420.csv")
+  SRVuv <- read_csv("data_raw/raw_flow_usgs_11455420.zip")
 
   #subset and clean column headers
 
@@ -88,6 +88,8 @@ f_clean_SRV_stage_flow <- function(){
 
   #write new file
 
-  write.csv(SRVdv_off, "data_clean/clean_flow_11455420.csv")
+  write.csv(SRVdv_off, "data_clean/clean_flow_usgs_11455420.csv")
 
 }
+
+f_clean_flow_usgs_11455420

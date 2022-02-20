@@ -4,7 +4,6 @@
 #tidal trend input was the Rio Vista stage and flow data generated in the f_get_SRV_stage_flow and f_clean_SRV_stage_flow scripts
 
 library(glue)
-library(dataRetrieval)
 library(dplyr)
 library(ggplot2)
 library(janitor)
@@ -13,13 +12,13 @@ library(lubridate)
 f_clean_tides <- function(){
 
   # get raw data ID:
-  SRV_tide <- contentid::store("data/tides_usgs_11455420.csv")
+  SRV_tide <- contentid::store("data/tides_usgs_11455420.zip")
 
-  SRV_id <- contentid::resolve("hash://sha256/4bb88791e6e9212bf4d0911c2f8be3614a1b9eeb78e861dd5721f2a33195f263")
+  SRV_id <- contentid::resolve("hash://sha256/2874c265bd5a33cda442cbfa8dc2df41ceb61ced972e0eddf35fc618529a7fbe")
 
   # read in data
 
-  tt <- read.csv(("data/tides_usgs_11455420.csv"))
+  tt <- read_csv(("data/tides_usgs_11455420.zip"))
 
   # clean names
   tt <- janitor::clean_names(tt)
