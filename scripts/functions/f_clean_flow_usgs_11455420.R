@@ -10,8 +10,8 @@ library(tidyr)
 f_clean_flow_usgs_11455420 <- function(){
 
   # get raw data ID:
- SRV <- contentid::store("data_raw/raw_flow_usgs_11455420.zip")
-SRV
+  SRV <- contentid::store("data_raw/raw_flow_usgs_11455420.zip")
+  SRV
   SRV_id <- contentid::resolve("hash://sha256/7c2b6318b8b2efccc4ede3021a33f1c32c0a7c9498877e4d29a378e461bee89a")
 
   # read in data
@@ -32,9 +32,8 @@ SRV
     summarize(gh = mean(gh_inst, na.rm=TRUE), Q_tf = mean(Q_tf, na.rm = TRUE))
 
   #explore data - notice step change between WY05 and WY06
-
-  plot <- ggplot()+ geom_line(data = SRVdv, aes(x=date, y=gh), color = "red")
-
+  library(ggplot2)
+  plot <- ggplot() + geom_line(data = SRVdv, aes(x=date, y=gh), color = "red")
   plot
 
   #explore offset to correct WY05 and earlier data to current datum
@@ -81,9 +80,7 @@ SRV
     summarize(gh = mean(gh_off, na.rm=TRUE), Q_tf = mean(Q_tf, na.rm = TRUE))
 
   #view new timeseries with offset
-
   plot <- ggplot()+ geom_line(data = SRVdv_off, aes(x=date, y=gh), color = "blue")
-
   plot
 
   #write new file
@@ -92,4 +89,4 @@ SRV
 
 }
 
-f_clean_flow_usgs_11455420
+#f_clean_flow_usgs_11455420
