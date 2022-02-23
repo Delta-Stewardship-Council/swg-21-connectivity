@@ -46,7 +46,7 @@ f_clean_indundation <- function(){
   dayflow$date <- as.Date(dayflow$Date, "%m/%d/%Y")
 
   # merge two water datasets
-  all_flows <- merge(dayflow[,c(5,30)], discharge_sac_na[,c(1,4)], by = "date")
+  all_flows <- merge(dayflow[,c(4,5,30)], discharge_sac_na[,c(1,4)], by = "date")
   check.again <- seq(as.Date('1996-10-01'), as.Date('2020-09-30'), by = 'day') # no missing dates!!!
 
   ### calculate inundation days
