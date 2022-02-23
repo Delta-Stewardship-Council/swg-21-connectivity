@@ -6,7 +6,7 @@ library(readr)
 f_load_flow_tides_usgs_11455420 <- function() {
   # Get contentids ---------------------------------------------------------
   SRV_flow_id <- contentid::store("data_clean/clean_flow_11455420.csv")
-  SRV_flow_file <- contentid::resolve(SRV_id)
+  SRV_flow_file <- contentid::resolve(SRV_flow_id)
   SRV_tide_id <- contentid::store("data_clean/clean_tides_usgs_11455420.csv")
   SRV_tide_file <- contentid::resolve(SRV_tide_id)
 
@@ -22,4 +22,5 @@ f_load_flow_tides_usgs_11455420 <- function() {
   readr::write_csv(join, "data_model/model_flow_tides_usgs_11455420.csv")
 }
 
-f_load_flow_tides_usgs_11455420
+# write data out by running function
+f_load_flow_tides_usgs_11455420()
