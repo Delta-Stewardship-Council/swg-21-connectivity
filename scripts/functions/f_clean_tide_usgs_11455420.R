@@ -7,6 +7,7 @@ library(glue)
 library(dplyr)
 library(ggplot2)
 library(janitor)
+library(readr)
 library(lubridate)
 
 f_clean_tides <- function(){
@@ -41,4 +42,5 @@ f_clean_tides <- function(){
   print(glue("Data saved here: 'data_clean/clean_tides_usgs_11455420.csv'"))
 }
 
-f_clean_tides
+# run function
+f_clean_tides()
