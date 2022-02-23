@@ -30,4 +30,5 @@ f_get_11455420 <- function(siteNumbers=11455420, parameterCd = c('00065', '72137
   print(glue("Data saved here: 'data_raw/raw_flow_usgs_11455420.zip'"))
 }
 
-f_get_11455420
+# run with
+f_get_11455420()

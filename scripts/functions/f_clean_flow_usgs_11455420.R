@@ -89,4 +89,5 @@ f_clean_flow_usgs_11455420 <- function(){
 
 }
 
-#f_clean_flow_usgs_11455420
+# run function
+f_clean_flow_usgs_11455420()
