@@ -8,11 +8,9 @@ all_flows <- read.csv("data_clean/clean_inundation_days.csv")
 head(all_flows)
 plot(all_flows$YOLO, all_flows$SAC)
 
-
 #all_flows_test <- merge(all_flows, dayflow[,c(4,30)], by = "date")
 all_flows_test <- subset(all_flows, inundation == 0)
 all_flows_test$date <- as.Date(all_flows_test$date)
-
 mean(all_flows_test$YOLO) #542.5252
 
 # for plotting
@@ -43,9 +41,7 @@ all_flows_test$pch <- ifelse(all_flows_test$cooks > cutoff, 1, 2)
 cooks_dist <- subset(all_flows_test, pch == 1 & col == "red") #above Cooks cutoff and average value
 # 412 observations
 
-
 png(filename = "figures/sac_vs_yolo.png", width = 10, height = 8, units = "in", res = 300)
-
 
 plot(all_flows_test$SAC, all_flows_test$YOLO, xlim = c(0,77500), ylim = c(0,19083), col = all_flows_test$col, pch = all_flows_test$pch, main = "Yolo flow is roughly 3% of Sac River")
 abline(a=0,b=0.03,col="green",lwd=3) #Yolo flow is roughly 3% of Sac River

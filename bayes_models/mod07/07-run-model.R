@@ -17,7 +17,7 @@ library(ggplot2)
 library(lubridate)
 #library(postjags)
 library(rethinking)
-library(gtools)
+library(LaplacesDemon)
 
 # Bring in Data For Model -------------------------------------------------
 
@@ -38,22 +38,6 @@ sd(tapply(chla_all$chl, chla_all$station_id, mean))
 # look at chl by station
 ggplot(as.data.frame(chla_all), aes(x = station, y = log(chl))) + geom_boxplot()
 
-# Create Model Datalist for Qant ---------------------------------------------------
-
-datlist <- list(chl = log(chla_all$chl),
-                Q = c(covars$Q),
-                Srad_mwk = c(covars$Srad_mwk),
-                Wtemp_RIV_mwk = c(covars$Wtemp_RIV_mwk),
-                inund_days = c(covars$inund.days),
-                station_id = chla_all$station_id,
-                Nstation = length(unique(chla_all$station_id)),
-                doy1999 = chla_all$doy1999,
-                N = nrow(chla_all))
-#pA = c(1, 3, 3, 7, 7),
-# mean of 1 day, mean of 3 days before that, etc
-#nlagA = 5, # index for for loop
-#alphaA = rep(1, 5)) # for prior
-
 # Adjust Data for use with rethinking model -------------------------------
 Q_2 <- covars$Q[c(chla_all$doy1999),]
 Srad_mwk_2 <- covars$Srad_mwk[c(chla_all$doy1999),]
@@ -62,30 +46,12 @@ inund_days_2 <- covars$inund.days[c(chla_all$doy1999)]
 Nstation_2 <- rep(length(unique(chla_all$station_id)), length(chla_all$chl))
 N_2 <- rep(nrow(chla_all), length(chla_all$chl))
 
-# use lag of
-nlagA <- 5
-pA = c(1, 3, 3, 7, 7)
-qTemp <- matrix(0, nrow = length(datlist$chl), ncol = nlagA)
-for(i in 1:length(datlist$chl)){
-for(k in 1:nlagA){
-qTemp[i,k] <-
-mean(datlist$Q[(datlist$doy1999[i]-sum(pA[1:k])):(datlist$doy1999[i]-sum(pA[1:k])+pA[k] - 1)]) #*wA[k]
-  }
-}
-
 datlist_t <- list(chl = log(chla_all$chl),
                   Q = Q_2,
-                  #Srad_mwk = Srad_mwk_2,
-                  #Wtemp_RIV_mwk = Wtemp_RIV_mwk_2,
-                  #inund_days = inund_days_2,
-                  station_id = as.integer(chla_all$station_id),
-                  doy1999 = chla_all$doy1999,
-                  qTemp1 = qTemp[,1], # yesterday
-                  qTemp2 = qTemp[,2], # 4 d ago
-                  qTemp3 = qTemp[,3], # 7 d ago
-                  qTemp4 = qTemp[,4], # 14 d ago
-                  qTemp5 = qTemp[,5], # 21 d ago
-                  alphaA = rep(1, 5))
+                  Srad_mwk = Srad_mwk_2,
+                  Wtemp_RIV_mwk = Wtemp_RIV_mwk_2,
+                  inund_days = inund_days_2,
+                  station_id = as.integer(chla_all$station_id))
 Nstation <- 7
 
 
@@ -95,21 +61,20 @@ rm4 <- ulam(
     # likelihood
     chl ~ dnorm(mu, 1/sqrt(tau)) ,
     # regression
-    mu <- B1 + B2 * Q  + B3 * Qant +  B4 * Srad_mwk + eps[station_id] ,
+    mu <- B1 + B2 * Q + B3 * Srad_mwk + B4 * Wtemp_RIV_mwk + B5 * inund_days + eps[station_id] ,
+
     # Priors for random effects
     # non-identifiable random effects
     eps[station_id] ~ normal(0, sigeps) ,
-
     # identifiable random effects
     #Estar[station_id] <- eps[station_id] - mean(eps[1:Nstation]) ,
     ## for Estar[1]: precis(rm4, depth = 2)[1,1] - mean(precis(rm4, depth = 2)[c(1:7),1])
-
     # Diffuse normal priors for regression coefficients
     B1 ~ normal(0, 1/sqrt(0.001)) ,
     B2 ~ normal(0, 1/sqrt(0.001)) ,
     B3 ~ normal(0, 1/sqrt(0.001)) ,
     B4 ~ normal(0, 1/sqrt(0.001)) ,
-
+    B5 ~ normal(0, 1/sqrt(0.001)) ,
     # Identifiable parameter vector
     # Bstar1 <- B1 +  mean(eps[1:Nstation]) ,
     # Bstar2 <- B2 ,
@@ -117,14 +82,6 @@ rm4 <- ulam(
     # Bstar4 <- B4 ,
     # Bstar5 <- B5 ,
     ## for Bstar[1]: precis(rm4, depth = 2)[8,1] + mean(precis(rm4, depth = 2)[c(1:7),1])
-
-    ### Weighting for Qant
-    # Sum antecedent components across all timesteps
-    Qant <- qTemp1*wA[1] + qTemp2*wA[2] + qTemp3*wA[3] + qTemp4*wA[4] + qTemp5*wA[5],
-
-    simplex[5]: wA ~ dirichlet(alphaA),
-    ### End Weighting for Qant
-
     # Diffuse gamma prior for observation-level precisions
     tau ~ gamma(0.01, 0.01) ,
 
@@ -139,69 +96,6 @@ precis(rm4, depth = 2)
 
 # plot prior
 curve( dgamma( x, 0.01, 0.01 ) , from=0 , to=20 )
-
-library(gtools) # for rdirichlet()
-# Add in the Qant lags as separate covariates and attach weights
-rm5 <- ulam(
-  alist(
-    # likelihood
-    chl ~ dnorm(mu, 1/sqrt(tau)) ,
-    # regression
-    mu <- B1 + B2 * Q + B3 * Srad_mwk + B4 * Wtemp_RIV_mwk + B5 * inund_days + eps[station_id] + B6 * Qant ,
-
-    # Priors for random effects
-    # non-identifiable random effects
-    eps[station_id] ~ normal(0, sigeps) ,
-
-    # identifiable random effects
-    #Estar[station_id] <- eps[station_id] - mean(eps[1:Nstation]) ,
-    ## for Estar[1]: precis(rm4, depth = 2)[1,1] - mean(precis(rm4, depth = 2)[c(1:7),1])
-
-    # Diffuse normal priors for regression coefficients
-    B1 ~ normal(0, 1/sqrt(0.001)) ,
-    B2 ~ normal(0, 1/sqrt(0.001)) ,
-    B3 ~ normal(0, 1/sqrt(0.001)) ,
-    B4 ~ normal(0, 1/sqrt(0.001)) ,
-    B5 ~ normal(0, 1/sqrt(0.001)) ,
-    B6 ~ normal(0, 1/sqrt(0.001)) ,
-
-    # Identifiable parameter vector
-    # Bstar1 <- B1 +  mean(eps[1:Nstation]) ,
-    # Bstar2 <- B2 ,
-    # Bstar3 <- B3 ,
-    # Bstar4 <- B4 ,
-    # Bstar5 <- B5 ,
-    ## for Bstar[1]: precis(rm4, depth = 2)[8,1] + mean(precis(rm4, depth = 2)[c(1:7),1])
-
-    ### Weighting for Qant
-    # Sum antecedent components across all timesteps
-    Qant <- qTemp1*wA[1] + qTemp2*wA[2] + qTemp3*wA[3] + qTemp4*wA[4] + qTemp5*wA[5],
-
-    # nlagA <- 5,
-    # alphaA <- rep(1, 5),
-    # set Priors for weights using the delta trick
-    #daily variable weights
-      simplex[5]: wA ~ dirichlet(alphaA), #rdirichlet(10, alpha = rep(2, 7))
-    # Sum of the deltas for each covariate
-    #sumA <- sum(deltaA[c(1:nlagA)]),
-
-    # a way to avoid using ddirich distrib function in JAGS
-    # use a variable drawn from gamma distrib
-    # use a weight from the dirich distribution
-    # use weight from that point / sum of all deltas
-
-    ### End Weighting for Qant
-
-    # Diffuse gamma prior for observation-level precisions
-    tau ~ gamma(0.01, 0.01) ,
-
-    # Diffuse folded-t prior for random-effect standard deviation
-    # Most effective for smaller number of groups; how to add truncated distrib?
-    sigeps ~ dstudent(2, mu = 0, sigma = 1/sqrt(10))
-    #dhalft(2, mu = 0, sigma = 1/sqrt(10))
-  ) ,
-  data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE, warmup = 1000, iter = 7000, cmdstan = TRUE)
-precis(rm4, depth = 2)
 
 # Try a different version
 rm_reparm <- ulam(
@@ -232,8 +126,6 @@ rm_reparm <- ulam(
 # marginal posterior distributions of parameters
 precis(rm_reparm, depth = 2)
 trankplot(rm_reparm, ncols = 2)
-# Look at mcmc chains
-traceplot_ulam(rm_reparm)
 # investigate var-cov
 pairs(rm_reparm@stanfit)
 round( vcov( rm_reparm ) , 3 )
@@ -247,52 +139,177 @@ compare(rm4, rm_reparm, function = LOO) # to use LOOIS
 plot(compare(rm4, rm_reparm))
 
 
-# Rethinking model just with Q and Qant
-rm6 <- ulam(
-  alist(
-    # likelihood
-    chl ~ dnorm(mu, 1/sqrt(tau)) ,
-    # regression
-    mu <- B1 + B2 * Q  + B3 * Qant + eps[station_id] ,
-    # Priors for random effects
-    # non-identifiable random effects
-    eps[station_id] ~ normal(0, sigeps) ,
+# Create Model Datalist ---------------------------------------------------
 
-    # Diffuse folded-t prior for random-effect standard deviation; how to add truncated distrib?
+datlist <- list(chl = log(chla_all$chl),
+                Q = c(covars$Q),
+                Srad_mwk = c(covars$Srad_mwk),
+                Wtemp_RIV_mwk = c(covars$Wtemp_RIV_mwk),
+                inund_days = c(covars$inund.days),
+                station_id = chla_all$station_id,
+                Nstation = length(unique(chla_all$station_id)),
+                doy1999 = chla_all$doy1999,
+                N = nrow(chla_all))
+                #pA = c(1, 3, 3, 7, 7),
+                # mean of 1 day, mean of 3 days before that, etc
+                #nlagA = 5, # index for for loop
+                #alphaA = rep(1, 5)) # for prior
 
-    # identifiable random effects
-    #Estar[station_id] <- eps[station_id] - mean(eps[1:Nstation]) ,
-    ## for Estar[1]: precis(rm4, depth = 2)[1,1] - mean(precis(rm4, depth = 2)[c(1:7),1])
 
-    # Diffuse normal priors for regression coefficients
-    B1 ~ normal(0, 1/sqrt(0.001)) ,
-    B2 ~ normal(0, 1/sqrt(0.001)) ,
-    B3 ~ normal(0, 1/sqrt(0.001)) ,
+# Set up Initial Model Starts ---------------------------------------------
 
-    # Identifiable parameter vector
-    # Bstar1 <- B1 +  mean(eps[1:Nstation]) ,
-    # Bstar2 <- B2 ,
-    # Bstar3 <- B3 ,
-    ## for Bstar[1]: precis(rm4, depth = 2)[8,1] + mean(precis(rm4, depth = 2)[c(1:7),1])
+# Initials functions for root node parameters
+inits <- function(){
+  list(sig.eps = runif(1, 0, 1),
+       tau = runif(1, 0, 1),
+       B = rnorm(5, 0, 1000)) # for 4 B parameters, adjust as needed
+}
+initslist <- list(inits(), inits(), inits())
 
-    ### Weighting for Qant
-    # Sum antecedent components across all timesteps
-    Qant <- qTemp1*wA[1] + qTemp2*wA[2] + qTemp3*wA[3] + qTemp4*wA[4] + qTemp5*wA[5],
+# run this if model has been successfully run already:
 
-    simplex[5]: wA ~ dirichlet(alphaA),
-    ### End Weighting for Qant
+# Or load saved.state
+load("bayes_models/mod06/inits/sstate_20211220.Rda")
+inits_2 <- function(){
+  list(sig.eps = runif(1, 0, 1),
+       tau = runif(1, 0, 1),
+       B = rnorm(5, 0, 1)) # for 3 B parameters, adjust as needed
+}
+initslist <- list(list(sig.eps = saved.state[[2]][[2]]$sig.eps, tau = saved.state[[2]][[2]]$tau, B = inits_2()$B), list(sig.eps = saved.state[[2]][[1]]$sig.eps, tau = saved.state[[2]][[1]]$tau, B = inits_2()$B), inits_2())
 
-    # Diffuse gamma prior for observation-level precisions
-    tau ~ gamma(0.01, 0.01) ,
+# Run Model ---------------------------------------------------------------
 
-    # Diffuse folded-t prior for random-effect standard deviation
-    # Most effective for smaller number of groups; how to add truncated distrib?
-    #sigeps ~ dcauchy(mu = 0, sigma = 1/sqrt(10))
-    sigeps ~ dstudent(2, mu = 0, sigma = 1/sqrt(10))
-    #dhalft(2, mu = 0, sigma = 1/sqrt(10))
-  ) ,
-  data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE, warmup = 1000, iter = 7000, cmdstan = TRUE) #, sample = TRUE
+# Run model
+jm <- jags.model("bayes_models/mod06/sam_model.JAGS",
+                 data = datlist,
+                 inits = initslist,
+                 n.chains = 3)
 
+update(jm, n.iter = 1000)
+
+# Sample Posterior
+jm_coda <- coda.samples(jm,
+                        variable.names = c("deviance", "Dsum", "Bstar",
+                                           "sig", "tau", "sig.eps", "tau.eps",
+                                           "Estar"),
+                        n.iter = 1000*15,
+                        thin = 15)
+
+wanted <- c("deviance", "Dsum", "Bstar",
+            "sig", "tau", "sig.eps", "tau.eps",
+            "Estar")
+library(jagsUI)
+# Summary of marginal posterior distributions
+( out <- jags(datlist, initslist, wanted, "bayes_models/mod06/sam_model.JAGS", DIC=FALSE,
+              n.chains=3, n.adapt=100, n.iter=1000, n.burnin=0) )
+# Calculate cross correlations among variables from MCMC output
+library(coda)
+crosscorr(out$samples) # we see that the posteriors of Srad_mwk and Wtemp_RIV_mwk are negatively correlated (-0.79), and
+# those for Q and inund_days are negatively correlated (-0.63)
+
+# Plot correlation in posterior between Srad_mwk and Wtemp_RIV_mwk
+png("bayes_models/mod06/fig_out/corr_posteriors_Srad_Wtemp.png",
+    height = 5, width = 6, units = "in", res = 300)
+par(cex = 1.25)
+with(out$sims.list, plot(Bstar[,3], Bstar[,4], xlab = "Srad_mwk", ylab = "Wtemp_RIV_mwk"))
+dev.off()
+
+# Plot correlation in posterior between Q and inund_days
+png("bayes_models/mod06/fig_out/corr_posteriors_Q_inund_days.png",
+    height = 5, width = 6, units = "in", res = 300)
+par(cex = 1.25)
+with(out$sims.list, plot(Bstar[,5], Bstar[,2], xlab = "Q", ylab = "inund_days"))
+dev.off()
+
+# Look at the sum of their posterior and compare to the individual posteriors
+# Srad and Wtemp
+png("bayes_models/mod06/fig_out/dens_posterior_SradWtemp.png",
+    height = 5, width = 6, units = "in", res = 300)
+par(cex = 1.25)
+sum_SradWtemp <- out$sims.list$Bstar[,3] + out$sims.list$Bstar[,4]
+dens( sum_SradWtemp , lwd=2 , xlab="sum of Srad and Wtemp" )
+dev.off()
+
+# Q and inund_days
+png("bayes_models/mod06/fig_out/dens_posterior_Qinund.png",
+    height = 5, width = 6, units = "in", res = 300)
+par(cex = 1.25)
+sum_Qinund <- out$sims.list$Bstar[,2] + out$sims.list$Bstar[,5]
+dens( sum_Qinund , lwd=2 , xlab="sum of Q and inund" )
+dev.off()
+
+
+# Load Saved Model --------------------------------------------------------
+
+load("bayes_models/mod06/run_20211220.rda")
+
+# Visualize
+mcmcplot(jm_coda, col = c("red", "blue", "green"))
+# Look at R-hat values. >1.02 would indicate did not converge
+gelman.diag(jm_coda, multivariate = FALSE)
+
+# Save state for rerunning
+newinits <- initfind(coda = jm_coda)
+#saved.state <- removevars(initsin = newinits, variables=c(2:5, 8, 9))
+saved.state <- newinits
+save(saved.state, file = "bayes_models/mod06/inits/sstate_20211220.Rda")
+
+
+# Look at Outputs ---------------------------------------------------------
+
+# betas
+caterplot(jm_coda,
+          regex  = "Bstar",
+          reorder = FALSE)
+
+# stations
+caterplot(jm_coda,
+          parms = "Estar",
+          reorder = FALSE)
+
+# time lags
+caterplot(jm_coda,
+          parms = "wA",
+          reorder = FALSE)
+
+# summarize and plot
+coda_sum <- tidyMCMC(jm_coda,
+                     conf.int = TRUE,
+                     conf.level = 0.95,
+                     conf.method = "HPDinterval")
+
+# intercept (interpreted as log(chlA) at average conditions, since covariates are standardized)
+coda_sum %>%
+  filter(grepl("Bstar\\[1", term)) %>%
+  ggplot(aes(x = term, y = estimate)) +
+  geom_hline(yintercept = 0, color = "red") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  scale_y_continuous("Intercept") +
+  theme_bw()
+
+# slope of Q, Qant
+# can interpret relative influence of each covariate, since covariates are standardized
+coda_sum %>%
+  filter(grepl("Bstar\\[[2-5]{1}", term)) %>%
+  ggplot(aes(x = term, y = estimate)) +
+  geom_hline(yintercept = 0, color = "red") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  scale_x_discrete(labels = c("Q", "Srad_mwk", "Wtemp_mwk", "Inund_days")) +
+  scale_y_continuous("Slope of covariates") +
+  theme_bw()
+ggsave(filename = "bayes_models/mod06/fig_out/slope_of_betas_qant_sol_wtemp_inund_20211217.png",
+       dpi=300, width = 10, height = 8)
+
+# weights of Qant
+coda_sum %>%
+  filter(grepl("wA", term)) %>%
+  ggplot(aes(x = term, y = estimate)) +
+  geom_hline(yintercept = 1/5, color = "red") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  scale_y_continuous("Weights of past Q") +
+  theme_bw()
+ggsave(filename = "bayes_models/mod05/fig_out/weights_of_qant_20211207.png",
+       dpi=300, width = 10, height = 8)
 
 
 # save model
