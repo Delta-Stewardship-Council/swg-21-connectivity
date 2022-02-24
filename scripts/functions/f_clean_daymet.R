@@ -25,7 +25,7 @@ daymet_df <- daymet_df %>%
             daymet_tmin = tmin_deg_c, # min temp
             daymet_tmean = (daymet_tmax + daymet_tmin) / 2, # mean temp
             daymet_trange = daymet_tmax - daymet_tmin, # temp range
-            daymet_srad = srad_w_m_2, # soloar radiation
+            daymet_srad = srad_w_m_2, # solar radiation
             daymet_vpd = vp_pa)
 
 # save out:
