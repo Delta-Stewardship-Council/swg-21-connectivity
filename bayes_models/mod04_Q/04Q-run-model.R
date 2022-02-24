@@ -86,19 +86,6 @@ jm_coda <- coda.samples(jm,
                         n.iter = 1000*15,
                         thin = 15)
 
-wanted <- c("deviance", "Dsum", "Bstar",
-            "sig", "tau", "sig.eps", "tau.eps",
-            "Estar")
-library(jagsUI)
-# Summary of marginal posterior distributions
-( out <- jags(datlist, initslist, wanted, "bayes_models/mod04_Q/sam_model.JAGS", DIC=FALSE,
-              n.chains=3, n.adapt=100, n.iter=1000, n.burnin=0) )
-# Compare to the individual of Q
-png("bayes_models/mod04_Q/fig_out/dens_posterior_Q.png",
-    height = 5, width = 6, units = "in", res = 300)
-par(cex = 1.25)
-dens( out$sims.list$Bstar[,2] , lwd=2 , xlab="Q" )
-dev.off()
 # Load Saved Model --------------------------------------------------------
 
 #load("bayes_models/mod04/run_20211206.rda")

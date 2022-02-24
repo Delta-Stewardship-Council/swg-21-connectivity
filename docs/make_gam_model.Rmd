@@ -38,8 +38,6 @@ library(psych)
 library(mgcv)
 library(ggplot2)
 library(viridis)
-library(lme4)
-library(jtools)
 ```
 
 ### Read in data
@@ -80,10 +78,9 @@ chla_uniq_date = chla_all %>% group_by(doy1998) %>% sample_n(1)
 chla_covars <- left_join(chla_uniq_date, final_covars, by=c("doy1998", "date"))
 
 x <- na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
-
 ```
 
-### Dataset with all chla (multiple stations and points on same day)
+### Dataset with all chla (multiple stations)
 ```{r}
 gam_data_allstations <- left_join(chla_all, final_covars, by = c("doy1998", "date")) %>%
   filter(chl > 0 & station != '11455420') %>%
@@ -93,10 +90,6 @@ gam_data_allstations <- left_join(chla_all, final_covars, by = c("doy1998", "dat
          station_id = factor(station_id))
 
 str(gam_data_allstations)
-
-# include station but still only one covariate per day
-# Need to only have one per date for model to run
-x2 <- na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998, station) 
 ```
 
 ## Modeling
@@ -225,87 +218,9 @@ AIC(gls.final, gls.6) # How do I check this??
 
 ### GLMM
 ```{r}
-lme1 = lme(log_chla ~ Q_sday + inund_days, na.action = na.omit, data = x2, random = ~1|station,
-           correlation = corARMA(form =~ doy1998, p=1, q=1))
-summary(lme1)
-
-lme2 <- lme(log_chla ~ Q_sday + inund_days + T_mwk, na.action = na.omit, data = x2,
-               random = ~ 1|station,
-               correlation = corARMA(form =~ doy1998, p=1, q=1))
-summary(lme2)
-par(mfrow = c(2,2))
-plot(lme2)
+gls.7 = gls(log_chla ~ inund_days + Q_sday + , na.action = na.omit, data = x, correlation = corARMA(form =~ doy1998, p=1, q=1))
 ```
 
-Plot predictions
-```{r}
-newdat <- expand.grid(
-  Q_sday = c(min(x2$Q_sday), mean(x2$Q_sday), max(x2$Q_sday)),
-  inund_days = c(min(x2$inund_days), mean(x2$inund_days), max(x2$inund_days)),
-  T_mwk = c(min(x2$T_mwk), mean(x2$T_mwk), max(x2$T_mwk)))
-
-
-
-sjPlot::plot_model(lme2)
-sjPlot::plot_model(lme2, 
-                   axis.labels=c("Flow", "Inundation Days", "Mean weekly temperature"),
-                   show.values=TRUE, show.p=TRUE,
-                   title="Effect of Variables on Chla")
-
-effect_plot(model = lme2, pred = inund_days, int.type = "confidence")
-
-
-
-effects_flow <- effects::effect(term= "Q_sday", mod= lme2)
-summary(effects_flow) #output of what the values are
-effects_flow2 <- as.data.frame(effects_flow)
-
-effects_inund <- effects::effect(term= "inund_days", mod= lme2)
-summary(effects_inund) #output of what the values are
-effects_inund2 <- as.data.frame(effects_inund)
-
-effects_temp <- effects::effect(term= "T_mwk", mod= lme2)
-summary(effects_temp) #output of what the values are
-effects_temp2 <- as.data.frame(effects_temp)
-
-flow_plot <- ggplot() + 
-geom_point(data=subset(x2, station=="USGS 657"), aes(Q_sday, log_chla)) + 
-  geom_point(data=effects_flow2, aes(x=Q_sday, y=fit), color="blue") +
-  geom_line(data=effects_flow2, aes(x=Q_sday, y=fit), color="blue") +
-  geom_ribbon(data= effects_flow2, aes(x=Q_sday, ymin=lower, ymax=upper), alpha= 0.3, fill="blue") +
-  labs(x="Flow_sameday", y="Log Chlorophylla")
-
-flow_plot
-
-
-temp_plot <- ggplot() + 
-geom_point(data=subset(x2, station=="USGS 657"), aes(T_mwk, log_chla)) + 
-  geom_point(data=effects_temp2, aes(x=T_mwk, y=fit), color="blue") +
-  geom_line(data=effects_temp2, aes(x=T_mwk, y=fit), color="blue") +
-  geom_ribbon(data= effects_temp2, aes(x=T_mwk, ymin=lower, ymax=upper), alpha= 0.3, fill="blue") +
-  labs(x="Mean Weekly Air Temperature", y="Log Chlorophylla")
-
-temp_plot
-
-
-inund_plot <- ggplot() + 
-geom_point(data=subset(x2, station=="USGS 657"), aes(inund_days, log_chla)) + 
-  geom_point(data=effects_inund2, aes(x=inund_days, y=fit), color="blue") +
-  geom_line(data=effects_inund2, aes(x=inund_days, y=fit), color="blue") +
-  geom_ribbon(data= effects_inund2, aes(x=inund_days, ymin=lower, ymax=upper), alpha= 0.3, fill="blue") +
-  labs(x="Inundation Days", y="Log Chlorophylla") 
-
-inund_plot
-
-table <- sjPlot::tab_model(lme2, 
-                  show.re.var= TRUE, 
-                  pred.labels =c("(Intercept)", "Q_sday", "inund_days", "T_mwk"),
-                  dv.labels= "Effects of Environmental Variables on Chlorophyll a")
-table
-
-
-jtools::effect_plot(model = lme2)
-```
 
 
 ### GAMM

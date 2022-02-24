@@ -13,167 +13,25 @@ library(glue)
 
 # Bayesian Modeling Overview
 
-The objective of this model is to determine how environmental variables during periods of floodplain connectivity influence chlorophyll-a in the North Delta.  
+The objective
 
-Better understanding of this issue could inform implementation of the Delta Plan, Delta Adapts climate change scenario planning, ITP and BiOp restoration targets and performance metrics. Increasing floodplain connectivity could export fish food downstream, improve native fish survival and reduce reliance on hatcheries.
+Why
 
-Jessica Guo provided code for Model 1, off of which all subsequent model iterations were derived.  The code for iterations of the Bayesian model are located in numbered subfolders (e.g., mod01) within the folder /bayes_models.  Model-specific data are generated via f_make_bayes_x_dataset.R files, where x corresponds to the model number.  As appropriate, model subfolders contain output figures in /fig_out folders and saved initial (start) parameter values in /inits folders. For JAGS models, the R script is a wrapper that brings in and compiles the model-specific data, generates and/or loads initial values, calls the JAGs model (sam_model.JAGS), and visualizes model outputs. NAs were filled through ...
-
-## Response Variable
-
-In all model iterations, log(chl) was used as the response variable, and in many models the time series spanned date >= 1998-01-01 and < 2020-10-01, with daily measurements as possible.  Sources: IEP Integrated WQ , 1998-2021: USGS (Cloern); EMP; USBR; USGS CA Water Science Center, 2012-2021; DWR Yolo Bypass Monitoring, Chla: 2009-2021
 
 ## Covariates of Interest
 
-* Sampling station for chlorophyll measurements (random effect); 7 stations (USBR 16, 34, 44, USGS 657, 11455315, 11455350, 11455385)
-* Flow (discharge) on the same day as the chlorophyll observation (Source: DWR Dayflow, Q)
-* Flow at various lags up to 3 weeks prior to chlorophyll sampling (Source: DWR Dayflow, Q)
-* Solar radiation - mean daily (Source: daymet)
-* Nutrients (dissolved inorganic nitrogen; DIN) (Sources: IEP Integrated WQ , 1998-2021: USGS (Cloern); EMP; USBR; USGS CA Water Science Center, 2012-2021; DWR Yolo Bypass Monitoring, Chla: 2009-2021)
-* Water temperature - max daily (Source: DWR/USBR (?) data at Rio Vista, or Yolo Bypass)
-* Air temperature - max daily (Source: daymet)
-* Tidal stage (Source: )
-* Number of days of floodplain inundation (Source: DWR dayflow Q and river stage)
-* Other metrics of water quality
-
-## General model notes
-
-Because there can be issues with identifiability in parameter estimates with hierarchical Bayesian models (see Ogle and Barber 2020), all JAGS models use reparameterization approaches to increase identifiability through post-sweeping of random effects.  For these models, new identifiable parameters are produced by "sweeping in" (adding) the mean value of the random effect of station into the intercept parameter estimate, and "sweeping out" (subtracting) the mean value of the random effect from the random effects.  Then these new identifiable parameters (Bstar and Estar) are analyzed and reported.  The Models 01 through 04 before 12/6/21 use a diffuse folded-t prior that was not truncated for the random-effect standard deviation (Gelman 2006), and suffered from non-convergent MCMC chains and autocorrelation of parameters.  Thus, models before Model 04 on 12/6/21 are considered unreliable.  For JAGS models with antecedent variables, priors for weights of individual lags use a variable drawn from gamma distribution divided by the sum of all deltas to avoid using the dirichlet distribution.  
 
 ## Model 01 (JAGS)
 
-### Covariates included:
-* Past topped (the number of days of floodplain inundation within the last 30 days, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Flow (Q) of the day of chlorophyll observation
-* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-* Antecedent solar radiation (Rant), with 7 daily lags of solar radiation up to 7 days prior to the day of chlorophyll observation
-* Antecedent air temperature (Tant), with 7 daily lags of air temperature up to 7 days prior to the day of chlorophyll observation
-
-### Notes:
-Lack of convergence in MCMC chains and autocorrelation observed in Bstar, sig.eps, and tau.eps. Thinning to 300 did not remedy the autocorrelation. Slopes of Qant and Tant are negative, with positive slopes for Q, Rant, and past topped (although almost a slope of 0 for past topped).  Weights for Qant are slightly greater for 1d and 21d prior, compared to the other lags, but credible intervals for these posteriors are still wide and overlap among all components; results may not be trustworthy due to issues with convergence.
-
 ## Model 02 (JAGS)
-
-### Covariates included:
-* Past topped (the number of days of floodplain inundation within the last 30 days, when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Flow (Q) on the day of chlorophyll observation
-* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-* Antecedent solar radiation (Rant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-* Antecedent air temperature (Tant), lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-* Air temperature (Temp) on the day of chlorophyll observation
-* Solar radiation (Rad) on the day of chlorophyll observation
-
-### Notes:
-Changed Rant and Tant to have lags that match Qant.  Still poor MCMC chain convergence and autocorrelation.  Credible intervals for slopes of Rad and Temp straddle 0, Rant slope is positive, and other covariate slopes do not change much.  Weight on Qant for 21d prior is now noticeably higher than other flow lags; however may not be trustworthy due to issues with convergence.  
 
 ## Model 03 (JAGS)
 
-### Covariates included:
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Flow (Q) on the day of chlorophyll observation
-* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-* Solar radiation (Rad) on the day of chlorophyll observation
-
-### Notes:
-As Model 02 was very complicated, limiting interpretation especially with lack of MCMC chain convergence, Model 03 was pared down. Air temperature was thought to be less important for chlorophyll development than solar radiation, thus was removed for this iteration. Credible intervals for slope of Qant now overlaps 0, inundation days also at 0 with no visible credible intervals; however may not be trustworthy due to continued issues with convergence.  
-
 ## Model 04 (JAGS)
 
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+## Model 05 (Rethinking)
 
-### Notes:
-Began saving text model output summaries (see jm_coda_summary.txt).  Model 04 was pared down even more to only focus on flow covariates.  run_20211124.rda reflects continued issues with convergence and autocorrelation of parameter estimates, see associated output files slope_betas_qant.png, and weights_of_qant.png.  Again, interval for Qant straddles 0.  Note also that initial values for covariate B slopes were set at B = rnorm(3,0,1000) for this and previous models (1st argument adjusted based on number of B slopes). 
-
-run_20211206.rda was generated after discussion with J. Guo, who suggested truncating the result for the folded t-prior for the random effect standard deviation to values above 0 as SD shouldn't be negative, and working with starting values for the sampler based on sig.eps posterior values from chains that seemed more reasonable (i.e., closer to 0 or 1).  Another approach suggested was to use the chain(s) associated with the lowest Dsum value for the initial parameter values, where Dsum is the posterior predictive loss (see Gelfand and Ghosh 1998 as an example). A module for estimating DIC was added to this run, to provide a basis for model selection. Implementing these suggestions resulted in MCMC chain convergence and reduction in parameter autocorrelation.  The slope for Q was closer to 0 and with narrower credible intervals compared to Qant's slope, which was larger but with much wider credible intervals.
-
-mod04_Q and mod04_Qant (below) were run to compare with mod04 posteriors, to investigate if there was added value of including both covariates within the same model.  
-
-## Model 04_Q (JAGS)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-
-## Model 04_Qant (JAGS)
-
-### Covariates included:
-* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-
-### Notes comparing 04, 04_Q, and 04_Qant versions 
-When given separate models, the posterior estimate for Q (in 04_Q) was the same as for Qant (in 04_Qant).  Comparing the posterior of Q with the sum of posteriors of Q and Qant revealed that there is a lot of shared information provided by these 2 covariates.  
-
-## Model 04_rethinking (rethinking)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-
-### Notes
-Attempted to convert the simplest version of Model 4 to the rethinking package.  This involved converting listed precisions (required by JAGS) in priors to standard deviations, and converting some JAGS syntax related to reparameterizations for identifiability to R syntax.  Issues with not being able to implement the truncated version of the folded t-distribution for sig.eps resulted in abandoning this model.
-
-## Model 05 (JAGS)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
-* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
-
-### Notes
-Explicitly specified initial starting values for covariate B slopes to be drawn from a much tighter distribution than in previous model iterations to help with convergence (B = rnorm(4,0,1) compared to B = rnorm(4,0,1000)). With the addition of Srad_mwk, Q slope increases and credible interval widens, and Qant slope moves back near 0 with credible interval overlapping 0.  Srad_mwk slope is positive.  Almost all mean weights on Qant lags are slightly below 0.2. 
-
-## Model 06 (JAGS)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
-
-### Notes
-Water temperature data at Rio Vista was only available for dates >=1999-02-24, or < 2019-12-31, constraining the analyzable data set for the rest of the model.  Like Model 5, Model 6 also had covariate B slopes drawn from a much tighter distribution (B = rnorm(5,0,1)) than in some previous model iterations to prevent parameters from getting stuck in extreme parameter spaces. Wtemp_RIV_mwk slope overlaps 0 with a wide credible interval, while the slope for inundation days is estimated as a value close to 0 with narrow credible intervals.  The correlations between Q and inundation days posteriors, as well as between solar radiation and water temperature were explored (see /fig_out), suggesting each covariate in the pair may provide some duplicated information within the model.  Additional exploration is provided in subsequent mod06 variants, by removing one covariate for each pair and comparing the resultant posterior density for the remaining covariate in the pair (see below).
-
-## Model 06_Inund (JAGS)
-
-### Covariates included:
-* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
-
-## Model 06_Srad (JAGS)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-
-## Model 06_Wtemp (JAGS)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-
-## Model 06b (JAGS)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
-
-### Notes
-This model is comparable to Model 6, but restricts the data to observations when there is inundation to determine if correlation between Srad_mwk and Wtemp_RIV_mwk decreases.  THIS MODEL NEEDS WORK.  
-
-## Model 07 (rethinking)
-
-### Covariates included:
-* Flow (Q) on the day of chlorophyll observation
-* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
-* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
-* Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
-
-### Notes
-Model 07 is a second attempt to convert between JAGS and the rethinking package.  It mimics Model 06's covariates.  Therefore, sam_model.JAGS in the /mod07 folder can be ignored.  ulam function within rethinking is used to accommodate the hierarchical model. There are two models within the 07-run-model.R script, the first attempts to mimic the JAGS models but leaves the estimates of Estar and Bstar out (which can be calculated post model run).  The second does the same thing but tries to reparameterize the model to improve identifiability, based on McElreath's Statistical Rethinking section 13.4.2 Reparameterization.  Some analyses are provided based on rethinking commands.
+## Model 06 ()
 
 # Stats Links
 
@@ -181,8 +39,3 @@ Model 07 is a second attempt to convert between JAGS and the rethinking package.
  
  - https://bookdown.org/content/4857/models-with-memory.html
  
- - Gelman, A. 2006. https://doi.org/10.1214/06-BA117A
- 
-- Gelfand, A.E. and S.K. Ghosh, Model choice: A minimum posterior predictive loss approach, Biometrika, Volume 85, Issue 1, March 1998, Pages 1–11, https://doi.org/10.1093/biomet/85.1.1
-
-- Ogle, K. and J.J. Barber (2020). Ensuring identifiability in hierarchical mixed effects Bayesian models. Ecological Applications. https://doi.org/10.1002/eap.2159
