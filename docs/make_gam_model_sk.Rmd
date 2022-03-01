@@ -1,0 +1,471 @@
+---
+title: "make_gam_model"
+author: "Catarina Pien"
+date: "1/10/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+Variety of Modeling Techniques for Connectivity Synthesis
+* LM
+* GLS
+* GLMM
+* GAM
+* GAMM
+What will we choose?
+
+Last updated 1/19/2022 after working with Pascale/Shruti with original dataset
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Connectivity Modeling - Chlorophyll a
+
+## Preparation
+
+### Call packages
+```{r}
+library(dplyr)
+library(readr)
+library(lubridate)
+library(glue)
+library(tidyr)
+library(zoo)
+library(car)
+library(MuMIn)
+library(psych)
+library(mgcv)
+library(ggplot2)
+library(viridis)
+#library(nlme)
+```
+
+### Read in data
+* Ideally we can load just one file with everything and just do the chla filtering here once we get the USGS chla data from liz incorporated into the load function.
+```{r}
+# covars <- read_csv("./data_model/gam_data_covars.csv")
+
+# temporary while waiting to clean up other data ------
+inundation <- read_csv("data_clean/clean_inundation_days.csv")
+colnames(inundation) = c("date", "yolo_flow", "height_sac", "inundays", "inund_flag")
+
+covars <- readRDS("bayes_models/mod_covariates_complete.rds") %>% 
+  select(-yolo, -height_sac, -inund_days, -inun, -past_topped, -doy1998) %>%
+  left_join(inundation, by = "date")
+
+chla_all <- readRDS("bayes_models/Chla_all.rds")%>%
+    # only want chl
+    select(station, date, chl) %>%
+    filter(chl > 0 & station != '11455420') %>%
+    filter(complete.cases(.)) %>% # keep only complete records
+    arrange(station, date) %>%
+    # add a diff time as above for join purposes
+    mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+           station_id = as.numeric(as.factor(station))) %>%
+    mutate(log_chla = log(chl))
+
+final_covars <- covars %>%
+    mutate(Q_1day = lag(flow_usgs_verona, 1), #this one is not working
+           Q_mwk = rollapply(flow_usgs_verona, 7, mean, align='right', partial=TRUE),
+           T_mwk = rollapply(daymet_tmax, 7, mean, align='right', partial=TRUE),
+           Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE)) %>%
+    rename(Q_sday = flow_usgs_verona)
+
+```
+
+### Clean model dataset
+```{r}
+
+chla_covars <- left_join(chla_all, final_covars, by = "date")
+
+x <- na.omit(chla_covars) %>% 
+  mutate(doy = yday(date), fWY = factor(water_year)) %>% 
+  select(log_chla, Q_sday, T_mwk, Srad_mwk, inundays, inund_flag, doy1998, date, doy, fWY, station) %>% 
+  group_by(station, doy1998) %>% sample_n(1)
+
+```
+
+## Modeling
+
+### LM
+All variables
+
+```{r}
+lm_first = lm(log_chla ~ Q_sday + Q_1day + Q_mwk + T_mwk + Srad_mwk + inundays, data = x)
+```
+
+#### Check vif (variance inflation factor). 
+vif > 4 should be eliminated step by step, removing variable with largest vif first.
+```{r}
+vif(lm_first)
+
+# remove the covar with the biggest number; rerun vif
+lm_firstb = lm(log_chla ~ Q_sday + Q_mwk + T_mwk + Srad_mwk + inundays, data = x)
+vif(lm_firstb)
+
+# remove the next most correlated covar; rerun vif until all values below 3
+lm_firstc = lm(log_chla ~ Q_sday + Srad_mwk + inundays, data = x)
+vif(lm_firstc)
+```
+
+#### dredge - a function to run all instances of a global model and evaluated
+```{r}
+# them based off AIC - output commented below
+options(na.action = "na.fail")
+dredge_results_fullmodel <- dredge(lm_first)
+dredge_results <- dredge(lm_firstc)
+```
+
+#### Check for autocorrelation in model, predictor, response
+```{r}
+acf(lm_firstc$residuals)
+acf(x$log_chla)
+acf(x$Q_sday)
+```
+
+### GLS
+
+#### Run Models 
+Temperature
+```{r}
+gls.0 <- gls(log_chla ~ Q_sday + T_mwk + inundays, na.action = na.omit, 
+              data = x)
+acf(gls.0$residuals)
+
+
+gls.1 <- gls(log_chla ~ Q_sday + T_mwk + inundays, na.action = na.omit, 
+            data = x,
+            correlation = corAR1(form =~ doy1998))
+  
+nresid = residuals(gls.1, type = "normalized")
+acf(nresid)
+  
+gls.2 <- gls(log_chla ~ Q_sday + T_mwk + inundays, na.action = na.omit, 
+            data = x,
+            correlation = corARMA(form =~ doy1998, p=1, q=1))
+nresid2 = residuals(gls.2, type = "normalized")
+acf(nresid2)
+
+gls.3 <- gls(log_chla ~ Q_sday + T_mwk + inundays, na.action = na.omit, 
+             data = x,
+            correlation = corARMA(form =~ doy1998, p=2, q=1))
+nresid3 = residuals(gls.3, type = "normalized")
+acf(nresid3)
+
+# Compare models
+anova(gls.0, gls.1, gls.2, gls.3)
+```
+
+Srad
+```{r}
+gls.4 <- gls(log_chla ~ Q_sday + Srad_mwk + inundays, na.action = na.omit, data = x,
+               correlation = corARMA(form =~ doy1998, p=1, q=1))
+nresid4 = residuals(gls.4, type = "normalized")
+acf(nresid4)
+
+AIC(gls.4, gls.2) # Temperature better than Srad
+```
+
+#### Final Model 
+Remove temperature: final model is just flow and inundation
+```{r}
+# dropping Temperature gives better AIC hence gls 5 is final model
+gls.5 <- gls(log_chla ~ Q_sday + inundays, na.action = na.omit, data = x,
+               correlation = corARMA(form =~ doy1998, p=1, q=1))
+gls.final = update(gls.5, method="ML")
+
+# check residuals are not autocorrelated
+nresid5 = residuals(gls.final, type = "normalized")
+acf(nresid5)
+
+# Get p-values
+anova(gls.final)
+```
+
+```{r}
+# interaction gives a worse AIC hence no interaction
+gls.6 = gls(log_chla ~ inundays + Q_sday + inundays:Q_sday, na.action = na.omit, data = x, correlation = corARMA(form =~ doy1998, p=1, q=1))
+
+AIC(gls.final, gls.6) # How do I check this??
+```
+
+#### Model validation
+```{r}
+# validate the final model by plotting residuals and save to a tiff
+  #tiff(filename = "figures/gls_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
+  op = par(mfrow = c(2, 3), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gls.final), nresid, xlab = "Fitted values", ylab = "Norm. Residuals")
+  #plot(gls.final, add.smooth = FALSE, which = 1)
+  # save residuals
+  nresid = residuals(gls.final, type = "normalized")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(nresid, xlab = 'Norm. Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(nresid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(x$Q_sday, nresid, xlab = "Flow same day", ylab = "Norm. Residuals")
+  plot(x$inundays, nresid, xlab = "Consecutive inundation days", ylab = "Norm. Residuals")
+  par(op)
+```
+
+### GLMM
+```{r}
+gls.7 = gls(log_chla ~ inundays + Q_sday, na.action = na.omit, data = x, correlation = corARMA(form =~ doy1998, p=1, q=1))
+```
+
+
+
+### GAMM
+* Are we interested in month, season, day of water year as interaction terms? e.g. inundays by month?
+
+* tp is default
+* cc = cyclic smooth
+* by = doesn't need a smooth
+* by = will make a smoother for each category
+
+#### Models
+
+```{r}
+# Add in day of year
+# Make water year a factor
+gam_data <- chla_covars %>%
+  mutate(doy = yday(date),
+         fWY = factor(water_year))
+ #------------------------
+
+
+# Flow and inundation
+gam1 <- gam(log_chla ~ s(inundays, k = 4) + s(Q_sday, k = 4) , method = "REML", data = gam_data)
+
+gam.check(gam1)
+summary(gam1)
+plot(gam1, pages = 1, all.terms = TRUE, se = TRUE)
+
+# Flow and Temperature and inundation
+gam2 <- gam(log_chla ~ s(inundays, k = 4) + s(Q_sday, k = 4) + s(T_mwk, k = 4), method = "REML", data = x)
+
+gam.check(gam2)
+summary(gam2)
+plot(gam2, pages = 1, all.terms = TRUE, se = TRUE)
+
+# FLow and Srad and inundation
+gam3 <- gam(log_chla ~ s(inundays, k = 4) + s(Q_sday, k = 4) + s(Srad_mwk, k = 4), method = "REML", data = x)
+
+gam.check(gam3)
+summary(gam3)
+plot(gam3, pages = 1, all.terms = TRUE)
+```
+
+
+#### Random effect
+```{r}
+
+# With station as random effect
+gamm1 <- gam(log_chla ~ s(inundays, k = 4) + s(Q_sday, k = 4) + s(station_id, bs = "re") , method = "REML", data = gam_data)
+
+par(mfrow = c(2,2))
+gam.check(gamm1)
+summary(gamm1)
+plot(gamm1, pages = 1, all.terms = TRUE, se = TRUE)
+```
+
+#### Zuur GAM
+```{r}
+# gamm1 <- gamm(log_chla ~ s(inundays) + s(Q_sday) + s(doy, bs = "cc"), random = list(station_id = ~1), method = "REML", correlation = corARMA(form =~ doy1998|station, p=1, q=1), data = gam_data)
+
+# run the gamm model with station as a random effect, and "day of year" as a circular series
+gamm1 <- gamm(log_chla ~ s(inundays) + s(Q_sday) + s(T_mwk) + s(doy, bs = "cc"), random = list(station_id = ~1), method = "REML", data = gam_data)
+
+# check for autocorrelation (and partial autocorr.) structure in normalized residuals
+ acf(residuals(gamm1$lme, type="normalized"), main="standardized residual ACF")
+pacf(residuals(gamm1$lme, type="normalized"), main="standardized residual ACF")
+
+# plot the different responses of the model
+plot(gamm1$gam)
+anova(gamm1$gam)
+# do what?
+#vis.gam(gamm1$gam)
+
+# drop temperature from the model
+gamm2 <- gamm(log_chla ~ s(inundays) + s(Q_sday) + s(doy, bs = "cc"), random = list(station_id = ~1), method = "REML", data = gam_data)
+
+# check for autocorrelation (and partial autocorr.) structure in normalized residuals
+ acf(residuals(gamm2$lme, type="normalized"), main="standardized residual ACF")
+pacf(residuals(gamm2$lme, type="normalized"), main="standardized residual ACF")
+
+# plot the different responses of the model
+plot(gamm2$gam)
+anova(gamm2$gam)
+
+gamm3 <- gamm(log_chla ~ s(inundays) + s(doy, bs = "cc"), random = list(station_id = ~1), method = "REML", data = gam_data)
+
+# check for autocorrelation (and partial autocorr.) structure in normalized residuals
+ acf(residuals(gamm3$lme, type="normalized"), main="standardized residual ACF")
+pacf(residuals(gamm3$lme, type="normalized"), main="standardized residual ACF")
+
+# plot the different responses of the model
+plot(gamm3$gam)
+anova(gamm3$gam)
+
+```
+
+
+#### Interactions
+```{r}
+gam4 <- gam(log_chla~s(inundays, k = 12) + s(Q_sday, k = 6) + s(Srad_mwk, k = 15) + te(doy, water_year, k = c(15,10), bs = "cc"), method = "REML", data = gam_data)
+gam.check(gam4)
+summary(gam4)
+plot(gam4, pages = 1, all.terms = TRUE)
+par(mfrow = c(1,1))
+vis.gam(x = gam4,
+        view = c("doy", "water_year"),
+        color = "heat", plot.type = "contour")
+
+gam5 <- gam(log_chla~ s(inundays, k = 12) +s(Q_sday, k = 6)+s(Srad_mwk, by = fWY) + fWY, method = "REML", data = filter(gam_data, water_year>2012))
+
+par(mfrow = c(2,2))
+gam.check(gam5)
+summary(gam5)
+plot(gam5)
+
+vis.gam(x = gam5,
+        view = c("fWY", "inundays"))
+```
+
+* I think this is similar to vif but for GAM
+```{r}
+gam_full <- gam(log_chla ~ s(Q_sday) + s(T_mwk) + s(Srad_mwk) + s(inundays), data = x, method = "REML")
+
+concurvity(gam_full, full = TRUE)
+concurvity(gam_full, full = FALSE)
+round(concurvity(gam_full, full = FALSE)$worst, 2)
+```
+
+
+### lme trials
+All variables
+
+```{r}
+  
+  # make sure that only one date per station is present in the final dataset
+  y = x
+
+  # decide the random structure & autocorr. with a full fixed model and method REML
+  ms.0 = gls(log_chla ~ 1 + inund_flag + Q_sday + T_mwk + inundays, method = "REML", data = y)
+
+  ms.1 = lme(log_chla ~ 1 + inund_flag + Q_sday + T_mwk + inundays, method = "REML", data = y,
+             random = ~ 1 | station)
+  
+  ms.2 = lme(log_chla ~ 1 + inund_flag + Q_sday + T_mwk + inundays, method = "REML", data = y,
+             random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  ms.11 = gls(log_chla ~ 1, method = "ML", data = x)
+
+  # which predictor should be included next
+  ms.21 = lme(log_chla ~ 1 + Q_sday,   method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.22 = lme(log_chla ~ 1 + inundays, method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.23 = lme(log_chla ~ 1 + T_mwk,    method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.24 = lme(log_chla ~ 1 + Srad_mwk, method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  ms.25 = lme(log_chla ~ 1 + inund_flag, method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  BIC(ms.21, ms.22, ms.23, ms.24, ms.25)
+  
+  # which second predictor should be included (or not)
+  ms.31 = lme(log_chla ~ 1 + inundays + Q_sday,   method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.32 = lme(log_chla ~ 1 + inundays + T_mwk,    method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.33 = lme(log_chla ~ 1 + inundays + Srad_mwk, method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.34 = lme(log_chla ~ 1 + inundays + inund_flag, method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  BIC(ms.31, ms.32, ms.33, ms.34)
+
+  # best model was ms.22 with just inundation, random effect and autocorr. structure
+  ms.22.reml = lme(log_chla ~ 1 + inundays, method = "REML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  resid = residuals(ms.22.reml, type = "normalized")
+  acf(resid)
+  pacf(resid)
+  summary(ms.22.reml)
+  
+```
+
+
+#### Model validation for the lme model selection
+```{r}
+
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/lme_model_validation.tiff", width = 10, height = 8, units = "in", res = 200)
+  op = par(mfrow = c(2, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(ms.22.reml), resid, xlab = "Fitted values", ylab = "Norm. Residuals")
+  #plot(gls.final, add.smooth = FALSE, which = 1)
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Norm. Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(y$inundays, resid, xlab = "Consecutive inundation days", ylab = "Norm. Residuals")
+  par(op)
+  dev.off()
+
+  tiff(filename = "figures/lme_model_visualization.tiff", width = 10, height = 8, units = "in", res = 200)
+  
+  emmeans
+  plot(ms.22.reml)
+  par(op)
+  dev.off()
+
+```
+
+
+
+### gamm trials
+All variables
+
+```{r}
+
+# Flow and inundation
+gam.0 <- gamm(log_chla ~ s(inundays) + s(Q_sday) + s(T_mwk) + s(doy1998, bs = "cc"), method = "REML", data = x)
+
+gam.1 <- gamm(log_chla ~ s(inundays) + s(Q_sday) + s(T_mwk) + s(doy1998, bs = "cc"),
+              random = list(station = ~1), method = "REML", data = x)
+
+```
+
+
+#### Model validation for the gam model selection
+```{r}
+# validate the final model by plotting residuals and save to a tiff
+  #tiff(filename = "figures/gls_model_validation.tiff", width = 10, height = 6, units = "in", res = 300)
+  op = par(mfrow = c(2, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(ms.22.reml), resid, xlab = "Fitted values", ylab = "Norm. Residuals")
+  #plot(gls.final, add.smooth = FALSE, which = 1)
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Norm. Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(y$inundays, resid, xlab = "Consecutive inundation days", ylab = "Norm. Residuals")
+  par(op)
+  
+```
