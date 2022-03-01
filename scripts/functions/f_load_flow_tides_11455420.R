@@ -5,7 +5,7 @@ library(readr)
 
 f_load_flow_tides_usgs_11455420 <- function() {
   # Get contentids ---------------------------------------------------------
-  SRV_flow_id <- contentid::store("data_clean/clean_flow_11455420.csv")
+  SRV_flow_id <- contentid::store("data_clean/clean_flow_usgs_11455420.csv")
   SRV_flow_file <- contentid::resolve(SRV_flow_id)
   SRV_tide_id <- contentid::store("data_clean/clean_tides_usgs_11455420.csv")
   SRV_tide_file <- contentid::resolve(SRV_tide_id)
@@ -15,7 +15,8 @@ f_load_flow_tides_usgs_11455420 <- function() {
   flow <- readr::read_csv(SRV_flow_file)
   tide <- readr::read_csv(SRV_tide_file)
 
-  join <- bind_rows(flow, tide)
+  join <- left_join(flow, tide, by = "date") %>%
+    filter(lubridate::year(date)>1997)
 
   # export data ----------------------------------------
 
