@@ -7,6 +7,7 @@
 library(dplyr)
 library(readr)
 library(contentid)
+library(lubridate)
 
 f_load_wq_chla_nuts <- function() {
   # Get contentids ---------------------------------------------------------
@@ -26,7 +27,7 @@ f_load_wq_chla_nuts <- function() {
     dplyr::filter(lubridate::year(date)>=1998 & year(date)< 2020) %>%
     dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
                   din = diss_nitrate_nitrite + diss_ammonia)%>%
-    dplyr::select(c(source, doy1998, station_wq_chl = station, latitude, longitude, field_coords, date, depth, tide, chlorophyll, diss_ammonia_sign, diss_ammonia, diss_nitrate_nitrite_sign, diss_nitrate_nitrite, din, don, tot_phos, diss_silica))
+    dplyr::select(c(source, doy1998, station_wq_chl = station, latitude, longitude, field_coords, date, depth, tide, chlorophyll, diss_ammonia_sign, diss_ammonia, diss_nitrate_nitrite_sign, diss_nitrate_nitrite, din, don, diss_orthophos_sign, diss_orthophos, diss_silica))
 
   # export data ----------------------------------------
   print("Writing to 'data_clean/clean_chla_nuts_combined.csv'")
