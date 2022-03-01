@@ -1,5 +1,6 @@
 library(dplyr)
 library(readr)
+library(imputeTS)
 
 # data
 source("scripts/funtions/f_get_riv.R")
@@ -60,14 +61,21 @@ f_clean_riv <- function(){
   temp_daily_rvb <- merge(temp_daily_rvb, temp_daily_mis, by = "date", all = TRUE)
 
   temp_rv <- rbind(temp_daily_riv, temp_daily_rvb)
+  temp_rv$category = "data"
+  temp_rv$method = "CDEC"
 
   # still need to impute for 9 days
+  temp_daily_rv_cont <- merge(temp_rv, continous.dates, by = "date", all = TRUE) # less than 7 continuous missing days
+  # order by date
+  temp_daily_rv_cont <- temp_daily_rv_cont[order(temp_daily_rv_cont$date),]
+  # 7 day moving average
+  temp_daily_rv_cont$mean <- na_ma(temp_daily_rv_cont$mean, k = 7, weighting = "exponential", maxgap = Inf)
+  temp_daily_rv_cont$category <- ifelse(is.na(temp_daily_rv_cont$category) == TRUE, "7&Under", temp_daily_rv_cont$category)
+  temp_daily_rv_cont$method <- ifelse(is.na(temp_daily_rv_cont$method) == TRUE, "imputeTS", temp_daily_rv_cont$method)
 
 
 
-
-
-  write.csv(##, "data_clean/clean_riv_temperature.csv", row.names = FALSE)
+  write.csv(temp_daily_rv_cont, "data_clean/clean_rv_temperature.csv", row.names = FALSE)
 
 
 }
