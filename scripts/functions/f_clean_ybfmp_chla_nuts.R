@@ -13,11 +13,19 @@ f_clean_ybfmp_chla_nuts <- function() {
 
   # read in data
   chla_nuts <- readr::read_csv(chla_nuts_file) %>%
-    janitor::clean_names()
+    janitor::clean_names() %>%
+    dplyr::mutate(date = lubridate::date(datetime),
+                  source = "YBFMP",
+                  field_coords = "FALSE",
+                  depth = 1) %>%
+    dplyr::mutate(field_coords = is.logical(field_coords)) %>%
+    dplyr::filter(year(date) < 2020) %>%
+    dplyr::select(-pheophytin, -wy, -sample_code)
 
   # write data
   readr::write_csv(chla_nuts, file="data_clean/clean_chla_nuts_ybfmp.csv")
 
   # print
-  print("Data saved here: 'data_clean/clean_chla_nuts_ybfmp.rds'")
+  print("Data saved here: 'data_clean/clean_chla_nuts_ybfmp.csv'")
 }
+f_clean_ybfmp_chla_nuts()
