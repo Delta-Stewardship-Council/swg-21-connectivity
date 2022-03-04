@@ -20,7 +20,7 @@ f_load_flow_tides_usgs_11455420 <- function() {
 
   # export data ----------------------------------------
 
-  readr::write_csv(join, "data_model/model_flow_tides_usgs_11455420.csv")
+  readr::write_csv(join, "data_clean/clean_flow_tides_usgs_11455420.csv")
 }
 
 # write data out by running function
