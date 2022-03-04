@@ -103,29 +103,6 @@ f_load_daily_covars_models <- function() {
     #wtemp_max_yolo = max
     dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
 
-  #       # Fill missing RIV with RVB for years RVB available
-  # watertemp_wide = tidyr::pivot_wider(watertemp, names_from = station_wtemp, values_from = max_wtemp_RIV)
-  #
-  # ggplot2::ggplot(data = watertemp_wide, aes(x = RVB, y = RIV)) + geom_point() + geom_smooth(method = "lm")
-  #
-  # watertemp_fill <- watertemp_wide %>%
-  #   dplyr::mutate(RIV = ifelse(is.na(RIV), RVB, RIV)) %>%
-  #   dplyr::select(-RVB) %>%
-  #   dplyr::mutate(station_wtemp = "RIV") %>%
-  #   dplyr::rename(max_wtemp_RIV = RIV) %>%
-  #   arrange(doy1998)
-  #
-  # summary(watertemp_fill)
-  #
-  # # Make sure values look within range
-  # ggplot2::ggplot(data=watertemp_fill, aes(x = doy1998, y = max_wtemp_RIV)) + geom_point()
-  #
-  # # check missing data
-  # check_wt <- watertemp_fill %>%
-  #   arrange(doy1998) %>%
-  #   mutate(diff = difftime(date, lag(date))) %>%
-  #   filter(diff>1) # get zero
-
   # join data in steps ------------------------------------------------
   print("Joining data...")
 
@@ -145,7 +122,6 @@ f_load_daily_covars_models <- function() {
     tidyr::fill(daymet_tmax, .direction = "down") %>%
     tidyr::fill(daymet_srad, .direction = "down") %>%
     tidyr::fill(daymet_precip_mm, .direction = "down") %>%
-    dplyr::mutate(station_wtemp = "RIV") %>%
     dplyr::filter(date>as.Date("1999-02-22") & date<as.Date("2020-01-01"))
 
 
