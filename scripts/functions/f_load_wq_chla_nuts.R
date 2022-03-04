@@ -30,8 +30,8 @@ f_load_wq_chla_nuts <- function() {
     dplyr::select(c(source, doy1998, station_wq_chl = station, latitude, longitude, field_coords, date, depth, tide, chlorophyll, diss_ammonia_sign, diss_ammonia, diss_nitrate_nitrite_sign, diss_nitrate_nitrite, din, don, diss_orthophos_sign, diss_orthophos, diss_silica))
 
   # export data ----------------------------------------
-  print("Writing to 'data_clean/clean_chla_nuts_combined.csv'")
-  readr::write_csv(join, "data_clean/clean_chla_nuts_combined.csv")
+  print("Writing to 'data_model/model_chla_nuts_combined.csv'")
+  readr::write_csv(join, "data_model/model_chla_nuts_combined.csv")
   }
 
 f_load_wq_chla_nuts()
