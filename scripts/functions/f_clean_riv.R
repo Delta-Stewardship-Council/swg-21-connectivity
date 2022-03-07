@@ -70,6 +70,9 @@ f_clean_riv <- function(){
   temp_daily_rv_cont <- temp_daily_rv_cont[order(temp_daily_rv_cont$date),]
   # 7 day moving average
   temp_daily_rv_cont$mean <- na_ma(temp_daily_rv_cont$mean, k = 7, weighting = "exponential", maxgap = Inf)
+  temp_daily_rv_cont$max <- na_ma(temp_daily_rv_cont$max, k = 7, weighting = "exponential", maxgap = Inf)
+  temp_daily_rv_cont$min <- na_ma(temp_daily_rv_cont$min, k = 7, weighting = "exponential", maxgap = Inf)
+
   temp_daily_rv_cont$category <- ifelse(is.na(temp_daily_rv_cont$category) == TRUE, "7&Under", temp_daily_rv_cont$category)
   temp_daily_rv_cont$method <- ifelse(is.na(temp_daily_rv_cont$method) == TRUE, "imputeTS", temp_daily_rv_cont$method)
 
@@ -79,7 +82,7 @@ f_clean_riv <- function(){
   temp_daily_rv_cont[c(2681:2684),12] <- 4
   temp_daily_rv_cont[7874,12] <- 1
 
-  write.csv(temp_daily_rv_cont, "data_clean/clean_rv_temperature.csv", row.names = FALSE)
+  write.csv(temp_daily_rv_cont[,-11], "data_clean/clean_rv_temperature.csv", row.names = FALSE)
 
 
 }
