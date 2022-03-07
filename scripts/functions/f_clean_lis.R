@@ -63,6 +63,40 @@ as.Date('2013-11-24')) #starts at 11:01 on the 27th
   continous.dates <- data.frame (x = 1:4955, date = seq(as.Date('2008-07-16'),as.Date('2022-02-07'),by='day'))
   temp_daily_lis_na <- merge(temp_daily_lis, continous.dates, by = "date", all = TRUE)
 
+  dat.NA <- temp_daily_lis_na[is.na(temp_daily_lis_na$mean),]
+  head(dat.NA)
+
+  # Assigns id to consecutive date groups
+  dat.NA$group <- cumsum(c(1, diff.Date(dat.NA$date)) >= 2)
+
+  dat.NA.sum <- dat.NA %>%
+    group_by(group) %>%
+    summarise(length = length(group)) %>%
+    as.data.frame(dat.NA.sum)
+
+  dat.NA.sum <- transform(dat.NA.sum, category = ifelse(length > 7, "Over7", "7&Under"))
+
+  dat.NA.complete <- merge(dat.NA[,-c(9:11)], dat.NA.sum, by="group", all.x = TRUE)
+  head(dat.NA.complete)
+  unique(dat.NA.complete$length) #2 351  36  19   1   4   6  23 - Feb 2010-Feb 2011 missing
+
+  temp_daily_lis$group = NA
+  temp_daily_lis$length = NA
+  temp_daily_lis$category = "data"
+
+  dat.NA.complete$method <- ifelse(dat.NA.complete$category == "7&Under", "imputeTS", "lm_RIV")
+
+  imput_dat <- rbind(temp_daily_lis, dat.NA.complete)
+  imput_dat <- imput_dat[order(imput_dat$date),]
+
+  imput_dat$mean <- na_ma(imput_dat$mean, k = 7, weighting = "exponential", maxgap = Inf)
+  imput_dat$max <- na_ma(imput_dat$max, k = 7, weighting = "exponential", maxgap = Inf)
+  imput_dat$min <- na_ma(imput_dat$min, k = 7, weighting = "exponential", maxgap = Inf)
+
+
+
+
+
 
 
 }
