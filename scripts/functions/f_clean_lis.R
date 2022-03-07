@@ -46,6 +46,18 @@ as.Date('2013-11-24')) #starts at 11:01 on the 27th
 
   hist(temp_daily$`n()`) #max is 96 now
 
-
   time.check= seq(as.Date('2008-07-16'),as.Date('2022-02-07'),by='day') #448 missing
+
+  cv <- function(x) 100*( sd(x)/mean(x))
+
+  temp_daily_lis <- temp_final %>%
+    group_by(date) %>%
+    summarise(mean = mean(temp_c, na.rm = TRUE), max = max(temp_c, na.rm = TRUE), min = min(temp_c, na.rm = TRUE), sd = sd(temp_c, na.rm = TRUE), cv = cv(temp_c))
+
+  temp_daily_lis$site <- "LIS"
+  temp_daily_lis <- merge(temp_daily_lis, temp_daily, by = "date", all = TRUE)
+
+
+
+}
 
