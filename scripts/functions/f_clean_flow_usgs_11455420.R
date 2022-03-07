@@ -10,13 +10,13 @@ library(tidyr)
 f_clean_flow_usgs_11455420 <- function(){
 
   # get raw data ID:
-  SRV <- contentid::store("data_raw/raw_flow_usgs_11455420.zip")
-  SRV
-  SRV_id <- contentid::resolve("hash://sha256/7c2b6318b8b2efccc4ede3021a33f1c32c0a7c9498877e4d29a378e461bee89a")
+  SRV_flow <- contentid::store("data_raw/raw_flow_usgs_11455420.zip")
+
+  SRV_flow_id <- contentid::resolve("hash://sha256/7c2b6318b8b2efccc4ede3021a33f1c32c0a7c9498877e4d29a378e461bee89a")
 
   # read in data
 
-  SRVuv <- read_csv("data_raw/raw_flow_usgs_11455420.zip")
+  SRVuv <- read_csv(SRV_flow_id)
 
   #subset and clean column headers
 
