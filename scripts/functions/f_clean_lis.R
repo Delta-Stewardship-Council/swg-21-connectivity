@@ -56,6 +56,12 @@ as.Date('2013-11-24')) #starts at 11:01 on the 27th
 
   temp_daily_lis$site <- "LIS"
   temp_daily_lis <- merge(temp_daily_lis, temp_daily, by = "date", all = TRUE)
+  temp_daily_lis$category = "data"
+  temp_daily_lis$method = "CDEC"
+
+  # investigate missing data
+  continous.dates <- data.frame (x = 1:4955, date = seq(as.Date('2008-07-16'),as.Date('2022-02-07'),by='day'))
+  temp_daily_lis_na <- merge(temp_daily_lis, continous.dates, by = "date", all = TRUE)
 
 
 
