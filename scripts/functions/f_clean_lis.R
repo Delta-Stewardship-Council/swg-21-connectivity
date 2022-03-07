@@ -93,10 +93,43 @@ as.Date('2013-11-24')) #starts at 11:01 on the 27th
   imput_dat$max <- na_ma(imput_dat$max, k = 7, weighting = "exponential", maxgap = Inf)
   imput_dat$min <- na_ma(imput_dat$min, k = 7, weighting = "exponential", maxgap = Inf)
 
+  # need to remove data that is not within parameters
+  imput_dat$mean <- ifelse(imput_dat$category == "Over7", NA, imput_dat$mean)
+  imput_dat$max <- ifelse(imput_dat$category == "Over7", NA, imput_dat$max)
+  imput_dat$min <- ifelse(imput_dat$category == "Over7", NA, imput_dat$min)
 
+  # bring in data from Rio Vista bridge
+  temp_4_lm <- read.csv("data_clean/clean_rv_temperature.csv")
+  temp_4_lm$date <- as.Date(temp_4_lm$date)
 
+  # make data for lm
+  input <- imput_dat[,c(1:4)]
+  colnames(input) <- c("date", "lis_mean", "lis_max", "lis_min")
 
+  dat4model <- merge(input, temp_4_lm[,c(1:4)], by = "date", all.x = TRUE)
 
+  dat4model_na <- na.omit(dat4model)
+  fit_mean <- lm(lis_mean~mean, data = dat4model_na)# Adjusted R-squared: 0.9281
+  fit_max <- lm(lis_max~max, data = dat4model_na)# Adjusted R-squared: 0.9291
+  fit_min <- lm(lis_min~min, data = dat4model_na)# Adjusted R-squared: 0.9176
+
+  summary(fit_max)
+
+  df_fill <- dat4model %>%
+    mutate(pred_mean = predict(fit_mean, .), pred_max = predict(fit_max, .), pred_min = predict(fit_min, .))
+
+  plot(df_fill$lis_min, df_fill$pred_min)
+
+  dat.NA_Over7 <- subset(imput_dat, category == "Over7")
+  imput_dat_Over7 <- merge(dat.NA_Over7, df_fill[,c(1,8:10)], by = "date", all.x = TRUE)
+  # rename n and remove group
+  imput_dat_Over7 <- imput_dat_Over7[,-c(2,3,4,11)]
+  colnames(imput_dat_Over7)[9:11] <- c("mean", "max", "min")
+
+  dat_not_Over7 <- subset(imput_dat, category != "Over7")
+  temp_daily_lis_cont <- rbind(dat_not_Over7[,-11], imput_dat_Over7)
+
+  write.csv(temp_daily_lis_cont, "data_clean/clean_lis_temperature.csv", row.names = FALSE)
 
 
 }
