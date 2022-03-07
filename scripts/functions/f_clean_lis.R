@@ -129,6 +129,8 @@ as.Date('2013-11-24')) #starts at 11:01 on the 27th
   dat_not_Over7 <- subset(imput_dat, category != "Over7")
   temp_daily_lis_cont <- rbind(dat_not_Over7[,-11], imput_dat_Over7)
 
+  temp_daily_lis_cont$site[is.na(temp_daily_lis_cont$site)] <- "LIS"
+
   write.csv(temp_daily_lis_cont, "data_clean/clean_lis_temperature.csv", row.names = FALSE)
 
 
