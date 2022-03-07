@@ -28,12 +28,16 @@ library(psych) # for pairs
 
 # Read in data
 ```{r}
-covars <- read_csv("data_model/gam_data_covars.csv") %>%
+covars <- read_csv("data_model/model_data_daily_covars.csv") %>%
   mutate(month = lubridate::month(date)) 
 
-alldata <- read_csv("data_model/gam_data_covars_chla.csv")%>%
+alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
   mutate(month = lubridate::month(date),
-         year = lubridate::year(date)) 
+         year = lubridate::year(date),
+         doy = lubridate::yday(date)-60,
+         water_year = ifelse(month>9, year + 1, year))
+
+chla_nuts <- read_csv("data_model/model_chla_nuts_combined.csv")
 ```
 
 ## Temporarily use this until data are cleaned up above.
@@ -74,6 +78,13 @@ chla_covars <- left_join(chla_uniq_date, final_covars, by=c("doy1998", "date"))
 
 ## Chla
 ```{r}
+chl_clean <- chla_nuts %>%
+  filter(!is.na(chlorophyll)) %>%
+  rename(chl = chlorophyll) %>%
+  mutate(month = month(date),
+         year = year(date),
+         water_year = ifelse(month>9, year + 1, year))
+
 chl_clean <- chl_all %>%
   filter(!is.na(chl))
 
@@ -82,12 +93,12 @@ ggplot(chl_clean) + geom_point(aes(date, chl, color = month), size = 3) + scale_
 ggplot(chl_clean) + geom_boxplot(aes(x = factor(month), y = chl))
 ggplot(chl_clean) + geom_boxplot(aes(x = factor(water_year), y = chl)) + theme(axis.text.x = element_text(angle = 90))
 par(mfrow = c(1,1))
-dotchart(chla_all$chl, lcolor = "white", xlab = "Chla", ylab = "row")
+dotchart(chl_clean$chl, lcolor = "white", xlab = "Chla", ylab = "row")
 ```
 
 ## Covariates
 ```{r}
-model_covars <- final_covars %>%
+model_covars <- covars %>%
   select(c(date, month, water_year, daymet_precip_mm, Q_sday, flow_yolo, height_sac_na, inund_days, daymet_tmax, daymet_srad))
 
 # make data long to plot everything faceted
@@ -129,6 +140,20 @@ ggplot(model_covars, aes(daymet_tmax, Q_sday)) + geom_point(aes(color = month))+
 # Useful plot (seasonality of temp vs stage height)
 ggplot(model_covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = month)) + scale_color_viridis() 
 ```
+
+# Correlations with chlorophyll
+```{r}
+ggplot(subset(alldata, inund_days>0), aes(inund_days, chlorophyll, color = region_chla)) + geom_point() + theme_bw() + viridis::scale_color_viridis( discrete = TRUE, option = "turbo") + labs(x = "Inundation Days", color = "Region") + geom_smooth( aes(inund_days, chlorophyll))
+
+
+stations <- alldata %>% select(station_wq_chl, latitude, longitude, region_chla) %>%
+  distinct()
+
+stations_plot <- ggplot(stations, aes(longitude, latitude,  color = station_wq_chl)) + geom_point()
+
+plotly::ggplotly(stations_plot)
+```
+
 
 # Model exploration 
 
