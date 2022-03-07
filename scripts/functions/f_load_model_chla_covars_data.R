@@ -32,8 +32,8 @@ f_load_model_chla_covars_data <- function() {
     unique(chla_nuts$source)
   # Add regions to data -----------------------------------------------
   chla_nuts <- chla_nuts %>%
-    mutate(region_chla = case_when(source == "YBFMP" & station_wq_chl == "SHR"~ "upstream",
-                              source == "YBFMP" & station_wq_chl %in% c("LIS", "STTD") ~ "bypass",
+    mutate(region_chla = case_when(station_wq_chl %in% ("SHR", "USGS-11447650") ~ "upstream",
+                              station_wq_chl %in% c("LIS", "STTD", "USGS-11455139") ~ "bypass",
                               TRUE ~ "downstream"))
 
 
@@ -63,12 +63,12 @@ f_load_model_chla_covars_data <- function() {
   summary(chla_covars)
   nas <- filter(chla_covars, !(complete.cases(chla_covars)))
 
-  summary(chla_covars_all)
+  summary(chla_covars_fulljoin)
 
   # export data ----------------------------------------
 
   readr::write_csv(chla_covars, "data_model/model_chla_covars_gam.csv")
-  readr::write_csv(chla_covars_all, "data_model/model_covars_chla_fulljoin.csv")
+  readr::write_csv(chla_covars_fulljoin, "data_model/model_covars_chla_fulljoin.csv")
 }
 
 f_load_model_chla_covars_data()
