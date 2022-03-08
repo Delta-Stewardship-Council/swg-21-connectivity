@@ -14,8 +14,8 @@ f_make_bayes_mod05_dataset <- function() {
   # (from Pascale's code inundation_days.R): will replace with f_load_inund after
   # pascale adds f_get and f_clean functions
   # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days
-  inund <- read_csv("data/inundation_days.csv") %>% # lots of random NAs in here on join
-    select(date:inund_days) # drop row id column
+  inund <- read_csv("data_clean/clean_inundation_days.csv") %>% # lots of random NAs in here on join
+    select(date:inund.days) # drop row id column
 
  ## FLOW: Get Verona Flow -----------
 
@@ -76,7 +76,7 @@ f_make_bayes_mod05_dataset <- function() {
   # past_topped = # of topped or inundated days in past 31 days
   # best to use an odd number because it makes things symmetrical
   mod_dat_out_fill <- mod_dat_out_fill %>%
-    mutate(inun = ifelse(inund_days == 0, 0, 1),
+    mutate(inun = ifelse(inund.days == 0, 0, 1),
            past_topped = zoo::rollsum(inun, k = 31, fill = NA))
 
   # select and scale the data

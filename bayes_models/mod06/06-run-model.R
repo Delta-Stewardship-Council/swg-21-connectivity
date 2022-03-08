@@ -1,5 +1,5 @@
 # Create input for SAM model
-# Q, Qant, Rad
+# Q, Rad, Wtemp, Inund
 # Accounts for random effect of site (intercept-only, due to low sample size)
 
 
@@ -90,7 +90,7 @@ initslist <- list(inits(), inits(), inits())
 # run this if model has been successfully run already:
 
 # Or load saved.state
-load("bayes_models/mod06/inits/sstate_20211220.Rda")
+load("bayes_models/mod06/inits/sstate_20220210.Rda")
 inits_2 <- function(){
   list(sig.eps = runif(1, 0, 1),
        tau = runif(1, 0, 1),
@@ -144,6 +144,7 @@ dev.off()
 
 # Look at the sum of their posterior and compare to the individual posteriors
 # Srad and Wtemp
+library(rethinking)
 png("bayes_models/mod06/fig_out/dens_posterior_SradWtemp.png",
     height = 5, width = 6, units = "in", res = 300)
 par(cex = 1.25)
@@ -159,19 +160,9 @@ sum_Qinund <- out$sims.list$Bstar[,2] + out$sims.list$Bstar[,5]
 dens( sum_Qinund , lwd=2 , xlab="sum of Q and inund" )
 dev.off()
 
-mu <- with(out$sims.list, Bstar[,1] +
-             Bstar[,2] * mean(out$sims.list$Bstar[,2]) +
-             Bstar[,3] * mean(out$sims.list$Bstar[,3]) +
-             Bstar[,4] * mean(out$sims.list$Bstar[,4]) +
-             Bstar[,4] * mean(out$sims.list$Bstar[,5]) +
-             mean(out$sims.list$sig.eps)
-)
-out$sd$Bstar[3] / out$mean$Bstar[3]
-out$sd$Bstar[4] / out$mean$Bstar[4]
-sd(mu) / mean(mu)
 # Load Saved Model --------------------------------------------------------
 
-load("bayes_models/mod06/run_20211220.rda")
+load("bayes_models/mod06/run_20220210.rda")
 
 # Visualize
 mcmcplot(jm_coda, col = c("red", "blue", "green"))
@@ -182,7 +173,7 @@ gelman.diag(jm_coda, multivariate = FALSE)
 newinits <- initfind(coda = jm_coda)
 #saved.state <- removevars(initsin = newinits, variables=c(2:5, 8, 9))
 saved.state <- newinits
-save(saved.state, file = "bayes_models/mod06/inits/sstate_20211220.Rda")
+save(saved.state, file = "bayes_models/mod06/inits/sstate_20220210.Rda")
 
 
 # Look at Outputs ---------------------------------------------------------
@@ -227,20 +218,9 @@ coda_sum %>%
   scale_x_discrete(labels = c("Q", "Srad_mwk", "Wtemp_mwk", "Inund_days")) +
   scale_y_continuous("Slope of covariates") +
   theme_bw()
-ggsave(filename = "bayes_models/mod06/fig_out/slope_of_betas_qant_sol_wtemp_inund_20211217.png",
-       dpi=300, width = 10, height = 8)
-
-# weights of Qant
-coda_sum %>%
-  filter(grepl("wA", term)) %>%
-  ggplot(aes(x = term, y = estimate)) +
-  geom_hline(yintercept = 1/5, color = "red") +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_y_continuous("Weights of past Q") +
-  theme_bw()
-ggsave(filename = "bayes_models/mod05/fig_out/weights_of_qant_20211207.png",
+ggsave(filename = "bayes_models/mod06/fig_out/slope_of_betas_qant_sol_wtemp_inund_20220210.png",
        dpi=300, width = 10, height = 8)
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod06/run_20211220.rda")
+save(jm_coda, coda_sum, file = "bayes_models/mod06/run_20220210.rda")
