@@ -243,18 +243,19 @@ gam_data <- chla_covars %>%
 
 
 # Flow and inundation
-gam1 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) , method = "REML", data = gam_data)
+gam1 <- gam(log_chla~ s(Q_sday, k = 6) + s(inund_days, k = 12) , method = "REML", data = gam_data)
 
 gam.check(gam1)
 summary(gam1)
 plot(gam1, pages = 1, all.terms = TRUE, se = TRUE)
+gamplot <- plot(gam1, pages = 2, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
 
 # Flow and Temperature and inundation
 gam2 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) + s(T_mwk, k = 6), method = "REML", data = x)
 
 gam.check(gam2)
 summary(gam2)
-plot(gam2, pages = 1, all.terms = TRUE, se = TRUE)
+plot(gam2, pages = 1, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
 
 # FLow and Srad and inundation
 gam3 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) + s(Srad_mwk, k = 15), method = "REML", data = x)
@@ -262,14 +263,22 @@ gam3 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) + s(Srad_mwk, k = 
 gam.check(gam3)
 summary(gam3)
 plot(gam3, pages = 1, all.terms = TRUE)
+plot(gam3)
+```
+
+##### Export plots for IEP/ISB presentation (Model gam1)
+```{r}
+png("figures/gamplotresults.png", width = 3.5, height = 3, units = "in", pointsize = 12, res = 300)
+plot(gam1, pages = 2, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
+dev.off()
+png("figures/gamplotresults_flow_inund.png", width = 5.5, height = 3, units = "in", pointsize = 12, res = 300)
+plot(gam1, pages = 1, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
+dev.off()
 ```
 
 
 #### Random effect
 ```{r}
-
-
-
 # With station as random effect
 gamm1 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) + s(station_id, bs = "re") , method = "REML", data = gam_data_allstations)
 
