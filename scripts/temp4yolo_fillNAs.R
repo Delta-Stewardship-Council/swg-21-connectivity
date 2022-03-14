@@ -129,7 +129,10 @@ imput_dat_Over7 <- merge(imput_dat, df_fill[,c(1,8:10)], by = "date", all = TRUE
 
 imput_dat_Over7$method <- ifelse(imput_dat_Over7$category == "Over7" & imput_dat_Over7$date >= as.Date('1999-02-22'), "lm_RIV", imput_dat_Over7$method) #for yb
 
+# add method
 imput_dat_Over7$method <- ifelse(imput_dat_Over7$category == "Over7", "lm_RIV", imput_dat_Over7$method)
+
+# take out data that doesnt apply
 imput_dat_Over7$method <- ifelse(is.na(imput_dat_Over7$mean), "NA", imput_dat_Over7$method)
 
 imput_dat_Over7$mean <- ifelse(is.na(imput_dat_Over7$mean), imput_dat_Over7$pred_mean, imput_dat_Over7$mean)
