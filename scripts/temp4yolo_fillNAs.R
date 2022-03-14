@@ -140,7 +140,7 @@ imput_dat_Over7$min <- ifelse(is.na(imput_dat_Over7$min), imput_dat_Over7$pred_m
 colnames(imput_dat_Over7)[7] <- "n"
 imput_dat_Over7 <- imput_dat_Over7[,-c(11:13)]
 
-write.csv(imput_dat_Over7, "dat_clean/SHWharbor_temp_98_20.csv")
+write.csv(imput_dat_Over7, "data_clean/SHWharbor_temp_98_20.csv")
 
 # use LIS to fill in after Jan 2018 (only for yolo)
 # check relationship
