@@ -176,6 +176,10 @@ lis_fill$category <- "Over7"
 
 imput_dat_98_20 <- rbind(imput_dat_Over7, lis_fill)
 
+# need to pull out max and min that doesn't apply
+imput_dat_98_20$max <- ifelse(imput_dat_98_20$category == "single_measure" | imput_dat_98_20$category == "daily_mean", "NA", imput_dat_98_20$max)
+imput_dat_98_20$min <- ifelse(imput_dat_98_20$category == "single_measure" | imput_dat_98_20$category == "daily_mean", "NA", imput_dat_98_20$min)
+
 write.csv(imput_dat_98_20, "data_clean/yolo_temp_98_20.csv")
 
 # now fix remaining NAs in 1998
