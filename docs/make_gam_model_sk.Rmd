@@ -396,7 +396,7 @@ All variables
              correlation = corARMA(form =~ doy1998|station, p=1, q=1))
 
   BIC(ms.31, ms.32, ms.33, ms.34)
-
+  
   # best model was ms.22 with just inundation, random effect and autocorr. structure
   ms.22.reml = lme(log_chla ~ 1 + inundays, method = "REML", data = y, random = ~ 1 | station,
              correlation = corARMA(form =~ doy1998|station, p=1, q=1))
@@ -469,3 +469,167 @@ gam.1 <- gamm(log_chla ~ s(inundays) + s(Q_sday) + s(T_mwk) + s(doy1998, bs = "c
   par(op)
   
 ```
+
+### lme trials separting inundated from non-inundated periods
+
+## All except inundation related variables because for dry period
+
+```{r}
+  
+  # make sure that only one date per station is present in the final dataset
+  # divide the inundated dataset from the non-inundated dataset
+  y.wet = subset(x, inund_flag == 1)
+  y.dry = subset(x, inund_flag == 0)
+
+  # decide the random structure & autocorr. with a full fixed model and method REML
+  ms.0 = gls(log_chla ~ 1 + Q_sday + T_mwk + Srad_mwk, method = "REML", data = y.dry)
+
+  ms.1 = lme(log_chla ~ 1 + Q_sday + T_mwk + Srad_mwk, method = "REML", data = y.dry,
+             random = ~ 1 | station)
+  
+  ms.2 = lme(log_chla ~ 1 + Q_sday + T_mwk + Srad_mwk, method = "REML", data = y.dry,
+             random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  BIC(ms.0, ms.1, ms.2)
+  
+  # best model is ms.2
+
+  ms.11 = gls(log_chla ~ 1, method = "ML", data = y.dry)
+
+  # which predictor should be included next
+  ms.21 = lme(log_chla ~ 1 + Q_sday,   method = "ML", data = y.dry, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.22 = lme(log_chla ~ 1 + Srad_mwk, method = "ML", data = y.dry, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.23 = lme(log_chla ~ 1 + T_mwk,    method = "ML", data = y.dry, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  BIC(ms.21, ms.22, ms.23)
+  
+  # best model is ms.21 so Q_sday most important
+  
+  # which second predictor should be included (or not)
+  ms.31 = lme(log_chla ~ 1 + Q_sday + T_mwk,    method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.32 = lme(log_chla ~ 1 + Q_sday + Srad_mwk, method = "ML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  BIC(ms.31, ms.32)
+  
+  # best model was ms.22 with just flow from same day, random effect and autocorr. structure
+  ms.22.reml = lme(log_chla ~ 1 + Q_sday, method = "REML", data = y, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  resid = residuals(ms.22.reml, type = "normalized")
+  acf(resid)
+  pacf(resid)
+  summary(ms.22.reml)
+  
+```
+
+
+
+#### Model validation for the lme model selection
+```{r}
+
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/lme_model_validation_dryperiod.tiff", width = 10, height = 8, units = "in", res = 200)
+  op = par(mfrow = c(2, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(ms.22.reml), resid, xlab = "Fitted values", ylab = "Norm. Residuals")
+  #plot(gls.final, add.smooth = FALSE, which = 1)
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Norm. Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(y$inundays, resid, xlab = "Flow", ylab = "Norm. Residuals")
+  par(op)
+  dev.off()
+
+  tiff(filename = "figures/lme_model_visualization.tiff", width = 10, height = 8, units = "in", res = 200)
+  
+  emmeans
+  plot(ms.22.reml)
+  par(op)
+  dev.off()
+
+```
+
+
+### lme trials with fewer zeroes (same number of 0 inundation days as other numbers)
+All variables
+
+```{r}
+  
+  # make sure that only one date per station is present in the final dataset
+  y.bal = x %>% group_by(inund_flag) %>% sample_n(43)
+
+  # decide the random structure & autocorr. with a full fixed model and method REML
+  ms.0 = gls(log_chla ~ 1 + inund_flag + Q_sday + T_mwk + inundays, method = "REML", data = y.bal)
+
+  ms.1 = lme(log_chla ~ 1 + inund_flag + Q_sday + T_mwk + inundays, method = "REML", data = y.bal,
+             random = ~ 1 | station)
+  
+  ms.2 = lme(log_chla ~ 1 + inund_flag + Q_sday + T_mwk + inundays, method = "REML", data = y.bal,
+             random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  ms.11 = gls(log_chla ~ 1, method = "ML", data = y.bal)
+
+  # which predictor should be included next
+  ms.21 = lme(log_chla ~ 1 + Q_sday,   method = "ML", data = y.bal, random = ~ 1 | station)
+  
+  ms.22 = lme(log_chla ~ 1 + inundays, method = "ML", data = y.bal, random = ~ 1 | station)
+  
+  ms.23 = lme(log_chla ~ 1 + T_mwk,    method = "ML", data = y.bal, random = ~ 1 | station)
+  
+  ms.24 = lme(log_chla ~ 1 + Srad_mwk, method = "ML", data = y.bal, random = ~ 1 | station)
+
+  ms.25 = lme(log_chla ~ 1 + inund_flag, method = "ML", data = y.bal, random = ~ 1 | station)
+
+  BIC(ms.21, ms.22, ms.23, ms.24, ms.25)
+  
+  # which predictor should be included next
+  ms.21 = lme(log_chla ~ 1 + Q_sday,   method = "ML", data = y.bal, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.22 = lme(log_chla ~ 1 + inundays, method = "ML", data = y.bal, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.23 = lme(log_chla ~ 1 + T_mwk,    method = "ML", data = y.bal, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+  
+  ms.24 = lme(log_chla ~ 1 + Srad_mwk, method = "ML", data = y.bal, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  ms.25 = lme(log_chla ~ 1 + inund_flag, method = "ML", data = y.bal, random = ~ 1 | station,
+             correlation = corARMA(form =~ doy1998|station, p=1, q=1))
+
+  BIC(ms.21, ms.22, ms.23, ms.24, ms.25)
+
+    # which second predictor should be included (or not)
+  ms.31 = lme(log_chla ~ 1 + inundays + Q_sday,   method = "ML", data = y, random = ~ 1 | station)
+  
+  ms.32 = lme(log_chla ~ 1 + inundays + T_mwk,    method = "ML", data = y, random = ~ 1 | station)
+  
+  ms.33 = lme(log_chla ~ 1 + inundays + Srad_mwk, method = "ML", data = y, random = ~ 1 | station)
+  
+  ms.34 = lme(log_chla ~ 1 + inundays + inund_flag, method = "ML", data = y, random = ~ 1 | station)
+
+  BIC(ms.31, ms.32, ms.33, ms.34)
+  
+  # best model was ms.22 with just inundation, random effect and autocorr. structure
+  ms.22.reml = lme(log_chla ~ 1 + inundays, method = "REML", data = y, random = ~ 1 | station)
+
+  resid = residuals(ms.22.reml, type = "normalized")
+  acf(resid)
+  pacf(resid)
+  summary(ms.22.reml)
+  
+```
+
