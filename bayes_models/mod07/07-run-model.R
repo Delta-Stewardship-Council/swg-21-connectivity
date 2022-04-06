@@ -1,5 +1,5 @@
 # Create a rethinking version of model based on mod06
-# Q, Rad, Wtemp, inund_days
+# Q, Rad, Wtemp, inund_days; then modify to add Qant
 # Accounts for random effect of site (intercept-only, due to low sample size)
 
 
@@ -75,7 +75,7 @@ mean(datlist$Q[(datlist$doy1999[i]-sum(pA[1:k])):(datlist$doy1999[i]-sum(pA[1:k]
 
 datlist_t <- list(chl = log(chla_all$chl),
                   Q = Q_2,
-                  #Srad_mwk = Srad_mwk_2,
+                  Srad_mwk = Srad_mwk_2,
                   #Wtemp_RIV_mwk = Wtemp_RIV_mwk_2,
                   #inund_days = inund_days_2,
                   station_id = as.integer(chla_all$station_id),
@@ -89,7 +89,7 @@ datlist_t <- list(chl = log(chla_all$chl),
 Nstation <- 7
 
 
-# Do the rethinking model -------------------------------
+# Do the rethinking model no Wtemp or inund days -------------------------------
 rm4 <- ulam(
   alist(
     # likelihood
@@ -141,7 +141,9 @@ precis(rm4, depth = 2)
 curve( dgamma( x, 0.01, 0.01 ) , from=0 , to=20 )
 
 library(gtools) # for rdirichlet()
-# Add in the Qant lags as separate covariates and attach weights
+
+
+# Do the rethinking model includes Srad, Wtemp, inund_days -------------------------------
 rm5 <- ulam(
   alist(
     # likelihood
@@ -203,13 +205,14 @@ rm5 <- ulam(
   data=datlist_t, chains = 4, control=list(adapt_delta=0.99), log_lik = TRUE, warmup = 1000, iter = 7000, cmdstan = TRUE)
 precis(rm4, depth = 2)
 
-# Try a different version
+# Try a noncentered reparameterization of rm4 -----------------------------------------------
 rm_reparm <- ulam(
   alist(
     # likelihood
     chl ~ dnorm(mu, 1/sqrt(tau)) ,
     # regression
-    mu <- a_bar + z_station[station_id] * sig_a + B2 * Q + B3 * Srad_mwk + B4 * Wtemp_RIV_mwk + B5 * inund_days ,
+    mu <- a_bar + z_station[station_id] * sig_a + B2 * Q + B3 * Qant + B4 * Srad_mwk ,
+#mu <- a_bar + z_station[station_id] * sig_a + B2 * Q + B3 * Srad_mwk + B4 * Wtemp_RIV_mwk + B5 * inund_days ,
 
     # Priors for random effects; reparameterized rethinking version
     a_bar ~ normal(0, 1/sqrt(0.001)) , # unreparameterized rethinking version: a[station_id] ~ normal(a_bar, sig_a)
@@ -222,8 +225,26 @@ rm_reparm <- ulam(
     B2 ~ normal(0, 1/sqrt(0.001)) ,
     B3 ~ normal(0, 1/sqrt(0.001)) ,
     B4 ~ normal(0, 1/sqrt(0.001)) ,
-    B5 ~ normal(0, 1/sqrt(0.001)) ,
+    #B5 ~ normal(0, 1/sqrt(0.001)) ,
 
+### Weighting for Qant
+# Sum antecedent components across all timesteps
+Qant <- qTemp1*wA[1] + qTemp2*wA[2] + qTemp3*wA[3] + qTemp4*wA[4] + qTemp5*wA[5],
+
+# nlagA <- 5,
+# alphaA <- rep(1, 5),
+# set Priors for weights using the delta trick
+#daily variable weights
+simplex[5]: wA ~ dirichlet(alphaA), #rdirichlet(10, alpha = rep(2, 7))
+# Sum of the deltas for each covariate
+#sumA <- sum(deltaA[c(1:nlagA)]),
+
+# a way to avoid using ddirich distrib function in JAGS
+# use a variable drawn from gamma distrib
+# use a weight from the dirich distribution
+# use weight from that point / sum of all deltas
+
+### End Weighting for Qant
     # Diffuse gamma prior for observation-level precisions
     tau ~ gamma(0.01, 0.01)
   ) ,
@@ -247,7 +268,7 @@ compare(rm4, rm_reparm, function = LOO) # to use LOOIS
 plot(compare(rm4, rm_reparm))
 
 
-# Rethinking model just with Q and Qant
+# Rethinking model just with Q and Qant-----------------------------------------
 rm6 <- ulam(
   alist(
     # likelihood

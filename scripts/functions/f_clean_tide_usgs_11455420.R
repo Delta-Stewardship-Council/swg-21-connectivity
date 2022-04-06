@@ -13,13 +13,13 @@ library(lubridate)
 f_clean_tides <- function(){
 
   # get raw data ID:
-  SRV_tide <- contentid::store("data/tides_usgs_11455420.zip")
+  SRV_tide <- contentid::store("data_raw/raw_tides_usgs_11455420.rds")
 
-  SRV_id <- contentid::resolve("hash://sha256/2874c265bd5a33cda442cbfa8dc2df41ceb61ced972e0eddf35fc618529a7fbe")
+  SRV_id <- contentid::resolve("hash://sha256/5a6ff23657a07ef461553bdef1be5e0e3064f745cfc88f498905c003031fd5a9")
 
   # read in data
 
-  tt <- read_csv(("data/tides_usgs_11455420.zip"))
+  tt <- readRDS(SRV_id)
 
   # clean names
   tt <- janitor::clean_names(tt)

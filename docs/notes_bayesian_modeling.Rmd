@@ -121,6 +121,16 @@ Attempted to convert the simplest version of Model 4 to the rethinking package. 
 ### Notes
 Explicitly specified initial starting values for covariate B slopes to be drawn from a much tighter distribution than in previous model iterations to help with convergence (B = rnorm(4,0,1) compared to B = rnorm(4,0,1000)). With the addition of Srad_mwk, Q slope increases and credible interval widens, and Qant slope moves back near 0 with credible interval overlapping 0.  Srad_mwk slope is positive.  Almost all mean weights on Qant lags are slightly below 0.2. 
 
+## Model 05_Inund (JAGS)
+
+### Covariates included:
+* Flow (Q) on the day of chlorophyll observation
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+
+### Notes
+As in mod05, Qant slope credible interval overlaps 0.  Inundation days slope has a small positive slope with a VERY tight credible interval.  
+
 ## Model 06 (JAGS)
 
 ### Covariates included:
