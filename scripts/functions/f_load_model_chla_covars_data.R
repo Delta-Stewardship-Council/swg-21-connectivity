@@ -61,7 +61,7 @@ f_load_model_chla_covars_data <- function() {
            summarize(n = n())
 
 
-         ggplot(observationsPerRegionYear) + geom_tile(aes(year, region, fill = n)) + viridis::scale_fill_viridis()
+         plotly::ggplotly(ggplot(observationsPerRegionYear) + geom_tile(aes(year, region, fill = n)) + viridis::scale_fill_viridis())
 
         #write.csv(observationsPerStation, "data_clean/chlObsPerStation.csv", row.names = FALSE)
 
@@ -89,6 +89,8 @@ f_load_model_chla_covars_data <- function() {
     filter(!is.na(chlorophyll)) %>%
    dplyr::filter(date>as.Date("1999-02-22") & date<as.Date("2020-01-01")) # this is when RIV starts
 
+
+    filtered <- filter(chla_covars, lubridate::year(date)>2008)
   # Full join for bayes
   chla_covars_fulljoin <- full_join(covars_clean, chla_only)
 
@@ -114,20 +116,6 @@ f_load_model_chla_covars_data <- function() {
   # Above steamboat slough
   # Above Decker Island
 
-  # Map -----------------------------------------------------------
-  stas <- chla_covars %>%
-    select(latitude, longitude, station_wq_chl, source) %>%
-    distinct() %>%
-    mutate(latitude = as.numeric(latitude),
-           longitude = as.numeric(longitude))
-
-  samplesize <- chla_covars %>%
-    group_by(station_wq_chl, latitude, longitude) %>%
-    summarize(n = n())
-
-  # stas_sf <- samplesize %>%
-  #   sf::st_as_sf(coords=c("longitude","latitude"), crs=4326, remove=FALSE)
-  # mapview::mapview(stas_sf, zcol = "station_wq_chl", cex = "n")
 
 
   # check missing data----------------------------------------------
