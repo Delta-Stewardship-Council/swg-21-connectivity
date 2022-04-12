@@ -52,3 +52,36 @@ yolo_by_day <-
 sum(duplicated(yolo_chl$date)) # 192
 sum(duplicated(yolo_by_day$date)) # 1
 subset(yolo_by_day, duplicated(date)) # same as Sac R - USGS-11455139  2017-06-07
+
+# rio vista
+rv_chl <- subset(regions_chla_covars, location == "main_below")
+rv_chl <- rv_chl[,c(3,6,7)]
+
+rv_by_day <-
+  rv_chl %>%
+  mutate(station_wq_chl = fct_relevel(station_wq_chl, c('657', '34', 'NZ068', '653', 'USGS-11455478', '16', 'D22'), after=0L)) %>%
+  group_by(date) %>%
+  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
+
+sum(duplicated(rv_chl$date)) # 144
+sum(duplicated(rv_by_day$date)) # 0 (best as usual)
+min(rv_by_day$date)
+
+# off channel and below
+off_below_chl <- subset(regions_chla_covars, location == "off_channel_below")
+off_below_chl <- off_below_chl[,c(3,6,7)]
+# Liz said USGS-11455350' & 'USGS-11455385' are the same site
+
+off_below_by_day <-
+  off_below_chl %>%
+  mutate(station_wq_chl = fct_relevel(station_wq_chl, c('Pro', 'USGS-11455315', '44', 'USGS-11455350', 'USGS-11455385'), after=0L)) %>%
+  group_by(date) %>%
+  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
+
+sum(duplicated(off_below_chl$date)) # 334
+sum(duplicated(off_below_by_day$date)) #26
+dups <- subset(off_below_by_day, duplicated(date)) # a little trickier
+# USGS-382006121401601, USGS-11455143 need to be added to priority list
+date_list <- unique(dups$date)
+dups_check <- off_below_by_day[off_below_by_day$date %n% date_list,]
+
