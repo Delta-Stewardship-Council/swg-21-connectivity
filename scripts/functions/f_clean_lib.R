@@ -22,6 +22,8 @@ f_clean_lib <- function(){
   head(temp_lib)
   head(cfs_lib)
 
+  write.csv(cfs_lib, "data_raw/raw_lib_flow.csv", row.names = FALSE)
+
   # get C from F
   temp_lib$temp_c <- ((temp_lib$value - 32) *5/9)
   hist(temp_lib$value) # weird values - 83251.2
