@@ -47,6 +47,11 @@ f_clean_lib <- function(){
   temp_daily_lib$method = "CDEC"
 
   # investigate
+  # check when chl starts
+  chlorophyll_fin <- read_csv("data_model/chlorophyll_fin.csv")
+  date_check <- subset(chlorophyll_fin, location == "cache")
+  min(date_check$date) #2012-06-13
+
   continous.dates <- data.frame (x = 1:4068, date = seq(as.Date('2010-12-20'),as.Date('2022-02-07'), by='day'))
   temp_daily_lib$date <- as.Date(temp_daily_lib$date)
   temp_daily_lib_na <- merge(temp_daily_lib, continous.dates, by = "date", all = TRUE)
@@ -90,6 +95,41 @@ f_clean_lib <- function(){
   # bring in data from Rio Vista bridge
   temp_4_lm <- read.csv("data_clean/clean_rv_temperature.csv")
   temp_4_lm$date <- as.Date(temp_4_lm$date)
+
+  # make data for lm
+  input <- imput_dat[,c(1:4)]
+  colnames(input) <- c("date", "lib_mean", "lib_max", "lib_min")
+
+  dat4model <- merge(input, temp_4_lm[,c(1:4)], by = "date", all.x = TRUE)
+
+  dat4model_na <- na.omit(dat4model)
+  fit_mean <- lm(lib_mean~mean, data = dat4model_na)# Adjusted R-squared: 0.9867
+  fit_max <- lm(lib_max~max, data = dat4model_na)# Adjusted R-squared: 0.9726
+  fit_min <- lm(lib_min~min, data = dat4model_na)# Adjusted R-squared:  0.9628
+
+  df_fill <- dat4model %>%
+    mutate(pred_mean = predict(fit_mean, .), pred_max = predict(fit_max, .), pred_min = predict(fit_min, .))
+
+  plot(df_fill$lib_mean, df_fill$pred_mean)
+
+  dat.NA_Over7 <- subset(imput_dat, category == "Over7")
+  imput_dat_Over7 <- merge(dat.NA_Over7, df_fill[,c(1,8:10)], by = "date", all.x = TRUE)
+
+  # rename n and remove group
+  imput_dat_Over7 <- imput_dat_Over7[,-c(2,3,4,11)]
+  colnames(imput_dat_Over7)[9:11] <- c("mean", "max", "min")
+
+  dat_not_Over7 <- subset(imput_dat, category != "Over7")
+  temp_daily_lib_cont <- rbind(dat_not_Over7[,-11], imput_dat_Over7)
+
+  temp_daily_lib_cont$site[is.na(temp_daily_lib_cont$site)] <- "LIB"
+  colnames(temp_daily_lib_cont)[8] <- "n"
+
+  write.csv(temp_daily_lib_cont, "data_clean/clean_lib_temperature.csv", row.names = FALSE)
+
+
+}
+
 
 
 
