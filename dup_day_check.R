@@ -54,21 +54,24 @@ head(main_above_by_day)
 
 # now lets try yolo
 yolo_chl <- subset(regions_chla_covars, location == "yolo")
-yolo_chl <- yolo_chl[,c(3,6,7)]
 
 yolo_by_day <-
   yolo_chl %>%
   mutate(station_wq_chl = fct_relevel(station_wq_chl, c('STTD', 'LIS', 'USGS-11455139'), after=0L)) %>%
   group_by(date) %>%
-  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
+  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl))) %>%
+  group_by(date) %>%
+  summarise(chlorophyll_fin = mean(chlorophyll))
 
 sum(duplicated(yolo_chl$date)) # 192
-sum(duplicated(yolo_by_day$date)) # 1
-subset(yolo_by_day, duplicated(date)) # same as Sac R - USGS-11455139  2017-06-07
+sum(duplicated(yolo_by_day$date)) # 0
+#subset(yolo_by_day, duplicated(date)) # 1 duplicate with the mean line, same as Sac R - USGS-11455139  2017-06-07
+
+yolo_by_day$location <- "yolo"
+head(yolo_by_day)
 
 # rio vista
 rv_chl <- subset(regions_chla_covars, location == "main_below")
-rv_chl <- rv_chl[,c(3,6,7)]
 
 rv_by_day <-
   rv_chl %>%
@@ -78,23 +81,32 @@ rv_by_day <-
 
 sum(duplicated(rv_chl$date)) # 144
 sum(duplicated(rv_by_day$date)) # 0 (best as usual)
-min(rv_by_day$date)
+min(rv_by_day$date) # "1998-01-06"
+
+rv_by_day$location <- "below"
+rv_by_day <- rv_by_day[,c(4:6)] # get rid of site info (because we didn't need the mean)
+colnames(rv_by_day)[2] <- "chlorophyll_fin"
+head(rv_by_day)
 
 # off channel and below
 off_below_chl <- subset(regions_chla_covars, location == "off_channel_below")
-off_below_chl <- off_below_chl[,c(3,6,7)]
 # Liz said USGS-11455350' & 'USGS-11455385' are the same site
 
 off_below_by_day <-
   off_below_chl %>%
   mutate(station_wq_chl = fct_relevel(station_wq_chl, c('Pro', 'USGS-11455315', '44', 'USGS-11455350', 'USGS-11455385', 'USGS-382006121401601', 'USGS-11455143'), after=0L)) %>%
   group_by(date) %>%
-  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
+  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))%>%
+  group_by(date) %>%
+  summarise(chlorophyll_fin = mean(chlorophyll))
 
 sum(duplicated(off_below_chl$date)) # 334
-sum(duplicated(off_below_by_day$date)) #26
-dups <- subset(off_below_by_day, duplicated(date)) # a little trickier
-# USGS-382006121401601, USGS-11455143 need to be added to priority list
-date_list <- unique(dups$date)
-dups_check <- off_below_by_day[off_below_by_day$date %n% date_list,]
+sum(duplicated(off_below_by_day$date)) #0
+#dups <- subset(off_below_by_day, duplicated(date)) # a little trickier
 
+off_below_by_day$location <- "cache"
+head(off_below_by_day)
+
+chlorophyll_fin <- rbind(off_below_by_day, rv_by_day, yolo_by_day, main_above_by_day)
+
+write.csv(chlorophyll_fin, "data_model/chlorophyll_fin.csv")
