@@ -43,13 +43,55 @@ f_clean_lib <- function(){
 
   temp_daily_lib$site <- "LIB"
   temp_daily_lib <- merge(temp_daily_lib, temp_daily, by = "date", all = TRUE)
+  temp_daily_lib$category = "data"
+  temp_daily_lib$method = "CDEC"
 
   # investigate
   continous.dates <- data.frame (x = 1:4068, date = seq(as.Date('2010-12-20'),as.Date('2022-02-07'), by='day'))
   temp_daily_lib$date <- as.Date(temp_daily_lib$date)
   temp_daily_lib_na <- merge(temp_daily_lib, continous.dates, by = "date", all = TRUE)
 
-  temp_daily_lib_n <- temp_daily_lib_na[is.na(temp_daily_lib_na$mean),]
+  dat.NA <- temp_daily_lib_na[is.na(temp_daily_lib_na$mean),]
+  head(dat.NA)
+
+  # Assigns id to consecutive date groups
+  dat.NA$group <- cumsum(c(1, diff.Date(dat.NA$date)) >= 2)
+
+  dat.NA.sum <- dat.NA %>%
+    group_by(group) %>%
+    summarise(length = length(group)) %>%
+    as.data.frame(dat.NA.sum)
+
+  dat.NA.sum <- transform(dat.NA.sum, category = ifelse(length > 7, "Over7", "7&Under"))
+
+  dat.NA.complete <- merge(dat.NA[,-c(9:11)], dat.NA.sum, by="group", all.x = TRUE)
+  head(dat.NA.complete)
+  unique(dat.NA.complete$length) # two large time series missing in 2016 & 2018/19
+
+  # same stratagy as LIS
+  temp_daily_lib$group = NA
+  temp_daily_lib$length = NA
+
+  dat.NA.complete$method <- ifelse(dat.NA.complete$category == "7&Under", "imputeTS", "lm_RIV")
+
+  imput_dat <- rbind(temp_daily_lib, dat.NA.complete)
+  imput_dat <- imput_dat[order(imput_dat$date),]
+
+  #impute
+  imput_dat$mean <- na_ma(imput_dat$mean, k = 7, weighting = "exponential", maxgap = Inf)
+  imput_dat$max <- na_ma(imput_dat$max, k = 7, weighting = "exponential", maxgap = Inf)
+  imput_dat$min <- na_ma(imput_dat$min, k = 7, weighting = "exponential", maxgap = Inf)
+
+  # need to remove data that is not within parameters
+  imput_dat$mean <- ifelse(imput_dat$category == "Over7", NA, imput_dat$mean)
+  imput_dat$max <- ifelse(imput_dat$category == "Over7", NA, imput_dat$max)
+  imput_dat$min <- ifelse(imput_dat$category == "Over7", NA, imput_dat$min)
+
+  # bring in data from Rio Vista bridge
+  temp_4_lm <- read.csv("data_clean/clean_rv_temperature.csv")
+  temp_4_lm$date <- as.Date(temp_4_lm$date)
+
+
 
 
 
