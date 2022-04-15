@@ -4,6 +4,10 @@ library(dplyr)
 
 # Cat's data (should do before adding covars)
 chla_covars <- read_csv("data_model/model_chla_nuts_combined.csv")
+head(chla_covars)
+str(chla_covars)
+
+chla_covars <- chla_covars[,c(3:5,7,10)] # get rid of nuts and other covars for now
 
 # regions from make_map_determine_stations.Rmd
 regions_chla_covars <- chla_covars %>%
@@ -15,20 +19,25 @@ regions_chla_covars <- chla_covars %>%
                               station_wq_chl %in% c("USGS-11455143", "USGS-382006121401601", "USGS-382010121402301", "USGS-11455146", "USGS-11455276", "USGS-11455166", "USGS-381424121405601", "USGS-11455315", "USGS-11455385", "USGS-11455350", "44", "USGS-11455167", "Pro", "USGS-11455140") ~"off_channel_below",
                               station_wq_chl %in% c("34", "657", "NZ068", "653", "USGS-11455478", "16", "D22") ~ "main_below"))
 
+head(regions_chla_covars)
+sum(is.na(regions_chla_covars$chlorophyll) == TRUE) # 659
+
+regions_chla_covars <- regions_chla_covars[!is.na(regions_chla_covars$chlorophyll),]
+
 # need to subset by region first
 main_above_chl <- subset(regions_chla_covars, location == "main_above")
-main_above_chl <- main_above_chl[,c(3,6,7)] # get rid of covars for now
 
-main_above_by_day <-
-  main_above_chl %>%
-  mutate(station_wq_chl = fct_relevel(station_wq_chl, c('SHR', 'USGS-11447650'), after=0L)) %>%
-  group_by(date) %>%
-  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
+# testing code...
+#main_above_by_day <-
+#  main_above_chl %>%
+#  mutate(station_wq_chl = fct_relevel(station_wq_chl, c('SHR', 'USGS-11447650'), after=0L)) %>%
+#  group_by(date) %>%
+#  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
 
 # check
-sum(duplicated(main_above_chl$date))
-sum(duplicated(main_above_by_day$date)) # the remaining duplicates are when two measurements were taken at one station on the same day...
-subset(main_above_by_day, duplicated(date)) # impacts 6 days (all but one is 2019), chl values are not the same (need to decide how to choose, maybe take a mean?)
+#sum(duplicated(main_above_chl$date))
+#sum(duplicated(main_above_by_day$date)) # the remaining duplicates are when two measurements were taken at one station on the same day...
+#subset(main_above_by_day, duplicated(date)) # impacts 6 days (all but one is 2019), chl values are not the same (need to decide how to choose, maybe take a mean?)
 
 # if that is the choice, this will do it -
 main_above_by_day <-
@@ -40,6 +49,8 @@ main_above_by_day <-
   summarise(chlorophyll_fin = mean(chlorophyll))
 
 # need to add region (above, below, cache, yolo)
+main_above_by_day$location <- "above"
+head(main_above_by_day)
 
 # now lets try yolo
 yolo_chl <- subset(regions_chla_covars, location == "yolo")
