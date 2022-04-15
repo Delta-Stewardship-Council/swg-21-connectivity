@@ -3,7 +3,7 @@ library(forcats)
 library(dplyr)
 
 # Cat's data (should do before adding covars)
-chla_covars <- read_csv("data_model/model_chla_covars_gam.csv")
+chla_covars <- read_csv("data_model/model_chla_nuts_combined.csv")
 
 # regions from make_map_determine_stations.Rmd
 regions_chla_covars <- chla_covars %>%
@@ -38,6 +38,8 @@ main_above_by_day <-
   filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl))) %>%
   group_by(date) %>%
   summarise(chlorophyll_fin = mean(chlorophyll))
+
+# need to add region (above, below, cache, yolo)
 
 # now lets try yolo
 yolo_chl <- subset(regions_chla_covars, location == "yolo")
@@ -74,7 +76,7 @@ off_below_chl <- off_below_chl[,c(3,6,7)]
 
 off_below_by_day <-
   off_below_chl %>%
-  mutate(station_wq_chl = fct_relevel(station_wq_chl, c('Pro', 'USGS-11455315', '44', 'USGS-11455350', 'USGS-11455385'), after=0L)) %>%
+  mutate(station_wq_chl = fct_relevel(station_wq_chl, c('Pro', 'USGS-11455315', '44', 'USGS-11455350', 'USGS-11455385', 'USGS-382006121401601', 'USGS-11455143'), after=0L)) %>%
   group_by(date) %>%
   filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
 
