@@ -41,55 +41,72 @@ library(viridis)
 ```
 
 ### Read in data
-* Ideally we can load just one file with everything and just do the chla filtering here once we get the USGS chla data from liz incorporated into the load function.
+
+Old - leaving in for now
 ```{r}
 # covars <- read_csv("data_model/gam_data_covars.csv")
 
 # temporary while waiting to clean up other data ------
-inundation_doy1998 <- read_csv("data_model/inundation_with_doy1998.csv")
-
-covars <- readRDS("bayes_models/mod_covariates_complete.rds") %>% 
-  select(-yolo, -height_sac, -inund_days, -inun, -past_topped) %>%
-  left_join(inundation_doy1998, by = c("doy1998", "date"))
-
-chla_all <- readRDS("bayes_models/Chla_all.rds")%>%
-    # only want chl
-    select(station, date, chl) %>%
-    filter(chl > 0 & station != '11455420') %>%
-    filter(complete.cases(.)) %>% # keep only complete records
-    arrange(station, date) %>%
-    # add a diff time as above for join purposes
-    mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
-           station_id = as.numeric(as.factor(station))) %>%
-    mutate(log_chla = log(chl))
-
-final_covars <- covars %>%
-    mutate(Q_1day = lag(flow_usgs_verona, 1), #this one is not working
-           Q_mwk = rollapply(flow_usgs_verona, 7, mean, align='right', partial=TRUE),
-           T_mwk = rollapply(daymet_tmax, 7, mean, align='right', partial=TRUE),
-           Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE)) %>%
-    rename(Q_sday = flow_usgs_verona)
-
-chla_uniq_date = chla_all %>% group_by(doy1998) %>% sample_n(1)
+# inundation_doy1998 <- read_csv("data_model/inundation_with_doy1998.csv")
+# 
+# covars <- readRDS("bayes_models/mod_covariates_complete.rds") %>% 
+#   select(-yolo, -height_sac, -inund_days, -inun, -past_topped) %>%
+#   left_join(inundation_doy1998, by = c("doy1998", "date"))
+# 
+# chla_all <- readRDS("bayes_models/Chla_all.rds")%>%
+#     # only want chl
+#     select(station, date, chl) %>%
+#     filter(chl > 0 & station != '11455420') %>%
+#     filter(complete.cases(.)) %>% # keep only complete records
+#     arrange(station, date) %>%
+#     # add a diff time as above for join purposes
+#     mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), "day")) + 1,
+#            station_id = as.numeric(as.factor(station))) %>%
+#     mutate(log_chla = log(chl))
+# 
+# final_covars <- covars %>%
+#     mutate(Q_1day = lag(flow_usgs_verona, 1), #this one is not working
+#            Q_mwk = rollapply(flow_usgs_verona, 7, mean, align='right', partial=TRUE),
+#            T_mwk = rollapply(daymet_tmax, 7, mean, align='right', partial=TRUE),
+#            Srad_mwk = rollapply(daymet_srad, 7, mean, align='right', partial=TRUE)) %>%
+#     rename(Q_sday = flow_usgs_verona)
+# 
+# chla_uniq_date = chla_all %>% group_by(doy1998) %>% sample_n(1)
 ```
 
-### Clean model dataset
 ```{r}
-chla_covars <- left_join(chla_uniq_date, final_covars, by=c("doy1998", "date"))
-
-x <- na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
+# chla_covars <- left_join(chla_uniq_date, final_covars, by=c("doy1998", "date"))
+# 
+# x <- na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
 ```
 
 ### Dataset with all chla (multiple stations)
 ```{r}
-gam_data_allstations <- left_join(chla_all, final_covars, by = c("doy1998", "date")) %>%
-  filter(chl > 0 & station != '11455420') %>%
-  filter(complete.cases(.)) %>%
-  mutate(fWY = factor(water_year),
-         doy = yday(date),
-         station_id = factor(station_id))
+# gam_data_allstations <- left_join(chla_all, final_covars, by = c("doy1998", "date")) %>%
+#   filter(chl > 0 & station != '11455420') %>%
+#   filter(complete.cases(.)) %>%
+#   mutate(fWY = factor(water_year),
+#          doy = yday(date),
+#          station_id = factor(station_id))
+# 
+# str(gam_data_allstations)
+```
 
-str(gam_data_allstations)
+### Clean model dataset - current
+```{r}
+#4/8/2022
+chla_covars <- read_csv("data_model/model_chla_covars_gam.csv") %>%
+  mutate(log_chla = log(chlorophyll + 1))
+
+rv_data <- chla_covars %>% filter(station_wq_chl == "657")
+```
+
+For linear models, if we want one observation per date, use for now until we modify the order. Some of the variables have changed though, lags not in here. 
+```{r}
+chla_single <- chla_covars %>%
+  group_by(doy1998) %>% sample_n(1)
+
+x <- na.omit(chla_single) %>% select(log_chla, Q_sday, WTmwk, Sradmwk, inund_days, doy1998)
 ```
 
 ## Modeling
@@ -236,43 +253,95 @@ gls.7 = gls(log_chla ~ inund_days + Q_sday + , na.action = na.omit, data = x, co
 ```{r}
 # Add in day of year
 # Make water year a factor
-gam_data <- chla_covars %>%
+# Remove outlier
+gam_data <- rv_data %>%
   mutate(doy = yday(date),
-         fWY = factor(water_year))
+         fWY = factor(water_year),
+         inundation= factor(inundation),
+         wateRshedTools::add_WYD(rv_data, datecolumn = "date")) %>%
+  filter(chlorophyll < 20) %>%
+  select(-DOY, -WY) %>%
+  rename(dowy = DOWY)
+str(gam_data)
  #------------------------
 
 
-# Flow and inundation
-gam1 <- gam(log_chla~ s(Q_sday, k = 6) + s(inund_days, k = 12) , method = "REML", data = gam_data)
+# Look at data
+ggplot(gam_data) + geom_point(aes(date, chlorophyll))
+ggplot(gam_data) + geom_point(aes(Sradmwk, WTmwk))
+ggplot(gam_data) + geom_smooth(aes(WTmwk, chlorophyll, color = factor(inundation)))
+ggplot(gam_data) + geom_smooth(aes(Q_sday, chlorophyll, color = factor(inundation)))
+ggplot(gam_data) + geom_smooth(aes(Sradmwk, chlorophyll, color = factor(inundation)))
+```
 
+
+Notes
+- Response: log-chla (discrete)
+- Covars: Flow, inundation days, Water temperature, Air temperature, Solar Radiation, Region, seasonal (dowy, wy, season, month)
+
+- Autocorrelation: 
+* detrend data/use anomaly (hard to interpret results) and then add seasonal variable (dowy). Would show what happens when temps are warmer than expected
+* different years share same trend for seasonality (global smoother)
+
+- Visualize everything, get a sense of # wiggles
+- Make k too small
+- gam.check: guidance on k. If edf close to k' it's using all the wiggle space possible. k-index <1 may indicate k is too low. You can overrule if you have a reason to keep a certain wiggliness.
+
+- Consider hurdle model given structural zeros
+
+- Look at documentation of gam function
+
+```{r}
+# Flow, inundation days, water temperature, day of year
+# consider water_year as global model or random effect
+# consider water year index
+gam1 <- gam(log_chla~ s(Q_sday, k = 10) + s(inund_days, k = 15) + s(WTmwk, k = 10) + s(dowy, k = 10, bs = "cc"), method = "REML", data = gam_data)
+
+par(mfrow = c(2,2))
 gam.check(gam1)
 summary(gam1)
 plot(gam1, pages = 1, all.terms = TRUE, se = TRUE)
 gamplot <- plot(gam1, pages = 2, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
 
-# Flow and Temperature and inundation
-gam2 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) + s(T_mwk, k = 6), method = "REML", data = x)
+# Interaction example
+# Flow, inundation days, water temperature, day of year 
+# Add flow by inundation days
+gam2 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, by = inundation, k = 6) + inundation +  s(WTmwk, k = 10) + s(dowy, k = 10, bs = "cc"), method = "REML", data = gam_data)
 
 gam.check(gam2)
 summary(gam2)
-plot(gam2, pages = 1, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
+plot(gam2, pages = 1, all.terms = TRUE, se = TRUE, ylab = "log Chlorophyll (ug/L)")
 
-# FLow and Srad and inundation
-gam3 <- gam(log_chla~s(inund_days, k = 12) + s(Q_sday, k = 6) + s(Srad_mwk, k = 15), method = "REML", data = x)
+# Single model
+# Flow
+gam3 <- gam(log_chla~ s(Q_sday, bs = "tp", k = 11), method = "REML", data = gam_data)
 
 gam.check(gam3)
 summary(gam3)
 plot(gam3, pages = 1, all.terms = TRUE)
-plot(gam3)
+
+# Inundation days
+gam4 <- gam(log_chla~ s(inund_days, bs = "tp", k = 12), method = "REML", data = gam_data)
+
+gam.check(gam4)
+summary(gam4)
+plot(gam4, pages = 1, all.terms = TRUE)
+
+
+
+```
+
+```{r}
+BIC(gam3, gam4)
 ```
 
 ##### Export plots for IEP/ISB presentation (Model gam1)
 ```{r}
 png("figures/gamplotresults.png", width = 3.5, height = 3, units = "in", pointsize = 12, res = 300)
-plot(gam1, pages = 2, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
+plot(gam1, pages = 2, all.terms = TRUE, se = TRUE, ylab = "log Chlorophyll")
 dev.off()
 png("figures/gamplotresults_flow_inund.png", width = 5.5, height = 3, units = "in", pointsize = 12, res = 300)
-plot(gam1, pages = 1, all.terms = TRUE, se = TRUE, ylab = "Chlorophyll (ug/L)")
+plot(gam1, pages = 1, all.terms = TRUE, se = TRUE, ylab = "log Chlorophyll")
 dev.off()
 ```
 
@@ -319,7 +388,7 @@ vis.gam(x = gam5,
 
 * I think this is similar to vif but for GAM
 ```{r}
-gam_full <- gam(log_chla ~ s(Q_sday) + s(T_mwk) + s(Srad_mwk) + s(inund_days), data = x, method = "REML")
+gam_full <- gam(log_chla ~ s(Q_sday) + s(WTmwk) + s(Sradmwk) + s(inund_days), data = gam_data, method = "REML")
 
 concurvity(gam_full, full = TRUE)
 concurvity(gam_full, full = FALSE)
