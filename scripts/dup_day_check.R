@@ -1,6 +1,7 @@
 # library
 library(forcats)
 library(dplyr)
+library(readr)
 
 # Cat's data (should do before adding covars)
 chla_covars <- read_csv("data_model/model_chla_nuts_combined.csv")
