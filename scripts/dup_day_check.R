@@ -107,15 +107,16 @@ rv_by_day <-
   rv_chl %>%
   mutate(station_wq_chl = fct_relevel(station_wq_chl, c('657', '34', 'NZ068', '653', 'USGS-11455478', '16', 'D22'), after=0L)) %>%
   group_by(date) %>%
-  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
+  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))%>%
+  ungroup()
 
 sum(duplicated(rv_chl$date)) # 144
 sum(duplicated(rv_by_day$date)) # 0 (best as usual)
 min(rv_by_day$date) # "1998-01-06"
 
+rv_by_day <- rv_by_day[,-c(2,3,6)] # get rid of site info (because we didn't need the mean)
 rv_by_day$location <- "below"
-rv_by_day <- rv_by_day[,c(4:6)] # get rid of site info (because we didn't need the mean)
-colnames(rv_by_day)[2] <- "chlorophyll_fin"
+rv_by_day$method = "data"
 head(rv_by_day)
 
 # off channel and below
