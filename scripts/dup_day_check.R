@@ -128,15 +128,33 @@ off_below_by_day <-
   mutate(station_wq_chl = fct_relevel(station_wq_chl, c('Pro', 'USGS-11455315', '44', 'USGS-11455350', 'USGS-11455385', 'USGS-382006121401601', 'USGS-11455143'), after=0L)) %>%
   group_by(date) %>%
   filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))%>%
-  group_by(date) %>%
-  summarise(chlorophyll_fin = mean(chlorophyll))
+  ungroup()
+  #group_by(date) %>%
+  #summarise(chlorophyll_fin = mean(chlorophyll))
 
 sum(duplicated(off_below_chl$date)) # 334
-sum(duplicated(off_below_by_day$date)) #0
+sum(duplicated(off_below_by_day$date)) #42
 #dups <- subset(off_below_by_day, duplicated(date)) # a little trickier
 
-off_below_by_day$location <- "cache"
-head(off_below_by_day)
+dups <- subset(off_below_by_day, date == as.Date("2018-04-26") | date == as.Date("2018-04-19") | date == as.Date("2018-04-20") | date == as.Date("2019-04-17") | date == as.Date("2019-05-01") | date == as.Date("2018-04-25") | date == as.Date("2018-04-24") | date == as.Date("2018-08-14") | date == as.Date("2017-05-02") | date == as.Date("2019-09-05") | date == as.Date("2019-12-11"))
+
+dup_dates <- dups %>%
+  group_by(date) %>%
+  summarise(chlorophyll = mean(chlorophyll))
+
+dup_dates$station_wq_chl <- c("USGS-11455315", "USGS-382006121401601", "USGS-382006121401601", "USGS-382006121401601", "USGS-382006121401601", "USGS-11455315", "USGS-382006121401601", "USGS-382006121401601", "USGS-382006121401601", "USGS-11455315", "USGS-11455315")
+dup_dates$method = "mean"
+
+# put them back together
+off_below_chl_dup_rm <- subset(off_below_by_day, date != as.Date("2018-04-26") & date != as.Date("2018-04-19") & date != as.Date("2018-04-20") & date != as.Date("2019-04-17") & date != as.Date("2019-05-01") & date != as.Date("2018-04-25") & date != as.Date("2018-04-24") & date != as.Date("2018-08-14") & date != as.Date("2017-05-02") & date != as.Date("2019-09-05") & date != as.Date("2019-12-11"))
+
+off_below_chl_dup_rm <- off_below_chl_dup_rm[,-c(2,3,6)]
+off_below_chl_dup_rm$method = "data"
+
+off_below_daily <- rbind(off_below_chl_dup_rm, dup_dates)
+
+off_below_daily$location <- "cache"
+head(off_below_daily)
 
 chlorophyll_fin <- rbind(off_below_by_day, rv_by_day, yolo_by_day, main_above_by_day)
 
