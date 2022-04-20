@@ -81,13 +81,22 @@ yolo_by_day <-
   mutate(station_wq_chl = fct_relevel(station_wq_chl, c('STTD', 'LIS', 'USGS-11455139'), after=0L)) %>%
   group_by(date) %>%
   filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl))) %>%
-  group_by(date) %>%
-  summarise(chlorophyll_fin = mean(chlorophyll))
+  ungroup()
+  #group_by(date) %>%
+  #summarise(chlorophyll_fin = mean(chlorophyll))
 
 sum(duplicated(yolo_chl$date)) # 192
 sum(duplicated(yolo_by_day$date)) # 0
-#subset(yolo_by_day, duplicated(date)) # 1 duplicate with the mean line, same as Sac R - USGS-11455139  2017-06-07
+subset(yolo_by_day, duplicated(date)) # 1 duplicate with the mean line, same as Sac R - USGS-11455139  2017-06-07
 
+dups <- subset(yolo_by_day, date == as.Date("2017-06-07"))
+mean(dups$chlorophyll) #58.85
+
+yolo_by_day <- subset(yolo_by_day, date != as.Date("2017-06-07"))
+yolo_by_day <- yolo_by_day[,-c(2,3,6)]
+yolo_by_day$method = "data"
+
+yolo_by_day[nrow(yolo_by_day) + 1,] = list("USGS-11455139", as.Date("2017-06-07"), 58.85, "mean")
 yolo_by_day$location <- "yolo"
 head(yolo_by_day)
 
