@@ -156,6 +156,6 @@ off_below_daily <- rbind(off_below_chl_dup_rm, dup_dates)
 off_below_daily$location <- "cache"
 head(off_below_daily)
 
-chlorophyll_fin <- rbind(off_below_dailyy, rv_by_day, yolo_by_day, main_above_daily)
+chlorophyll_fin <- rbind(off_below_daily, rv_by_day, yolo_by_day, main_above_daily)
 
 write.csv(chlorophyll_fin, "data_model/chlorophyll_fin.csv")
