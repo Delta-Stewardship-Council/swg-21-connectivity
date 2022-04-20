@@ -36,9 +36,9 @@ main_above_chl <- subset(regions_chla_covars, location == "main_above")
 #  filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl)))
 
 # check
-#sum(duplicated(main_above_chl$date))
-#sum(duplicated(main_above_by_day$date)) # the remaining duplicates are when two measurements were taken at one station on the same day...
-#subset(main_above_by_day, duplicated(date)) # impacts 6 days (all but one is 2019), chl values are not the same (need to decide how to choose, maybe take a mean?)
+sum(duplicated(main_above_chl$date))
+sum(duplicated(main_above_by_day$date)) # the remaining duplicates are when two measurements were taken at one station on the same day...
+subset(main_above_by_day, duplicated(date)) # impacts 6 days (all but one is 2019), chl values are not the same (need to decide how to choose, maybe take a mean?)
 
 # if that is the choice, this will do it -
 main_above_by_day <-
@@ -46,12 +46,32 @@ main_above_by_day <-
   mutate(station_wq_chl = fct_relevel(station_wq_chl, c('SHR', 'USGS-11447650'), after=0L)) %>%
   group_by(date) %>%
   filter(as.numeric(station_wq_chl) == min(as.numeric(station_wq_chl))) %>%
-  group_by(date) %>%
-  summarise(chlorophyll_fin = mean(chlorophyll))
+  ungroup() # keeps station, but not with summarise
 
-# need to add region (above, below, cache, yolo)
-main_above_by_day$location <- "above"
 head(main_above_by_day)
+
+# deal with duplicates without loosing station
+dates <- subset(main_above_by_day, duplicated(date))
+
+dups <- subset(main_above_by_day, date == as.Date("2017-06-22") | date == as.Date("2019-09-19") | date == as.Date("2019-08-20") | date == as.Date("2019-10-22") | date == as.Date("2019-12-17") | date == as.Date("2019-07-23"))
+
+dup_dates <- dups %>%
+  group_by(date) %>%
+  summarise(chlorophyll = mean(chlorophyll))
+
+dup_dates$station_wq_chl <- "USGS-11447650"
+dup_dates$method <- "mean"
+
+# put them back together
+main_above_dup_rm <- subset(main_above_by_day, date != as.Date("2017-06-22") & date != as.Date("2019-09-19") & date != as.Date("2019-08-20") & date != as.Date("2019-10-22") & date != as.Date("2019-12-17") & date != as.Date("2019-07-23"))
+
+main_above_dup_rm <- main_above_dup_rm[,-c(2,3,6)]
+main_above_dup_rm$method = "data"
+
+main_above_daily <- rbind(main_above_dup_rm, dup_dates)
+# need to add region (above, below, cache, yolo)
+main_above_daily$location <- "above"
+head(main_above_daily)
 
 # now lets try yolo
 yolo_chl <- subset(regions_chla_covars, location == "yolo")
