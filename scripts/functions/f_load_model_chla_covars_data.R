@@ -15,71 +15,33 @@ library(tidyr)
 f_load_model_chla_covars_data <- function() {
 
   # Read data ---------------------------------------------------------
-  chla_nuts_id <- contentid::store("data_model/model_chla_nuts_combined.csv")
+  chla_nuts_id <- contentid::store("data_model/model_chla_nuts_prioritized.csv")
   chla_nuts_file <- contentid::resolve(chla_nuts_id)
   covars_id <- contentid::store("data_model/model_data_daily_covars.csv")
   covars_file <- contentid::resolve(covars_id)
-
-  # For nutrients, ammonium, nitrate/nitrite --> Diss inorganic nitrate (Ammonium + nitrate/nitrite),
-  # this is supposed to just include chla data below, then join with covars dataset
-
   chla_nuts0 <- readr::read_csv(chla_nuts_file) %>%
-    select(-tide, -field_coords, -depth)
-
+    rename(region = location)
   covars <- readr::read_csv(covars_file)
   summary(covars)
 
-  # Add regions to data -----------------------------------------------
-
-    ## * chla ------
-    chla_nuts <- chla_nuts0 %>%
-    mutate(region = case_when(station_wq_chl %in% c("SHR", "USGS-11447650") ~ "upstream",
-                              station_wq_chl %in% c("LIS", "STTD", "USGS-11455139") ~ "yolo",
-                              TRUE ~ "downstream"))
-
-          # Check data to see how many stations per region
-         stationsPerRegion <- chla_nuts %>%
-           filter(!is.na(chlorophyll)) %>%
-
-            select(region, station_wq_chl, source) %>%
-            distinct() %>%
-            group_by(region) %>%
-            summarize(n = n())
-
-         # Check data to see how many observations per station
-         observationsPerStation <- chla_nuts %>%
-           filter(!is.na(chlorophyll)) %>%
-           select(region, station_wq_chl, source, chlorophyll) %>%
-           group_by(region, station_wq_chl) %>%
-           summarize(n = n())
-
-         observationsPerRegionYear <- chla_nuts %>%
-           filter(!is.na(chlorophyll)) %>%
-           mutate(year = year(date)) %>%
-           select(region, station_wq_chl, source, chlorophyll, year) %>%
-           group_by(year, region) %>%
-           summarize(n = n())
-
-
-         plotly::ggplotly(ggplot(observationsPerRegionYear) + geom_tile(aes(year, region, fill = n)) + viridis::scale_fill_viridis())
-
-        #write.csv(observationsPerStation, "data_clean/chlObsPerStation.csv", row.names = FALSE)
+  # Rearrange data for regions----------------------------------------
 
     # remove nutrients for now
-    chla_only <- chla_nuts %>%
+    chla_only <- chla_nuts0 %>%
       select(-c(diss_ammonia_sign:diss_silica))
 
     ## * covars ----
     covars_long <- covars %>%
-    pivot_longer(cols = c(Q_upstream, Q_yolo, Q_downstream, WTmwk_downstream, WTmwk_upstream, WTmwk_yolo, WTrangemwk_downstream, WTrangemwk_upstream, WTrangemwk_yolo,Sradmwk_upstream, Sradmwk_yolo, Sradmwk_downstream,
-                          Tmwk_upstream, Tmwk_yolo, Tmwk_downstream, precip_yolo, precip_downstream, precip_upstream), names_to = c(".value","region"), names_sep =  "_") %>%
-      mutate(inund_days = ifelse(region == "upstream", 0, inund_days),
-             inundation = ifelse(region == "upstream", 0, inundation)) %>%
-      select(-station_flow, -agency_cd, -height_sac_na, -stage_SRV, -SAC, -daymet_tmax_yolo, -daymet_tmax_downstream, -daymet_tmax_upstream,
-             -daymet_srad_yolo, -daymet_srad_downstream, -daymet_srad_upstream) %>%
+    pivot_longer(cols = c(Q_above, Q_yolo, Q_below,  WTmwk_below, WTmwk_above, WTmwk_yolo, WTmwk_cache, WTrangemwk_below, WTrangemwk_above, WTrangemwk_yolo, WTrangemwk_cache, Sradmwk_above, Sradmwk_yolo, Sradmwk_below, Sradmwk_cache,
+                          Tmwk_above, Tmwk_yolo, Tmwk_below, Tmwk_cache, precip_yolo, precip_below, precip_above, precip_cache), names_to = c(".value","region"), names_sep =  "_") %>%
+      mutate(inund_days = ifelse(region == "above", 0, inund_days),
+             inundation = ifelse(region == "above", 0, inundation)) %>%
+      select(-station_flow, -agency_cd, -stage_SRV, -height_sac, -sac_dayflow, -daymet_tmax_yolo, -daymet_tmax_below, -daymet_tmax_above, -daymet_tmax_cache,
+             -daymet_srad_yolo, -daymet_srad_below, -daymet_srad_above, -daymet_srad_cache) %>%
       rename(Q_sday = Q,
              precip_mm = precip)
 
+  # Remove vars we probably won't use, but if we want them can make that dataset
     covars_clean <- covars_long %>%
       select(-precip_mm, -Tmwk, -normalized_diurnal_range)
 
@@ -89,13 +51,11 @@ f_load_model_chla_covars_data <- function() {
     filter(!is.na(chlorophyll)) %>%
    dplyr::filter(date>as.Date("1999-02-22") & date<as.Date("2020-01-01")) # this is when RIV starts
 
-
-    filtered <- filter(chla_covars, lubridate::year(date)>2008)
   # Full join for bayes
   chla_covars_fulljoin <- full_join(covars_clean, chla_only)
 
   # Dataset including extra variables
-  chla_covars_extravars <- left_join(chla_nuts, covars_long) %>%
+  chla_covars_extravars <- left_join(chla_nuts0, covars_long) %>%
     filter(!is.na(chlorophyll)) %>%
     dplyr::filter(date>as.Date("1999-02-22") & date<as.Date("2020-01-01")) # this is when RIV starts
 
@@ -103,24 +63,10 @@ f_load_model_chla_covars_data <- function() {
   summary(chla_covars_extravars)
     # fill in or PCA axes
 
-  # Plot -----------------------------------------------
-  # Figure out if we can reduce downstream stations
-  ggplot(chla_covars) + geom_point(aes(x = date, y = chlorophyll, color = station_wq_chl))
-
-  dups <- chla_covars %>%
-    group_by(date, region) %>%
-    mutate(n = n()) %>% filter(n>1) %>%
-    arrange(date, region)
-
-    # Hierarchy
-  # Above steamboat slough
-  # Above Decker Island
-
-
-
   # check missing data----------------------------------------------
   first(chla_covars$date)
   summary(chla_covars)
+      # missing Q from LIB for now. Need to fill in some lat/lons
 
   # nutrients have a lot of missing data.
   nutrients_span <- chla_nuts %>%
@@ -135,7 +81,6 @@ f_load_model_chla_covars_data <- function() {
     # only 5 missing diurnal range. can we just fill these? Yes!
 
   summary(chla_covars_fulljoin)
-
 
   # quick look at data
   samplesize <- chla_covars %>%
@@ -152,4 +97,4 @@ f_load_model_chla_covars_data <- function() {
   readr::write_csv(chla_covars_fulljoin, "data_model/model_covars_chla_fulljoin.csv")
 }
 
-f_load_model_chla_covars_data()
+

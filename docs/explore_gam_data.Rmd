@@ -10,7 +10,8 @@ editor_options:
 
     Here we read in cleaned dataset, plot data, look at outliers and correlations between variables. 
 
-*Last updated 1/19/2022 by C. Pien
+*Last updated 4/21/2022 by C. Pien
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -28,17 +29,93 @@ library(psych) # for pairs
 
 # Read in data
 ```{r}
-covars <- read_csv("data_model/model_data_daily_covars.csv") %>%
-  mutate(month = lubridate::month(date)) 
+#covars <- read_csv("data_model/model_data_daily_covars.csv") %>%
+#  mutate(month = lubridate::month(date)) 
 
 alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
   mutate(month = lubridate::month(date),
          year = lubridate::year(date),
          doy = lubridate::yday(date)-60,
-         water_year = ifelse(month>9, year + 1, year))
+         water_year = ifelse(month>9, year + 1, year)) %>%
+  rename(station = station_wq_chl)
 
-chla_nuts <- read_csv("data_model/model_chla_nuts_combined.csv")
+#chla_nuts <- read_csv("data_model/model_chla_nuts_combined.csv")
 ```
+
+Filter to downstream
+```{r}
+downstream <- alldata %>%
+  filter(region== "below")
+```
+
+Look at covariates
+```{r}
+downstream_long <- pivot_longer(downstream, cols = c(inund_days,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+
+ggplot(downstream_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+```
+
+These are very different scales. Scale covars.
+```{r}
+downstream_scaled <- downstream %>%
+  mutate(across(.cols = c(inund_days,diurnal_range:Sradmwk), ~ scale(.x)))
+```
+
+Check distribution.
+```{r}
+downstream_s_long <- pivot_longer(downstream_scaled, cols = c(inund_days,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+
+ggplot(downstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+```
+
+Explore data.
+Relationship with chlorophyll
+```{r}
+ggplot(downstream_s_long) + geom_point(aes(x = Value, y = chlorophyll, color = factor(month))) +
+  geom_smooth(aes(x = Value, y = chlorophyll), method = "gam") +
+  facet_wrap(~Parameter, scales = "free") 
+```
+
+Break up inundation = 0/1
+```{r}
+downstream_inund <- downstream_s_long %>%
+  filter(inundation == 1)
+downstream_noinund <- downstream_s_long %>%
+  filter(inundation == 0)
+
+ggplot(downstream_inund) + geom_point(aes(x = Value, y = chlorophyll, color = factor(month))) +
+  geom_smooth(aes(x = Value, y = chlorophyll), method = "gam") +
+  facet_wrap(~Parameter, scales = "free") 
+
+ggplot(downstream_noinund) + geom_point(aes(x = Value, y = chlorophyll, color = factor(month))) +
+  geom_smooth(aes(x = Value, y = chlorophyll), method = "gam") +
+  facet_wrap(~Parameter, scales = "free") 
+```
+
+By month
+```{r}
+ggplot(downstream_scaled) + geom_point(aes(x = inund_days, y = chlorophyll)) +
+  geom_smooth(aes(x = inund_days, y = chlorophyll), method = "gam") + facet_wrap(~month, scales = "free") 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Temporarily use this until data are cleaned up above.
 ```{r}
