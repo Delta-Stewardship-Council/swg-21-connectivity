@@ -20,18 +20,18 @@ library(ggplot2)
 ```
 
 ```{r}
-chla_covars <- read_csv("data_model/model_chla_covars_gam.csv")
+chla <- read_csv("data_model/model_chla_nuts_combined.csv")
 ```
 
 Make map  
 ```{r}
-stas <- chla_covars %>%
+stas <- chla %>%
     select(latitude, longitude, station_wq_chl, source) %>%
     distinct() %>%
     mutate(latitude = as.numeric(latitude),
            longitude = as.numeric(longitude))
 
-samplesize <- chla_covars %>%
+samplesize <- chla %>%
     group_by(station_wq_chl, latitude, longitude) %>%
     summarize(n = n())
 
@@ -41,28 +41,41 @@ stas_sf <- samplesize %>%
 
 ```
 
+
+
 # Look at stations
 * Above steamboat
 * Between steamboat and RV
 * RV/Decker
 
 * no shipping channel (56), no western stations, no USGS-....20(n=1)
+Pascale: add LIB watertemp file to clean_data, finish station priority, write to data_model, save final inundation file to clean_data. 
+Cat: Rename regions in map file, rename regions in covars, apply rollapply to water temp data (see explore_range), re-download daymet data for new lat/lons, combine everything in covars, combine back chla + nutrients + wq, combine everything in chla_covars.
+
+
+Region names: below, above, cache, yolo
+
+daymet: 
+center "Pro"
+center "STTD"
+center "SHR"
+center "657"
 ```{r}
 stas_location <- stas_sf %>%
   left_join(stas) %>%
   filter(!(longitude <= -121.8),
          !(station_wq_chl %in% c("56", "USGS-11455420"))) %>%
-  mutate(location = case_when(station_wq_chl %in% c("USGS-11447650", "SHR") ~"main_above",
+  mutate(location = case_when(station_wq_chl %in% c("USGS-11447650", "SHR") ~"above",
                               station_wq_chl %in% c("LIS", "STTD", 
                                                      "USGS-11455139") ~ "yolo",
-                              station_wq_chl %in% c("USGS-11455143", "USGS-382006121401601", "USGS-382010121402301", "USGS-11455146", "USGS-11455276", "USGS-11455166", "USGS-381424121405601", "USGS-11455315", "USGS-11455385", "USGS-11455350", "44", "USGS-11455167", "Pro", "USGS-11455140") ~"off_channel_below",
-                              station_wq_chl %in% c("34", "657", "NZ068", "653", "USGS-11455478", "16", "D22") ~ "main_below"))
+                              station_wq_chl %in% c("USGS-11455143", "USGS-382006121401601", "USGS-382010121402301", "USGS-11455146", "USGS-11455276", "USGS-11455166", "USGS-381424121405601", "USGS-11455315", "USGS-11455385", "USGS-11455350", "44", "USGS-11455167", "Pro", "USGS-11455140") ~"cache",
+                              station_wq_chl %in% c("34", "657", "NZ068", "653", "USGS-11455478", "16", "D22") ~ "below"))
 
 mapview::mapview(stas_location, zcol = "location", cex = "n")
 ```
 
 ```{r}
-chla_locations <- left_join(chla_covars, stas_location)%>%
+chla_locations <- left_join(chla, stas_location)%>%
   filter(!(longitude <= -121.8),
          station_wq_chl != "56")
 ```
@@ -73,17 +86,17 @@ ggplot(chla_locations) +
   theme(axis.text.x = element_text(angle = 90))
 
 chla_locations %>%
-filter(location == "main_above") %>%
+filter(location == "above") %>%
   ggplot() +
   geom_point(aes(x = date, y = chlorophyll, color = station_wq_chl))
 
 
 chla_locations %>%
-filter(location == "main_below") %>%
+filter(location == "below") %>%
   ggplot() +
   geom_point(aes(x = date, y = chlorophyll, color = station_wq_chl))
 
-off_below <- chla_locations %>% filter(location == "off_channel_below") 
+off_below <- chla_locations %>% filter(location == "cache") 
  plotly::ggplotly(ggplot(off_below) +
   geom_point(aes(x = date, y = chlorophyll, color = station_wq_chl)))
 ```
@@ -97,13 +110,42 @@ stas_priority <- chla_locations %>%
                               station_wq_chl %in% c("LIS", "USGS-11447650", "34", "USGS-11455315")~2,
                               station_wq_chl %in% c("USGS-11455139", "NZ068", "44") ~ 3,
                               station_wq_chl %in% c("653", "USGS-11455350") ~ 4,
-                              station_wq_chl=="USGS-11455478" ~ 5,
-                              station_wq_chl=="16" ~ 6,
+                              station_wq_chl %in% c("USGS-11455478", "USGS-382006121401601") ~ 5,
+                              station_wq_chl %in% c("16", "USGS-11455143") ~ 6,
                               station_wq_chl=="D22" ~ 7,
                               TRUE~0))
   
 ```
 
+```{r}
+# Check data to see how many stations per region
+         stationsPerRegion <- stas_priority %>%
+           filter(!is.na(chlorophyll)) %>%
+
+            select(location, station_wq_chl, source) %>%
+            distinct() %>%
+            group_by(location) %>%
+            summarize(n = n())
+
+         # Check data to see how many observations per station
+         observationsPerStation <- stas_priority %>%
+           filter(!is.na(chlorophyll)) %>%
+           select(location, station_wq_chl, source, chlorophyll) %>%
+           group_by(location, station_wq_chl) %>%
+           summarize(n = n())
+
+         observationsPerRegionYear <- stas_priority %>%
+           filter(!is.na(chlorophyll)) %>%
+           mutate(year = year(date)) %>%
+           select(location, station_wq_chl, source, chlorophyll, year) %>%
+           group_by(year, location) %>%
+           summarize(n = n())
+
+
+         plotly::ggplotly(ggplot(observationsPerRegionYear) + geom_tile(aes(year, location, fill = n)) + viridis::scale_fill_viridis())
+
+        #write.csv(observationsPerStation, "data_clean/chlObsPerStation.csv", row.names = FALSE)
+```
 
 ```{r}
 ggplot(stas_priority) + 
@@ -134,17 +176,3 @@ leaflet(stas_priority_only) %>%
                                                   direction = 'center',
                                                   textOnly = T))
 ```
-
-
-```{r}
-numbers <- chla_locations %>%
-  arrange(location) %>%
-  group_by(location, station_wq_chl) %>%
-  summarize(n = n())
-
-data_slice <- chla_locations %>%
-  arrange(date, location, station_wq_chl) %>%
-  group_by(date) %>%
-  slice(1)
-```
-
