@@ -59,7 +59,7 @@ initslist <- list(inits(), inits(), inits())
 # run this if model has been successfully run already:
 
 # Or load saved.state
-#load("bayes_models/mod06_Srad/inits/sstate_20220210.Rda")
+load("bayes_models/mod06_Srad/inits/sstate_20220210.Rda")
 inits_2 <- function(){
   list(sig.eps = runif(1, 0, 1),
        tau = runif(1, 0, 1),
@@ -165,3 +165,71 @@ ggsave(filename = "bayes_models/mod06_Srad/fig_out/slope_of_betas_q_sol_inund_20
 
 # save model
 save(jm_coda, coda_sum, file = "bayes_models/mod06_Srad/run_20220210.rda")
+
+# Investigate relationship between observed and predicted chl-a with this best model on 4/7/22:
+# Look at the relationship between predicted model chl and actual data chl
+## Need to monitor chl.rep directly
+coda.rep <- coda.samples(jm, variable.names = "chl.rep", n.iter = 1000*15,
+                         thin = 15)
+coda.rep_sum <- tidyMCMC(coda.rep, conf.int = TRUE, conf.method = "HPDinterval") %>%
+  rename(pd.mean = estimate, pd.lower = conf.low, pd.upper = conf.high)
+
+# Check model fit
+pred <- cbind.data.frame(chl = datlist$chl, station_id = datlist$station_id, coda.rep_sum)
+
+m1 <- lm(pd.mean ~ chl, data = pred)
+summary(m1) # Adjusted R-squared:  0.2243
+
+pred %>%
+  filter(!is.na(chl)) %>%
+  ggplot(aes(x = chl, y = pd.mean)) +
+  geom_abline(intercept = 0, slope = 1, col = "red") +
+  geom_errorbar(aes(ymin = pd.lower, ymax = pd.upper,
+                    color = as.factor(station_id)),
+                alpha = 0.25) +
+  geom_point(aes(color = as.factor(station_id))) +
+  geom_point(aes(y = chl)) +
+  scale_x_continuous("Observed") +
+  scale_y_continuous("Predicted") +
+  theme_bw(base_size = 12) +
+  scale_colour_discrete("Station ID")
+
+ggsave(filename = "bayes_models/mod06_Srad/fig_out/pred_vs_obs_20220405.png",
+       dpi=300, width = 10, height = 8)
+
+# Observed vs. predicted chlorophyll as a function of time
+chl_obs_dates <- as.data.frame(chla_all) %>%
+  select(date, doy1999)
+pred_time <- cbind.data.frame(pred, chl_obs_dates)
+pred_time$date <- as.Date(pred_time$date, format = "%Y-%m-%d")
+
+pred_time %>%
+  filter(!is.na(chl)) %>%
+  ggplot(aes(x = date, y = pd.mean)) +
+  geom_errorbar(aes(ymin = pd.lower, ymax = pd.upper,
+                    color = as.factor(station_id)),
+                alpha = 0.25) +
+  geom_point(aes(x = date, y = chl, color = as.factor(station_id))) +
+  scale_x_continuous("Date") +
+  scale_y_continuous("Chlorophyll-a") +
+  theme_bw(base_size = 12) +
+  scale_colour_discrete("Station ID") +
+  scale_x_date(date_labels = "%m-%Y")
+
+ggsave(filename = "bayes_models/mod06_Srad/fig_out/pred_obs_time_20220405.png",
+       dpi=300, width = 10, height = 8)
+
+# Look at cases where the model is not predicting low chlorophyll values well
+pred_time %>% filter(chl < -0.9) %>% ggplot(aes(x = date, y = pd.mean)) +
+  geom_errorbar(aes(ymin = pd.lower, ymax = pd.upper,
+                    color = as.factor(station_id)),
+                alpha = 0.25) +
+  geom_point(aes(x = date, y = chl, color = as.factor(station_id))) +
+  scale_x_continuous("Date") +
+  scale_y_continuous("Chlorophyll-a") +
+  theme_bw(base_size = 12) +
+  scale_colour_discrete("Station ID") +
+  scale_x_date(date_labels = "%m-%Y")
+
+ggsave(filename = "bayes_models/mod06_Srad/fig_out/highpred_lowobs_time_20220405.png",
+       dpi=300, width = 10, height = 8)
