@@ -1,0 +1,253 @@
+---
+title: "make_explore_gam_structure"
+author: "NCEAS Connectivity Group"
+date: "4/28/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# Connectivity Modeling - Chlorophyll a
+
+## Preparation
+
+### Call packages
+```{r}
+library(dplyr)
+library(readr)
+library(lubridate)
+library(glue)
+library(tidyr)
+library(zoo)
+library(car)
+library(MuMIn)
+library(psych)
+library(mgcv)
+library(ggplot2)
+library(viridis)
+library(nlme)
+
+# tinytex::install_tinytex() - run in console before knitting
+```
+
+### Read in data
+
+```{r}
+
+alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
+  mutate(month = lubridate::month(date),
+         year = lubridate::year(date),
+         doy = lubridate::yday(date) - 60,
+         week = lubridate::week(date),
+         water_year = ifelse(month > 9, year + 1, year),
+         log_chla = log(chlorophyll),
+         log_idys = log(inund_days + 1),
+         log_qsdy = log(Q_sday)) %>%
+  rename(station = station_wq_chl)
+
+```
+
+Filter to downstream
+```{r}
+downstream <- alldata %>% filter(region == "below")
+```
+
+Look at covariates
+```{r}
+downstream_long <- pivot_longer(downstream, cols = c(diurnal_range:Sradmwk, log_idys, log_qsdy), names_to = "Parameter", values_to = "Value")
+
+ggplot(downstream_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+```
+
+These are very different scales. Scale covars.
+```{r}
+downstream_scaled <- downstream %>%
+  mutate(across(.cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), ~ scale(.x)))
+```
+
+Check distribution.
+```{r}
+downstream_s_long <- pivot_longer(downstream_scaled, cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+
+ggplot(downstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+```
+
+
+#### Check for autocorrelation in model, predictor, response
+```{r}
+
+x <- downstream_scaled
+
+op = par(mfrow = c(2, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+
+acf(x$log_chla)
+acf(x$Q_sday)
+acf(x$WTmwk)
+acf(x$Sradmwk)
+
+par(op)
+
+```
+
+### Explore GAMM structure
+
+## first covar
+
+```{r}
+# Flow, inundation days, water temperature, day of year explored one at a time
+# compared to null model
+gam1.0 <- gam(log_chla ~ 1, method = "REML", data = x, family = "gaussian")
+gam1.1 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = x, family = "gaussian")
+gam1.2 <- gam(log_chla ~ s(log_idys), method = "REML", data = x, family = "gaussian")
+gam1.3 <- gam(log_chla ~ s(WTmwk),    method = "REML", data = x, family = "gaussian")
+gam1.4 <- gam(log_chla ~ s(Sradmwk),  method = "REML", data = x, family = "gaussian")
+
+# to make sure that k is not too high or too low
+gam.check(gam1.0)
+gam.check(gam1.1)
+gam.check(gam1.2)
+gam.check(gam1.3)
+gam.check(gam1.4)
+
+# to compare model fit; lowest AIC value will be first covar to be included in model
+AIC(gam1.0, gam1.1, gam1.2, gam1.3, gam1.4)
+
+# selects gam1.4 or Sradmwk
+```
+
+## explore other spline definitions
+
+```{r}
+
+# simple spline; no k given, bs is by default "tp"
+gam1.4 <- gam(log_chla ~ s(Sradmwk),  method = "REML", data = x, family = "gaussian")
+
+# added week + 52 knots as a tensor product with Srad (Pederson et al. paper)
+# unclear on the difference between k and knots
+gam4.4 <- gam(log_chla ~ te(week, Sradmwk,  bs=c("cc", "tp"), k = c(10, 10)), 
+              method = "REML", data = x, family = "gaussian", knots = list(week=c(0, 52)))
+
+# another way of including cyclic nature of data i.e. seasonality; performs as well as gam4.4
+gam4.3 <- gam(log_chla ~ s(Sradmwk) + s(week, bs = "cc", k = 51), 
+              method = "REML", data = x, family = "gaussian")
+
+gam.check(gam1.4)
+gam.check(gam4.4)
+
+AIC(gam1.4, gam4.4, gam4.3)
+
+# gam4.3 formulation carried forward as the simplest but best fitting
+
+```
+
+
+## second term of covar with model incorporating seasonality; first term Sradmwk
+
+```{r}
+
+gam5.1 <- gam(log_chla ~ s(Sradmwk) + s(week, bs = "cc", k = 51) + s(log_qsdy), 
+              method = "REML", data = x, family = "gaussian")
+gam5.2 <- gam(log_chla ~ s(Sradmwk) + s(week, bs = "cc", k = 51) + s(log_idys), 
+              method = "REML", data = x, family = "gaussian")
+
+AIC(gam4.3, gam5.1, gam5.2)
+
+# 5.1 wins; log_qsdy is included next
+# but also discoverd that by including week, Sradmwk becomes 'not significant'
+# thus Srad maybe only important as a marker to seasonality
+```
+
+## test out inundation flag as a by= with Q from same day
+
+# also test out tensor product of log(inundation days)
+
+```{r}
+
+gam5.3 <- gam(log_chla ~ s(Sradmwk) + s(week, bs = "cc", k = 51) + 
+                s(log_qsdy, by = inundation, m = 1, bs = "tp") + s(inundation, bs="re"), 
+              method = "REML", data = x, family = "gaussian")
+
+gam5.4 <- gam(log_chla ~ s(Sradmwk) + s(week, bs = "cc", k = 51) + te(log_qsdy, log_idys), 
+              method = "REML", data = x, family = "gaussian")
+
+AIC(gam5.1, gam5.3, gam5.4)
+
+gam.check(gam5.1)
+gam.check(gam5.4)
+
+summary(gam5.1)
+summary(gam5.4)
+
+# 5.1 wins but 5.4 performs equally well
+
+```
+
+
+
+## include inundation days as tensor product with Q from same day
+
+also remove week and include cyclic nature within Sradmwk (did not work)
+also include week and remove Sradmwk which works better
+
+```{r}
+
+# include cyclic nature within Sradmwk
+gam6.1 <- gam(log_chla ~ s(Sradmwk, bs = "cc", k = 51) + s(log_qsdy), 
+              method = "REML", data = x, family = "gaussian")
+
+# include cyclic nature within Sradmwk + tensor(log of Q and inundation days)
+gam6.2 <- gam(log_chla ~ s(Sradmwk, bs = "cc", k = 51) + te(log_qsdy, log_idys), 
+              method = "REML", data = x, family = "gaussian")
+
+# include cyclic nature through week and drop Srad  + te(log_qsdy, log_idys)
+gam6.3 <- gam(log_chla ~ s(week, bs = "cc", k = 51) + te(log_qsdy, log_idys), 
+              method = "REML", data = x, family = "gaussian")
+
+# include cyclic nature through week and drop Srad (no inundation days)
+gam6.4 <- gam(log_chla ~ s(week, bs = "cc", k = 51) + s(log_qsdy), 
+              method = "REML", data = x, family = "gaussian")
+
+# include cyclic nature through week and drop Srad (inundation flag with inundation days)
+gam6.5 <- gam(log_chla ~ s(week, bs = "cc", k = 51) + s(log_idys, by = inundation, m = 1, bs = "tp"), 
+              method = "REML", data = x, family = "gaussian")
+
+# compare all
+AIC(gam5.1, gam5.3, gam6.1, gam6.2, gam6.3, gam6.4, gam6.5)
+
+AIC(gam6.1, gam6.4)
+
+# gam6.4 (only log_qsdy required for a good model)
+
+# plot residuals with fitted values, etc.
+par(mfrow = c(2,2))
+gam.check(gam6.3)
+gam.check(gam6.4)
+
+# check if temporal autocorrelation is taken care of
+resid = residuals(gam6.3, type = "working")
+par(mfrow = c(2,2))
+acf(resid)
+pacf(resid)
+plot(x$log_qsdy, resid, xlab = "Flow same day",   ylab = "Residuals")
+plot(x$log_idys, resid, xlab = "Inundation days", ylab = "Residuals")
+
+resid = residuals(gam6.4)
+acf(resid)
+pacf(resid)
+plot(x$log_qsdy, resid, xlab = "Flow same day",   ylab = "Residuals")
+
+#install.packages("visreg")
+library("visreg")
+
+visreg2d(gam6.3, xvar='log_qsdy', yvar='log_idys', scale='response')
+
+summary(gam6.3)
+summary(gam6.4)
+
+```
