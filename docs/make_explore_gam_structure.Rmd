@@ -1,4 +1,11 @@
 ---
+output:
+  word_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: inline
+---
+---
 title: "make_explore_gam_structure"
 author: "NCEAS Connectivity Group"
 date: "4/28/2022"
@@ -224,6 +231,20 @@ AIC(gam6.1, gam6.4)
 
 # gam6.4 (only log_qsdy required for a good model)
 
+```
+
+## color ramp for diagnostic plots
+```{r}
+# add color bar to include Sradmwk to plots below
+range(x$Sradmwk)
+length(unique(x$Sradmwk))
+rbPal <- colorRampPalette(c('red','blue'))
+x$Col <- rbPal(10)[as.numeric(cut(x$Sradmwk,breaks = 10))]
+length(unique(x$Col))
+```
+
+## plot residuals with fitted values, etc.
+```{r}
 # plot residuals with fitted values, etc.
 par(mfrow = c(2,2))
 gam.check(gam6.3)
@@ -234,13 +255,13 @@ resid = residuals(gam6.3, type = "working")
 par(mfrow = c(2,2))
 acf(resid)
 pacf(resid)
-plot(x$log_qsdy, resid, xlab = "Flow same day",   ylab = "Residuals")
-plot(x$log_idys, resid, xlab = "Inundation days", ylab = "Residuals")
+plot(x$log_qsdy, resid, xlab = "Flow same day",   ylab = "Residuals", col = x$Col)
+plot(x$log_idys, resid, xlab = "Inundation days", ylab = "Residuals", col = x$Col)
 
 resid = residuals(gam6.4)
 acf(resid)
 pacf(resid)
-plot(x$log_qsdy, resid, xlab = "Flow same day",   ylab = "Residuals")
+plot(x$log_qsdy, resid, xlab = "Flow same day",   ylab = "Residuals", col = x$Col)
 
 #install.packages("visreg")
 library("visreg")
@@ -249,5 +270,19 @@ visreg2d(gam6.3, xvar='log_qsdy', yvar='log_idys', scale='response')
 
 summary(gam6.3)
 summary(gam6.4)
+
+```
+
+```{r}
+library("visreg")
+
+# attempt overlay of data
+visreg2d(gam6.3, xvar='log_qsdy', yvar='log_idys', scale='response')
+par(new = TRUE)
+plot(x$log_qsdy, x$log_idys, xlim = c(-2.5,5)) # looks weird, but answers the question about no data in blue area of the plot
+
+# 3-D plot that includes log(chl)
+library(rgl)
+visreg2d(gam6.3, xvar='log_qsdy', yvar='log_idys', scale='response', plot.type = "rgl")
 
 ```
