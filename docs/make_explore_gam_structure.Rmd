@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Call packages
 ```{r}
+detach(gam)
 library(dplyr)
 library(readr)
 library(lubridate)
@@ -40,22 +41,27 @@ library(nlme)
 
 ```{r}
 
-alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
+alldata <- read_csv("data_model/model_chla_covars_gam.csv") %>%
   mutate(month = lubridate::month(date),
-         year = lubridate::year(date),
-         doy = lubridate::yday(date) - 60,
-         week = lubridate::week(date),
+         year  = lubridate::year(date),
+         rdoy  = lubridate::yday(date) + 92,
+         week  = lubridate::week(date),
          water_year = ifelse(month > 9, year + 1, year),
+         dowy = ifelse(rdoy > 366, rdoy - 366, rdoy),
          log_chla = log(chlorophyll),
          log_idys = log(inund_days + 1),
          log_qsdy = log(Q_sday)) %>%
-  rename(station = station_wq_chl)
+  rename(station  = station_wq_chl) %>% 
+  filter(region  != "cache")
 
 ```
 
 Filter to downstream
 ```{r}
 downstream <- alldata %>% filter(region == "below")
+downstream$inundation = as.factor(downstream$inundation)
+downstream$station = as.factor(downstream$station)
+
 ```
 
 Look at covariates
@@ -63,6 +69,7 @@ Look at covariates
 downstream_long <- pivot_longer(downstream, cols = c(diurnal_range:Sradmwk, log_idys, log_qsdy), names_to = "Parameter", values_to = "Value")
 
 ggplot(downstream_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+
 ```
 
 These are very different scales. Scale covars.
@@ -103,10 +110,20 @@ par(op)
 # Flow, inundation days, water temperature, day of year explored one at a time
 # compared to null model
 gam1.0 <- gam(log_chla ~ 1, method = "REML", data = x, family = "gaussian")
+
+# gam1.1 <- gam(log_chla ~ s(log_qsdy) + s(station, bs="re"), method = "REML", data = x, family = "gaussian")
+# gam1.2 <- gam(log_chla ~ s(log_idys) + s(station, bs="re"), method = "REML", data = x, family = "gaussian")
+# gam1.3 <- gam(log_chla ~ s(WTmwk)    + s(station, bs="re"), method = "REML", data = x, family = "gaussian")
+# gam1.4 <- gam(log_chla ~ s(Sradmwk)  + s(station, bs="re"), method = "REML", data = x, family = "gaussian")
+# gam1.5 <- gam(log_chla ~ s(Q_sday)   + s(station, bs="re"), method = "REML", data = x, family = "gaussian")
+# gam1.6 <- gam(log_chla ~ s(Inund_days) + s(station, bs="re"), method = "REML", data = x, family = "gaussian")
+
 gam1.1 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = x, family = "gaussian")
 gam1.2 <- gam(log_chla ~ s(log_idys), method = "REML", data = x, family = "gaussian")
 gam1.3 <- gam(log_chla ~ s(WTmwk),    method = "REML", data = x, family = "gaussian")
 gam1.4 <- gam(log_chla ~ s(Sradmwk),  method = "REML", data = x, family = "gaussian")
+gam1.5 <- gam(log_chla ~ s(Q_sday),   method = "REML", data = x, family = "gaussian")
+gam1.6 <- gam(log_chla ~ s(inund_days), method = "REML", data = x, family = "gaussian")
 
 # to make sure that k is not too high or too low
 gam.check(gam1.0)
@@ -114,9 +131,11 @@ gam.check(gam1.1)
 gam.check(gam1.2)
 gam.check(gam1.3)
 gam.check(gam1.4)
+gam.check(gam1.5)
+gam.check(gam1.6)
 
 # to compare model fit; lowest AIC value will be first covar to be included in model
-AIC(gam1.0, gam1.1, gam1.2, gam1.3, gam1.4)
+AIC(gam1.0, gam1.1, gam1.2, gam1.3, gam1.4, gam1.5, gam1.6)
 
 # selects gam1.4 or Sradmwk
 ```
@@ -159,7 +178,7 @@ gam5.2 <- gam(log_chla ~ s(Sradmwk) + s(week, bs = "cc", k = 51) + s(log_idys),
 AIC(gam4.3, gam5.1, gam5.2)
 
 # 5.1 wins; log_qsdy is included next
-# but also discoverd that by including week, Sradmwk becomes 'not significant'
+# but also discovered that by including week, Sradmwk becomes 'not significant'
 # thus Srad maybe only important as a marker to seasonality
 ```
 
@@ -220,7 +239,7 @@ gam6.5 <- gam(log_chla ~ s(week, bs = "cc", k = 51) + s(log_idys, by = inundatio
 # compare all
 AIC(gam5.1, gam5.3, gam6.1, gam6.2, gam6.3, gam6.4, gam6.5)
 
-AIC(gam6.1, gam6.4)
+AIC(gam6.3, gam6.4, gam6.5)
 
 # gam6.4 (only log_qsdy required for a good model)
 
@@ -249,5 +268,173 @@ visreg2d(gam6.3, xvar='log_qsdy', yvar='log_idys', scale='response')
 
 summary(gam6.3)
 summary(gam6.4)
+
+```
+
+## Include all regions (except cache) and scale parameters
+
+```{r}
+
+alldata.scaled <- alldata %>%
+  mutate(across(.cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), ~ scale(.x)))
+  
+```
+
+## New trials with random effects for station and time (maybe)
+
+```{r}
+
+gam1.0 <- gam(log_chla ~ 1, method = "REML", data = x, family = "gaussian")
+gam1.2 <- gam(log_chla ~ s(Q_sday), method = "REML", data = x, family = "gaussian")
+gam1.3 <- gam(log_chla ~ inundation + s(Q_sday, by = inundation, bs = "tp"), 
+               method = "REML", data = x, family = "gaussian")
+gam1.4 <- gamm(log_chla ~ inundation + s(Q_sday, by = inundation, bs = "tp"), 
+               correlation = corAR1(), 
+               method = "REML", data = x, family = "gaussian")
+gam1.5 <- gamm(log_chla ~ inundation + s(Q_sday, by = inundation, bs = "tp"), 
+               correlation = corAR1(form = ~1|doy1998), 
+               method = "REML", data = x, family = "gaussian")
+gam1.6 <- gamm(log_chla ~ inundation + s(Q_sday, by = inundation, bs = "tp"), 
+               correlation = corAR1(form = ~1|doy1998), random = list(station = ~1),
+               method = "REML", data = x, family = "gaussian")
+
+AIC(gam1.0, gam1.1, gam1.2, gam1.3, gam1.4, gam1.5, gam1.6)
+
+# Best model here is gam1.4
+# accounting for autocorr. without giving any time var
+# I assume this means that it is implying autocorr in residuals
+# plus inundation flag - check is this is necessary
+
+gam1.4 <- gamm(log_chla ~ inundation + s(Q_sday, by = inundation, bs = "tp"), 
+               correlation = corAR1(), 
+               method = "REML", data = x, family = "gaussian")
+gam1.7 <- gamm(log_chla ~ s(Q_sday, bs = "tp"), correlation = corAR1(), 
+               method = "REML", data = x, family = "gaussian")
+
+AIC(gam1.4, gam1.7)
+
+```
+
+### discussion with Jereme
+
+1. try constraining the time series
+2. categorize inundation (high, low, no_inundation)
+3. year as random effect
+4. plots of normalized data
+5. plots of response vs. covar
+6. residuals mean 0 and variance similar across the range
+
+
+1. "Days_since_last_inundation"
+2. "days_of_inundation_until_now"
+3. "total_inund_last_year"
+4. "inundation_flag"
+
+Model 0: log_chla = s(Q_sday, by = inundated)
+Model 1: log_chla = s(Q_sday, by = inundated) + s(doy)
+Model 2: log_chla = te(Q_sday, doy, by = inundated)
+Model 3: log_chla = te(Q_sday, cumulative_idys, by = inundated (0,1))
+Model 4: log_chls = te(Q_sday, doy, days_since_inundation, by = inundated)
+
+```{r}
+
+library("mgcv")
+gam0 <- gam(log_chla ~ 1, method = "REML", data = x, family = "gaussian")
+
+gam1.0 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = x, family = "gaussian")
+gam1.1 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = x, family = "gaussian")
+gam1.2 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = x, family = "gaussian")
+gam1.3 <- gam(log_chla ~ te(log_qsdy, log_idys, dowy, by = inundation), method = "REML", data = x, family = "gaussian")
+
+AIC(gam0, gam1.0, gam1.1, gam1.2, gam1.3)
+
+gam.check(gam1.0)
+gam.check(gam1.1)
+gam.check(gam1.2)
+gam.check(gam1.3)
+
+summary(gam1.1)
+summary(gam1.2)
+summary(gam1.3)
+
+# plot residuals with fitted values, etc.
+par(mfrow = c(2,2), pch=18)
+gam.check(gam1.2)
+gam.check(gam1.3)
+
+par(mfrow = c(1,2), pch = 18)
+plot(gam1.3)
+
+
+```
+
+## constrain to range when Yolo Bypass gets inundated
+
+```{r}
+
+x.idys = subset(x, x$inundation == 1)
+range(x.idys$dowy)
+# min "day of water year" 65; max 214
+
+x.idys = subset(x, (x$dowy >= 65 & x$dowy <= 214))
+table(x.idys$inundation)
+
+gam1.0 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+gam1.1 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = x.idys, family = "gaussian")
+gam1.2 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+gam1.3 <- gam(log_chla ~ te(log_idys, dowy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+
+AIC(gam0, gam1.0, gam1.1, gam1.2, gam1.3)
+
+gam.check(gam1.1)
+gam.check(gam1.2)
+gam.check(gam1.3)
+gam.check(gam1.4)
+
+summary(gam1.1)
+summary(gam1.2)
+summary(gam1.3)
+summary(gam1.4)
+
+resid = residuals(gam1.3)
+acf(resid)
+pacf(resid)
+
+```
+
+
+#### Model validation for the gam model based on hypothesis testing
+
+```{r}
+
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/gam_model_validation_qsdy.tiff", width = 10, height = 8, units = "in", res = 200)
+  resid = residuals(gam1.3)
+  op = par(mfrow = c(2, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gam1.3), resid, xlab = "Fitted values", ylab = "Residuals")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(x.idys$log_qsdy, resid, xlab = "Flow",   ylab = "Residuals")
+  par(op)
+  dev.off()
+
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/gam_model_validation_idys.tiff", width = 10, height = 8, units = "in", res = 200)
+  resid = residuals(gam1.4)
+  op = par(mfrow = c(2, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gam1.4), resid, xlab = "Fitted values", ylab = "Residuals")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(x.idys$log_idys, resid, xlab = "Consecutive inundation days",   ylab = "Residuals")
+  par(op)
+  dev.off()
 
 ```
