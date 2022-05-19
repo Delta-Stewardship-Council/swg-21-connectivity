@@ -39,9 +39,30 @@ inun_metrics$match_water_year <- dates.posix$year + 1900 + offset
 
 # 5
 summary$match_water_year <- summary$water_year+1
-inun_metrics <- merge(inun_metrics, summary[,c(2,8)], by = "match_water_year")
+inun_metrics <- merge(inun_metrics, summary[,c(2,4,8)], by = "match_water_year")
 colnames(inun_metrics)[8] <- "total_inund_last_year"
 colnames(inun_metrics)[1] <- "water_year"
+
+# 3
+inun_metrics$days_since_last_inundation <- ifelse(inun_metrics$inundation == 1, 0, NA)
+
+as.Date("1997-02-18")-as.Date("1998-01-06")# 322
+inun_metrics <- inun_metrics[order(as.Date(inun_metrics$date, format="%Y/%m/%d")),]
+
+#inun_metrics$days_since_last_inundation <- ifelse(is.na(inun_metrics$days_since_last_inundation),
+#  cumsum(is.na(inun_metrics$days_since_last_inundation) == TRUE), inun_metrics$days_since_last_inundation)
+# almost works, need to restart sequence
+
+for(i in 2:nrow(inun_metrics)){
+  if(inun_metrics[i, "inundation"] == 1)
+    inun_metrics[i, "days_since_last_inundation"] <- 0
+  else
+    inun_metrics[i, "days_since_last_inundation"] <- inun_metrics[i-1, "days_since_last_inundation"]+1
+  #browser()
+  }
+
+# fix beginning of time series
+inun_metrics[c(1:9),10] <- c(322, 323, 324, 325, 326, 327, 328, 329, 330)
 
 # 4
 inun_metrics <- merge(inun_metrics, summary[,c(1,7)], by = "water_year")
@@ -58,4 +79,3 @@ inun_metrics_without$days_of_inundation_until_now
 inun_metrics_without <- subset(inun_metrics, number_overtopping_events < 2)
 inun_metrics_without$days_of_inundation_until_now <- inun_metrics_without$inund_days
 
-# 3
