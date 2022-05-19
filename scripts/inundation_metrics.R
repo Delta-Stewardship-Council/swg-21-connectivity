@@ -46,7 +46,6 @@ colnames(inun_metrics)[1] <- "water_year"
 # 3
 inun_metrics$days_since_last_inundation <- ifelse(inun_metrics$inundation == 1, 0, NA)
 
-as.Date("1997-02-18")-as.Date("1998-01-06")# 322
 inun_metrics <- inun_metrics[order(as.Date(inun_metrics$date, format="%Y/%m/%d")),]
 
 #inun_metrics$days_since_last_inundation <- ifelse(is.na(inun_metrics$days_since_last_inundation),
@@ -62,7 +61,9 @@ for(i in 2:nrow(inun_metrics)){
   }
 
 # fix beginning of time series
+as.Date("1997-02-18")-as.Date("1998-01-06")# 322
 inun_metrics[c(1:9),10] <- c(322, 323, 324, 325, 326, 327, 328, 329, 330)
+inun_metrics <- inun_metrics[,-9]
 
 # 4
 inun_metrics <- merge(inun_metrics, summary[,c(1,7)], by = "water_year")
