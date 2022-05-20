@@ -53,7 +53,9 @@ alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
          year = lubridate::year(date),
          doy = lubridate::yday(date)-60,
          water_year = ifelse(month>9, year + 1, year),
-         log_chla = log(chlorophyll)) %>%
+         log_chla = log(chlorophyll),
+         log_idys = log(inund_days+1),
+         log_qsdy = log(Q_sday)) %>%
   rename(station = station_wq_chl)
 
 ```
@@ -65,7 +67,7 @@ downstream <- alldata %>% filter(region == "below")
 
 Look at covariates
 ```{r}
-downstream_long <- pivot_longer(downstream, cols = c(inund_days,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+downstream_long <- pivot_longer(downstream, cols = c(diurnal_range:Sradmwk, log_idys, log_qsdy), names_to = "Parameter", values_to = "Value")
 
 ggplot(downstream_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
 ```
@@ -73,12 +75,12 @@ ggplot(downstream_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wra
 These are very different scales. Scale covars.
 ```{r}
 downstream_scaled <- downstream %>%
-  mutate(across(.cols = c(inund_days,diurnal_range:Sradmwk), ~ scale(.x)))
+  mutate(across(.cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), ~ scale(.x)))
 ```
 
 Check distribution.
 ```{r}
-downstream_s_long <- pivot_longer(downstream_scaled, cols = c(inund_days,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+downstream_s_long <- pivot_longer(downstream_scaled, cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
 
 ggplot(downstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
 ```
@@ -438,3 +440,6 @@ All variables but only for inundated period hence no "inundation" flag
   dev.off()
 
 ```
+
+
+
