@@ -108,3 +108,5 @@ inun_metrics_fin <- rbind(inun_metrics_without, inun_metrics_with_new)
 inun_metrics_fin <- inun_metrics_fin[,c(1:9,13)]
 
 # write final data
+write.csv(inun_metrics_fin, "data_clean/inundation_metrics.csv")
+
