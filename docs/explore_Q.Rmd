@@ -1,0 +1,317 @@
+---
+title: "explore_flow"
+author: "ebs"
+date: "4/27/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+#compare Liberty flow measurement in CDEC and NWIS
+##compare Lisbon Weir flow to computed Yolo dayflow (line 79)
+###compare Lisbon Weir flow to USGS Toe Drain Station flow
+####compare Cache and Liberty
+#####look at dayflow Yolo, Lisbon, Toe station, Liberty, Cache, Rio
+######map of stations
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#load libraries
+```{r}
+library(readr)
+library(dataRetrieval)
+library(dplyr)
+library(sf)
+library(mapview)
+```
+#load lib flow from CDEC 
+```{r}
+lib_cdec_Q <- read.csv("data_raw/raw_lib_flow.csv")
+
+```
+#load lib flow from NWIS - will take ~ 1 min
+```{r}
+siteNumber <- "11455315"
+
+startDate <- ""
+
+endDate <- "2022-02-07"
+
+parameterCd <- c("00060", "72137")
+
+uvLIB <- readNWISuv(siteNumber,parameterCd,startDate,endDate, tz = "Etc/GMT+8")
+```
+
+#clean lib flow from NWIS & lib_cdec_Q
+
+```{r}
+lib_nwis_Q <- subset(uvLIB, select = c(dateTime, X_00060_00000, X_72137_00000)) %>% rename(LIB_NWIS_Q = X_00060_00000, LIB_NWIS_Q_tf = X_72137_00000)
+
+lib_cdec_Q$dateTime <- as.POSIXct(lib_cdec_Q$datetime)
+
+lib_cdec_Q$LIB_CDEC_Q <- as.numeric(lib_cdec_Q$value)
+
+lib_cdec_Q <- subset(lib_cdec_Q, select = c(dateTime, LIB_CDEC_Q)) 
+
+lib_cdec_Q <- subset(lib_cdec_Q, dateTime > "2011-12-16 12:30:00")
+
+#take daily mean
+
+daily_lib_nwis_Q <- lib_nwis_Q %>%mutate(date = as.Date(dateTime)) %>%group_by(date) %>%summarize(mean_lib_nwis_Q = mean(LIB_NWIS_Q, na.rm=TRUE))
+
+daily_lib_cdec_Q <- lib_cdec_Q %>%mutate(date = as.Date(dateTime)) %>%group_by(date) %>%summarize(mean_lib_cdec_Q = mean(LIB_CDEC_Q, na.rm=TRUE))
+ 
+```
+
+#quick view cdec and nwis - cdec has high values at start of record 
+##cdec data has large 1 year gap but record begins earlier
+
+```{r}
+plot(daily_lib_cdec_Q$date, daily_lib_cdec_Q$mean_lib_cdec_Q)
+
+plot(daily_lib_nwis_Q$date, daily_lib_nwis_Q$mean_lib_nwis_Q)
+
+```
+
+#combine dfs and eval relationship
+
+```{r}
+combo_lib_Q <- full_join(daily_lib_cdec_Q, daily_lib_nwis_Q, by = "date")
+
+combo_lib_Q$date <- as.POSIXct(combo_lib_Q$date)
+
+plot(combo_lib_Q$date, combo_lib_Q$mean_lib_cdec_Q, col = 2)
+lines(combo_lib_Q$date, combo_lib_Q$mean_lib_nwis_Q, col = 3)
+legend("topright", c("lib_cdec", "lib_nwis"), col = 2:3, cex = 0.75, horiz = TRUE, lwd = 2)
+
+plot(combo_lib_Q$mean_lib_cdec_Q, combo_lib_Q$mean_lib_nwis_Q)
+
+lm <- lm(combo_lib_Q$mean_lib_nwis_Q ~ combo_lib_Q$mean_lib_cdec_Q)
+
+summary(lm)
+```
+
+read in dayflow and lisbon weir data and adjust time
+
+```{r}
+
+dayflow <- read.csv("data_raw/raw_dayflow.csv") 
+
+dayflow <- rename(dayflow, date = Date) 
+
+dayflow <- subset(dayflow, select = c(date, YOLO)) 
+
+dayflow$date <- as.POSIXct(dayflow$date, format = "%m/%d/%Y")
+
+#lisbon weir flow data downloaded from (https://wdl.water.ca.gov/WaterDataLibrary/StationDetails.aspx?Station=B91560Q&source=map) - I can place raw flow file in "data raw/raw_lis_flow.csv"
+
+lis_Q <- read.csv("data_raw/raw_lis_flow.csv", skip = 2, header = T) 
+
+lis_Q  <- rename(lis_Q, date = Date) 
+
+lis_Q$date <- as.POSIXct(lis_Q$date, format = "%m/%d/%Y %H:%M:%S")
+
+#downstep lis instantaneous to lis daily
+
+daily_lis_Q <- lis_Q %>%mutate(date = as.Date(date)) %>%group_by(date) %>%summarize(mean_lis_Q = mean(Point, na.rm=TRUE))
+
+#add Qualifier names to data
+#lis_Q$Qual <- as.character(lis_Q$Qual)  
+#lis_Q['Qual'][lis_Q['Qual'] == 170] <- 'unreliable_data' %>% lis_Q['Qual'][lis_Q['Qual'] == 255] <- 'no_data' %>% lis_Q['Qual'][lis_Q['Qual'] == 185] <- 'flooded_no_flow_calcd' %>% lis_Q['Qual'][lis_Q['Qual'] == 151] <- 'data_missing' %>% lis_Q['Qual'][lis_Q['Qual'] == 70] <- 'estimated' %>% lis_Q['Qual'][lis_Q['Qual'] == 2] <- 'good_edited' %>% lis_Q['Qual'][lis_Q['Qual'] == 1] <- 'good'
+
+```
+
+#quick view dayflow and lisbon weir
+
+```{r}
+
+plot(daily_lis_Q$date, daily_lis_Q$mean_lis_Q)
+
+plot(dayflow$date, dayflow$YOLO)
+```
+
+#combine lis and dayflow dfs
+```{r}
+dayflow_lis_Q <- full_join(dayflow, daily_lis_Q, by = "date") 
+
+plot(dayflow_lis_Q$YOLO, dayflow_lis_Q$mean_lis_Q, xlim = c(0, 10000))
+
+plot(dayflow_lis_Q$date, dayflow_lis_Q$YOLO, col = 2)
+lines(dayflow_lis_Q$date, dayflow_lis_Q$mean_lis_Q, col = 3)
+legend("topright", c("YOLO", "mean_lis_Q"), col = 2:3, cex = 0.75, horiz = TRUE, lwd = 2)
+
+lm <- lm(dayflow_lis_Q$YOLO ~ dayflow_lis_Q$mean_lis_Q)
+
+summary(lm)
+```
+#retrieve USGS Toe Drain Station data and plot - will take 1 minute
+```{r}
+#data retrieval pull through NWIS web services  
+
+siteNumbers <- c("11455139", "11455140")
+
+startDate <- ""
+
+endDate <- ""
+
+parameterCd <- c("00060")
+
+uvTOE <- readNWISuv(siteNumbers,parameterCd,startDate,endDate, tz = "Etc/GMT+8")
+
+TOE <- subset(uvTOE, select=c("dateTime", "X_00060_00000"))
+
+TOE <- rename(TOE, "TOE_Q" = "X_00060_00000")
+
+#downstep to daily mean
+
+daily_TOE <- TOE %>%mutate(date = as.Date(dateTime)) %>%group_by(date) %>%summarize(daily_TOE_Q = mean(TOE_Q, na.rm=TRUE))
+
+#plot Toe
+
+plot(daily_TOE$date, daily_TOE$daily_TOE_Q)
+```
+
+#combine lis and toe dfs and plot
+
+```{r}
+lis_toe_Q <- full_join(daily_lis_Q, daily_TOE, by = "date")
+
+lis_toe_Q$date <- as.POSIXct(lis_toe_Q$date)
+
+plot(lis_toe_Q$date, lis_toe_Q$mean_lis_Q, col = 2)
+lines(lis_toe_Q$date, lis_toe_Q$daily_TOE_Q, col = 3)
+legend("topright", c("LIS", "TOE"), col = 2:3, cex = 0.75, horiz = TRUE, lwd = 2 )
+
+plot(lis_toe_Q$mean_lis_Q, lis_toe_Q$daily_TOE_Q)
+
+lm <- lm(lis_toe_Q$mean_lis_Q~lis_toe_Q$daily_TOE_Q)
+
+summary(lm)
+```
+
+#review all flow
+
+#first receive Cache and Rio Vista flows
+
+```{r}
+#Cache
+
+siteNumber <- c("11455350", "11455385")
+
+startDate <- ""
+
+endDate <- "2022-02-07"
+
+parameterCd <- c("00060", "72137")
+
+dvCCH <- readNWISdv(siteNumber,parameterCd,startDate,endDate)#, tz = "Etc/GMT+8")
+
+dvCCH <- rename(dvCCH, date = Date, CCH_tf = X_72137_00003)
+
+dvCCH$date <- as.POSIXct(dvCCH$date) 
+ 
+plot(dvCCH$date, dvCCH$CCH_tf, ylim = c(-100000, 200000))
+
+#Rio Vista
+
+siteNumber <- c("11455420")
+
+startDate <- ""
+
+endDate <- "2022-02-07"
+
+parameterCd <- c("00060", "72137")
+
+dvRIO <- readNWISdv(siteNumber,parameterCd,startDate,endDate)#, tz = "Etc/GMT+8")
+
+dvRIO <- rename(dvRIO, date = Date, RIO_tf = X_72137_00003)
+
+dvRIO$date <- as.POSIXct(dvRIO$date) 
+ 
+plot(dvRIO$date, dvRIO$RIO_tf)#, ylim = c(-100000, 200000))
+
+#Liberty
+
+siteNumber <- c("11455315")
+
+startDate <- ""
+
+endDate <- "2022-02-07"
+
+parameterCd <- c("72137")
+
+dvLIB <- readNWISdv(siteNumber,parameterCd,startDate,endDate)
+
+dvLIB <- rename(dvLIB, date = Date, LIB_tf = X_72137_00003)
+
+dvLIB$date <- as.POSIXct(dvLIB$date) 
+ 
+plot(dvLIB$date, dvLIB$LIB_tf, ylim = c(-10000, 30000))
+```
+
+compare Cache and Liberty
+
+```{r}
+
+all_Q <- full_join(dvLIB, dvCCH, by = "date")
+
+plot(all_Q$CCH_tf, all_Q$LIB_tf)
+
+all_Q_subset <- subset(all_Q, CCH_tf>-10000)
+
+plot(all_Q_subset$CCH_tf, all_Q_subset$LIB_tf, xlim = c(-10000, 10000))
+
+lm <- lm(all_Q_subset$CCH_tf~all_Q_subset$LIB_tf)
+summary(lm)
+
+```
+
+look at all flow
+```{r}
+#entire record
+
+plot(dayflow_lis_Q$date, dayflow_lis_Q$YOLO, xlab = "date", ylab = "Q (cfs)", col = 1, main = "entire record")
+lines(dvRIO$date, dvRIO$RIO_tf, col = 2)
+lines(dvCCH$date, dvCCH$CCH_tf, ylim = c(-100000, 300000), ylab = "Q (cfs)", col = 3)
+lines(dayflow_lis_Q$date, dayflow_lis_Q$mean_lis_Q, col = 4)
+lines(lis_toe_Q$date, lis_toe_Q$daily_TOE_Q, col = 6)
+lines(combo_lib_Q$date, combo_lib_Q$mean_lib_cdec_Q, col = 7)
+legend("topright", c("YOLO", "RIO", "CCH", "LIS", "TOE", "LIB"), col = c(1:4, 6:7), cex = 0.75, horiz = TRUE, lwd = 2 )
+
+
+#wet period
+
+plot(dayflow_lis_Q$date, dayflow_lis_Q$YOLO, xlab = "date", ylab = "Q (cfs)", col = 1, xlim = c (as.POSIXct("2016-10-01", format="%Y-%m-%d"), as.POSIXct("2017-04-01", format="%Y-%m-%d")), xaxp = c(as.POSIXct("2016-10-01", format="%Y-%m-%d"), as.POSIXct("2017-04-01", format="%Y-%m-%d"), 4), main = "WY17 Oct - Apr")
+lines(dvRIO$date, dvRIO$RIO_tf, col = 2)
+lines(dvCCH$date, dvCCH$CCH_tf, ylim = c(-100000, 300000), ylab = "Q (cfs)", col = 3)
+lines(dayflow_lis_Q$date, dayflow_lis_Q$mean_lis_Q, col = 4)
+lines(lis_toe_Q$date, lis_toe_Q$daily_TOE_Q, col = 6)
+lines(combo_lib_Q$date, combo_lib_Q$mean_lib_cdec_Q, col = 7)
+legend("topright", c("YOLO", "RIO", "CCH", "LIS", "TOE", "LIB"), col = c(1:4, 6:7), cex = 0.75, horiz = TRUE, lwd = 2 )
+
+#dry period
+
+plot(dayflow_lis_Q$date, dayflow_lis_Q$YOLO, xlab = "date", ylab = "Q (cfs)", col = 1, xlim = c (as.POSIXct("2017-06-01", format="%Y-%m-%d"), as.POSIXct("2017-09-30", format="%Y-%m-%d")), ylim=c(-10000,20000), main = "WY17 June - Sept 30")
+lines(dvRIO$date, dvRIO$RIO_tf, col = 2)
+lines(dvCCH$date, dvCCH$CCH_tf, ylim = c(-100000, 300000), ylab = "Q (cfs)", col = 3)
+lines(dayflow_lis_Q$date, dayflow_lis_Q$mean_lis_Q, col = 4)
+lines(lis_toe_Q$date, lis_toe_Q$daily_TOE_Q, col = 6)
+lines(combo_lib_Q$date, combo_lib_Q$mean_lib_cdec_Q, col = 7)
+legend("topright", c("YOLO", "RIO", "CCH", "LIS", "TOE", "LIB"), col = c(1:4, 6:7), cex = 0.75, horiz = TRUE, lwd = 2 )
+
+#dry period v2
+
+plot(dayflow_lis_Q$date, dayflow_lis_Q$YOLO, xlab = "date", ylab = "Q (cfs)", col = 1, xlim = c (as.POSIXct("2019-06-01", format="%Y-%m-%d"), as.POSIXct("2019-09-30", format="%Y-%m-%d")), ylim=c(-5000,10000), xaxp = c(as.POSIXct("2019-06-01", format="%Y-%m-%d"), as.POSIXct("2019-09-30", format="%Y-%m-%d"), 4), main = "WY19 June - Sept 30")
+lines(dvRIO$date, dvRIO$RIO_tf, col = 2)
+lines(dvCCH$date, dvCCH$CCH_tf, ylim = c(-100000, 300000), ylab = "Q (cfs)", col = 3)
+lines(dayflow_lis_Q$date, dayflow_lis_Q$mean_lis_Q, col = 4)
+lines(lis_toe_Q$date, lis_toe_Q$daily_TOE_Q, col = 6)
+lines(combo_lib_Q$date, combo_lib_Q$mean_lib_cdec_Q, col = 7)
+legend("bottomright", c("YOLO", "RIO", "CCH", "LIS", "TOE", "LIB"), col = c(1:4, 6:7), cex = 0.75, horiz = TRUE, lwd = 2 )
+```
+map of sites
+```{r}
+mapview(ybfmp, label = "Station", col.regions = "red", layer.name = "YBFMP (chl-a + zoop)", cex = 6) + mapview(Q_turb, label = "site_no", col.regions = "lightgreen", layer.name = "usgs cawsc cont (flow + turb)", cex = 6)+mapview(cawsc_discrete_future, label = "site_no", col.regions="darkgreen", layer.name="usgs cawsc disc (chl-a + nut.)", cex=3) +
+  mapview(cimis, label = "stn_name", col.regions = "cyan", layer.name = "CIMIS", cex = 4)+
+  mapview(djfmp_fish, label = "StationCode", col_regions = "blue", layer.name = "djfmp (zoop, larval +)", cex=3)+mapview(int_temp_sta, label = "Station", col.regions = "gray", layer.name = "int_temp", cex = 3)
+```
+

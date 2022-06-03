@@ -8,7 +8,7 @@ library(janitor)
 
 # get data function - data retrieval is in Pacific Standard Time
 
-f_get_11455420 <- function(siteNumbers=11455420, parameterCd = c('00065', '72137'), startDate = "1996-10-01", endDate = "2021-09-30", tz = "Etc/GMT+8"){
+f_get_11455420 <- function(siteNumbers=11455420, parameterCd = c('00060', '00065', '72137'), startDate = "1996-09-30", endDate = "2021-10-01", tz = "Etc/GMT+8"){
 
   # get data
   print("Downloading data...")
@@ -24,10 +24,10 @@ f_get_11455420 <- function(siteNumbers=11455420, parameterCd = c('00065', '72137
   SRVdat <- janitor::clean_names(SRVdat)
 
   # write out
-  readr::write_csv(SRVdat, glue("data_raw/raw_flow_usgs_11455420.zip"))
+  readr::write_csv(SRVdat, gzfile(glue("data_raw/raw_flow_usgs_11455420.csv.gz")))
 
   # print message!
-  print(glue("Data saved here: 'data_raw/raw_flow_usgs_11455420.zip'"))
+  print(glue("Data saved here: 'data_raw/raw_flow_usgs_11455420.csv.gz'"))
 }
 
 # run with
