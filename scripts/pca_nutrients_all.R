@@ -266,7 +266,7 @@ dat_final <- df_for_PCA %>%
     #TRUE~location
   ))
 
-#add eigen values to dat_final
+#add eigen values to dat_final-----------------------------------
 
 dat_final <- cbind(dat_final, nuts_pca$x)
 
@@ -275,7 +275,7 @@ dat_final <- cbind(dat_final, nuts_pca$x)
 dat_final <- dat_final %>%
   mutate(unique_id = paste0(location_name,
                         "_", doy1998))
-#join dat_fin to chl_fin - merge works but left_join produces NAs...used distinct in cases where >1 nutrient sample collected each day
+#join dat_fin to chl_fin - merge works but left_join produces NAs...used distinct in cases where >1 nutrient sample collected each day------------------------
 
 merge <- merge(chl_fin[-c(2)], dat_final[-c(3:8)], by = "unique_id")
 
