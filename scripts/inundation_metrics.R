@@ -45,6 +45,11 @@ inun_metrics <- merge(inun_metrics, summary[,c(2,4,8)], by = "match_water_year")
 colnames(inun_metrics)[8] <- "total_inund_last_year"
 colnames(inun_metrics)[1] <- "water_year"
 
+# Cat found NAs
+unique(inun_metrics$total_inund_last_year)
+summary$total_days_inund # NAs should be zero
+inun_metrics$total_inund_last_year[is.na(inun_metrics$total_inund_last_year)] <- 0
+
 # 3
 # assign 0 for days with inundation and NA otherwise (could also just make NAs)
 inun_metrics$days_since_last_inundation <- ifelse(inun_metrics$inundation == 1, 0, NA)
