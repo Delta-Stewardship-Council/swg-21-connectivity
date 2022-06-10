@@ -344,6 +344,87 @@ lines(x = gam.i1$log_qsdy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha
 ```
 
 
+### visualize the results for Model gam1.2 across "day of water year"
+
+```{r}
+# gam1.2 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+
+# Determine the confidence interval to present in your figure and determine the
+# t-distribution value of which to multiply the standard error
+interval_value = 0.88
+t_distribution_probability = 1.0 - (1-interval_value)/2
+CI_factor = qt(t_distribution_probability, Inf)
+
+#~ Generate a data frame with the sequence from the minimum to the maximum
+# observed value of the predictor variable: day of water year
+lqsdy.15 = quantile(x.idys$log_qsdy, probs = 0.1)
+lqsdy.85 = quantile(x.idys$log_qsdy, probs = 0.9)
+range.dowy = range(x.idys$dowy)
+dowy.ser = seq(from = range.dowy[1], to = range.dowy[2], by = 1)
+n = length(dowy.ser)
+new_dat_1 = data.frame(cbind(dowy = dowy.ser, log_qsdy = sample(c(lqsdy.15, lqsdy.85), n, replace = TRUE),
+                             inundation = sample(c(0, 1), n, replace = TRUE)))
+
+#~ Use the *predict()* function to estimate model fit and standard error
+preds = predict(gam1.2, newdata = new_dat_1, se.fit = TRUE)
+
+# Multiply the standard error fit by the t-distribution value to estimate
+# the upper and lower confidence interval limits
+fit = preds$fit
+upper = fit - CI_factor*preds$se.fit
+lower = fit + CI_factor*preds$se.fit
+
+new_dat_1 = cbind(new_dat_1, fit, upper, lower)
+
+# separate by log_qsdy at high and low value
+gam.i0 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.15 & inundation == 0)
+gam.i1 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.85 & inundation == 0)
+gam.i2 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.15 & inundation == 1)
+gam.i3 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.85 & inundation == 1)
+
+# separate actual data by inundation flag
+act.i0 = subset(x.idys, x.idys$inundation == 0)
+act.i1 = subset(x.idys, x.idys$inundation == 1)
+
+gam.i0 = gam.i3
+# gam.i1 = gam.i3
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~ Visualize the model
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot the raw data and make the axes and labels aesthetically pleasing
+par(mfrow = c(1,1), mar = c(2.5, 4.5, 2,4.5) + 0.1, oma = c(1.5,0,0.5,0))
+
+# plot the actual data points separately for inundated and non-inundated
+colors = c("green", "blue")
+plot(x.idys$log_chla ~ x.idys$dowy, pch = 20, col = colors[x.idys$inundation], las = 1, ylab = "", xlab = "")
+#mtext(text = "Log(Chlorophyll-a)", side = 4, line = 3)
+mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
+#y_labs = c(0.0001,0.0003,0.001, 0.003,0.01,0.033,0.1,0.33, 1, 3, 8, 20, 55, 150)[c(T,F)]
+#axis(side = 4, at = log(y_labs), labels = y_labs, las=1)
+mtext(text = "Day of Water Year", side = 1, line = 2.25)
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.i1$dowy, max(gam.i1$dowy), rev(gam.i1$dowy), gam.i1$dowy[1]),
+        y = c(gam.i1$lower, gam.i1$upper[length(gam.i1$upper)], rev(gam.i1$upper), gam.i1$lower[1]), border = NA, 
+        col = rgb(20, 20, 200, alpha = 150, maxColorValue=255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.i1$dowy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.i0$dowy, max(gam.i0$dowy), rev(gam.i0$dowy), gam.i0$dowy[1]),
+        y = c(gam.i0$lower, gam.i0$upper[length(gam.i0$upper)], rev(gam.i0$upper), gam.i0$lower[1]), border = NA, 
+        col = rgb(20, 200, 20, alpha = 150, maxColorValue = 255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.i0$dowy, y = gam.i0$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
+
+```
+
+
+
 
 
 ### visualize the results for model gam1.3
@@ -729,7 +810,7 @@ lines(x = gam.i1$log_qsdy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha
 
 
 
-### visualize the results for Model gam1.6
+### visualize the results for Model gam1.6 across flow
 
 ```{r}
 
@@ -784,7 +865,7 @@ mtext(text = expression(log[e]~"(Flow)"), side = 1, line = 2.25)
 
 # Use the polygon function to add the CI
 polygon(x = c(new_dat_1$log_qsdy, max(new_dat_1$log_qsdy), rev(new_dat_1$log_qsdy), new_dat_1$log_qsdy[1]),
-        y = c(new_dat_1$lower, new_dat_1$upper[length(gam.i0$upper)], rev(new_dat_1$upper), new_dat_1$lower[1]), border = NA, 
+        y = c(new_dat_1$lower, new_dat_1$upper[length(new_dat_1$upper)], rev(new_dat_1$upper), new_dat_1$lower[1]), border = NA, 
         col = rgb(20, 200, 20, alpha = 150, maxColorValue = 255))
 
 # Use the lines() function to add the mean model prediction
@@ -793,81 +874,11 @@ lines(x = new_dat_1$log_qsdy, y = new_dat_1$fit, lwd = 2, col = rgb(20, 150, 20,
 ```
 
 
-### visualize the results for model gam1.3
+
+
+### visualize the results for Model gam1.6 across dowy
 
 ```{r}
-
-# Determine the confidence interval to present in your figure and determine the
-# t-distribution value of which to multiply the standard error
-interval_value = 0.95
-t_distribution_probability = 1.0 - (1-interval_value)/2
-CI_factor = qt(t_distribution_probability, Inf)
-
-#~ Generate a data frame with the sequence from the minimum to the maximum
-# observed value of the predictor variable: day of water year
-mod_q_range = range(na.omit(x.idys$log_idys))
-med.dowy = median(x.idys$dowy)
-qsdy.ser = seq(from = mod_q_range[1], to = mod_q_range[2], by = 0.05)
-n = length(qsdy.ser)
-new_dat_1 = data.frame(cbind(log_idys = qsdy.ser, dowy = rep(med.dowy, n)))
-new_dat_1$inundation = sample(c(0,1), n, replace = TRUE)
-                       
-#~ Use the *predict()* function to estimate model fit and standard error
-preds = predict(gam1.3, newdata = new_dat_1, se.fit = TRUE)
-
-# Multiply the standard error fit by the t-distribution value to estimate
-# the upper and lower confidence interval limits
-fit = preds$fit
-upper = fit - CI_factor*preds$se.fit
-lower = fit + CI_factor*preds$se.fit
-
-new_dat_1 = cbind(new_dat_1, fit, upper, lower)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~ Visualize the model
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Plot the raw data and make the axes and labels aesthetically pleasing
-par(mfrow = c(1,1), mar = c(2.5, 4.5, 2,4.5) + 0.1, oma = c(1.5,0,0.5,0))
-
-# separate by inundation flag
-gam.i0 = subset(new_dat_1, new_dat_1$inundation == 0)
-gam.i1 = subset(new_dat_1, new_dat_1$inundation == 1)
-
-# plot the actual data points
-plot(x.idys$log_chla ~ x.idys$log_idys, pch = 20, col = gray(0.1,0.2), las = 1, ylab = "", xlab = "")
-#mtext(text = "Log(Chlorophyll-a)", side = 4, line = 3)
-mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
-#y_labs = c(0.0001,0.0003,0.001, 0.003,0.01,0.033,0.1,0.33, 1, 3, 8, 20, 55, 150)[c(T,F)]
-#axis(side = 4, at = log(y_labs), labels = y_labs, las=1)
-mtext(text = expression(log[e]~"(Inundation Days)"), side = 1, line = 2.25)
-
-# Use the polygon function to add the CI
-polygon(x = c(gam.i0$log_idys, max(gam.i0$log_idys), rev(gam.i0$log_idys), gam.i0$log_idys[1]),
-        y = c(gam.i0$lower, gam.i0$upper[length(gam.i0$upper)], rev(gam.i0$upper), gam.i0$lower[1]), border = NA, 
-        col = rgb(20, 200, 20, alpha = 150, maxColorValue=255))
-
-# Use the lines() function to add the mean model prediction
-lines(x = gam.i0$log_idys, y = gam.i0$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
-
-# Use the polygon function to add the CI
-polygon(x = c(gam.i1$log_idys, max(gam.i1$log_idys), rev(gam.i1$log_idys), gam.i1$log_idys[1]),
-        y = c(gam.i1$lower, gam.i1$upper[length(gam.i1$upper)], rev(gam.i1$upper), gam.i1$lower[1]), border = NA, 
-        col = rgb(20, 20, 200, alpha = 150, maxColorValue=255))
-
-# Use the lines() function to add the mean model prediction
-lines(x = gam.i1$log_idys, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
-
-```
-
-
-
-### visualize the results for model gam1.4
-
-```{r}
-
-# gam1.4 <- gam(log_chla ~ te(log_qsdy, dowy, by = inund_fac), method = "REML", data = x.idys, family = "gaussian")
-
 
 # Determine the confidence interval to present in your figure and determine the
 # t-distribution value of which to multiply the standard error
@@ -877,15 +888,18 @@ CI_factor = qt(t_distribution_probability, Inf)
 
 #~ Generate a data frame with the sequence from the minimum to the maximum
 # observed value of the predictor variable: day of water year
-mod_q_range = range(na.omit(x.idys$log_qsdy))
-med.dowy = median(x.idys$dowy)
-qsdy.ser = seq(from = mod_q_range[1], to = mod_q_range[2], by = 0.05)
-n = length(qsdy.ser)
-new_dat_1 = data.frame(cbind(log_qsdy = qsdy.ser, dowy = rep(med.dowy, n)))
-new_dat_1$inund_fac = sample(c("none", "long", "short"), n, replace = TRUE)
-                       
+lqsdy.15 = quantile(x.idys$log_qsdy, probs = 0.15)
+lqsdy.85 = quantile(x.idys$log_qsdy, probs = 0.85)
+range.dowy = range(x.idys$dowy)
+#med.dowy = quantile(x.idys$dowy, probs = 0.5)
+#qsdy.ser = seq(from = mod_q_range[1], to = mod_q_range[2], by = 0.05)
+#qsdy.ser = seq(from = lqsdy.05, to = lqsdy.95, by = 0.02)
+dowy.ser = seq(from = range.dowy[1], to = range.dowy[2], by = 1)
+n = length(dowy.ser)
+new_dat_1 = data.frame(cbind(dowy = dowy.ser, log_qsdy = sample(c(lqsdy.15, lqsdy.85), n, replace = TRUE)))
+
 #~ Use the *predict()* function to estimate model fit and standard error
-preds = predict(gam1.4, newdata = new_dat_1, se.fit = TRUE)
+preds = predict(gam1.6, newdata = new_dat_1, se.fit = TRUE)
 
 # Multiply the standard error fit by the t-distribution value to estimate
 # the upper and lower confidence interval limits
@@ -895,6 +909,14 @@ lower = fit + CI_factor*preds$se.fit
 
 new_dat_1 = cbind(new_dat_1, fit, upper, lower)
 
+# separate by inundation flag
+gam.i0 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.15)
+gam.i1 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.85)
+
+# separate actual data by inundation flag
+act.i0 = subset(x.idys, x.idys$inundation == 0)
+act.i1 = subset(x.idys, x.idys$inundation == 1)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~ Visualize the model
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -902,36 +924,379 @@ new_dat_1 = cbind(new_dat_1, fit, upper, lower)
 # Plot the raw data and make the axes and labels aesthetically pleasing
 par(mfrow = c(1,1), mar = c(2.5, 4.5, 2,4.5) + 0.1, oma = c(1.5,0,0.5,0))
 
-# separate by inundation flag
-gam.i0 = subset(new_dat_1, new_dat_1$inund_fac == "none")
-gam.i1 = subset(new_dat_1, new_dat_1$inund_fac == "long")
-
-# plot the actual data points
-plot(x.idys$log_chla ~ x.idys$log_qsdy, pch = 20, col = gray(0.1,0.2), las = 1, ylab = "", xlab = "")
+# plot the actual data points separately for inundated and non-inundated
+colors = c("green", "blue")
+plot(x.idys$log_chla ~ x.idys$dowy, pch = 20, col = colors[x.idys$inundation], las = 1, ylab = "", xlab = "")
 #mtext(text = "Log(Chlorophyll-a)", side = 4, line = 3)
 mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
 #y_labs = c(0.0001,0.0003,0.001, 0.003,0.01,0.033,0.1,0.33, 1, 3, 8, 20, 55, 150)[c(T,F)]
 #axis(side = 4, at = log(y_labs), labels = y_labs, las=1)
-mtext(text = expression(log[e]~"(Flow same day)"), side = 1, line = 2.25)
+mtext(text = "Day of Water Year", side = 1, line = 2.25)
 
 # Use the polygon function to add the CI
-polygon(x = c(gam.i0$log_qsdy, max(gam.i0$log_qsdy), rev(gam.i0$log_qsdy), gam.i0$log_qsdy[1]),
+polygon(x = c(gam.i0$dowy, max(gam.i0$dowy), rev(gam.i0$dowy), gam.i0$dowy[1]),
         y = c(gam.i0$lower, gam.i0$upper[length(gam.i0$upper)], rev(gam.i0$upper), gam.i0$lower[1]), border = NA, 
-        col = rgb(20, 200, 20, alpha = 150, maxColorValue=255))
+        col = rgb(20, 200, 20, alpha = 150, maxColorValue = 255))
 
 # Use the lines() function to add the mean model prediction
-lines(x = gam.i0$log_qsdy, y = gam.i0$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
+lines(x = gam.i0$dowy, y = gam.i0$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
 
 # Use the polygon function to add the CI
-polygon(x = c(gam.i1$log_qsdy, max(gam.i1$log_qsdy), rev(gam.i1$log_qsdy), gam.i1$log_qsdy[1]),
+polygon(x = c(gam.i1$dowy, max(gam.i1$dowy), rev(gam.i1$dowy), gam.i1$dowy[1]),
         y = c(gam.i1$lower, gam.i1$upper[length(gam.i1$upper)], rev(gam.i1$upper), gam.i1$lower[1]), border = NA, 
         col = rgb(20, 20, 200, alpha = 150, maxColorValue=255))
 
 # Use the lines() function to add the mean model prediction
-lines(x = gam.i1$log_qsdy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
+lines(x = gam.i1$dowy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
+
+
+# plot(x.idys$log_qsdy ~ x.idys$inundation, pch = 20, las = 1, ylab = "", xlab = "")
+# mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
+# mtext(text = "Inundated?", side = 1, line = 2.25)
+
 
 ```
 
 
 
+# Only for Cache Slough and Yolo Region (only cache does not have enough data)
 
+## Filter to Cache Slough + Yolo
+
+```{r}
+yolo <- alldata %>% filter(region == "cache" | region == "yolo")
+
+yolo$inundation = as.factor(yolo$inundation)
+yolo$station    = as.factor(yolo$station)
+yolo$inund_fac  = as.factor(yolo$inund_fac)
+
+```
+
+## scale covariates
+
+```{r}
+yolo_scaled <- yolo %>%
+  mutate(across(.cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), ~ scale(.x)))
+  
+x <- yolo_scaled
+
+```
+
+
+## constrain to "day of water year" when Yolo Bypass gets inundated
+
+```{r}
+
+x.idys = subset(x, x$inundation == 1)
+range(x.idys$dowy)
+# min "day of water year" 65; max 214
+
+x.idys = subset(x, (x$dowy >= 65 & x$dowy <= 214))
+table(x.idys$inundation)
+
+gam0 <- gam(log_chla ~ 1, method = "REML", data = x.idys, family = "gaussian")
+gam1.0 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+gam1.1 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = x.idys, family = "gaussian")
+gam1.2 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+gam1.3 <- gam(log_chla ~ te(log_idys, dowy, by = inundation), method = "REML", data = x.idys, family = "gaussian")
+gam1.4 <- gam(log_chla ~ te(log_qsdy, dowy, by = inund_fac),  method = "REML", data = x.idys, family = "gaussian")
+gam1.5 <- gam(log_chla ~ te(log_qsdy, log_idys, dowy),  method = "REML", data = x.idys, family = "gaussian")
+gam1.6 <- gam(log_chla ~ te(log_qsdy, dowy), method = "REML", data = x.idys, family = "gaussian")
+
+AIC(gam0, gam1.0, gam1.1, gam1.2, gam1.3, gam1.4, gam1.5, gam1.6)
+
+gam.check(gam1.1)
+gam.check(gam1.2)
+gam.check(gam1.3)
+gam.check(gam1.4)
+
+summary(gam1.1)
+summary(gam1.2)
+summary(gam1.3)
+summary(gam1.4)
+summary(gam1.6)
+
+resid = residuals(gam1.2)
+acf(resid)
+pacf(resid)
+
+```
+
+
+### visualize the results for Model gam1.6 across "day of water year"
+
+```{r}
+
+# Determine the confidence interval to present in your figure and determine the
+# t-distribution value of which to multiply the standard error
+interval_value = 0.88
+t_distribution_probability = 1.0 - (1-interval_value)/2
+CI_factor = qt(t_distribution_probability, Inf)
+
+#~ Generate a data frame with the sequence from the minimum to the maximum
+# observed value of the predictor variable: day of water year
+lqsdy.15 = quantile(x.idys$log_qsdy, probs = 0.15)
+lqsdy.85 = quantile(x.idys$log_qsdy, probs = 0.85)
+range.dowy = range(x.idys$dowy)
+dowy.ser = seq(from = range.dowy[1], to = range.dowy[2], by = 1)
+n = length(dowy.ser)
+new_dat_1 = data.frame(cbind(dowy = dowy.ser, log_qsdy = sample(c(lqsdy.15, lqsdy.85), n, replace = TRUE)))
+
+#~ Use the *predict()* function to estimate model fit and standard error
+preds = predict(gam1.6, newdata = new_dat_1, se.fit = TRUE)
+
+# Multiply the standard error fit by the t-distribution value to estimate
+# the upper and lower confidence interval limits
+fit = preds$fit
+upper = fit - CI_factor*preds$se.fit
+lower = fit + CI_factor*preds$se.fit
+
+new_dat_1 = cbind(new_dat_1, fit, upper, lower)
+
+# separate by log_qsdy at high and low value
+gam.i0 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.15)
+gam.i1 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.85)
+
+# separate actual data by inundation flag
+act.i0 = subset(x.idys, x.idys$inundation == 0)
+act.i1 = subset(x.idys, x.idys$inundation == 1)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~ Visualize the model
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot the raw data and make the axes and labels aesthetically pleasing
+par(mfrow = c(1,1), mar = c(2.5, 4.5, 2,4.5) + 0.1, oma = c(1.5,0,0.5,0))
+
+# plot the actual data points separately for inundated and non-inundated
+colors = c("green", "blue")
+plot(x.idys$log_chla ~ x.idys$dowy, pch = 20, col = colors[x.idys$inundation], las = 1, ylab = "", xlab = "")
+#mtext(text = "Log(Chlorophyll-a)", side = 4, line = 3)
+mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
+#y_labs = c(0.0001,0.0003,0.001, 0.003,0.01,0.033,0.1,0.33, 1, 3, 8, 20, 55, 150)[c(T,F)]
+#axis(side = 4, at = log(y_labs), labels = y_labs, las=1)
+mtext(text = "Day of Water Year", side = 1, line = 2.25)
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.i0$dowy, max(gam.i0$dowy), rev(gam.i0$dowy), gam.i0$dowy[1]),
+        y = c(gam.i0$lower, gam.i0$upper[length(gam.i0$upper)], rev(gam.i0$upper), gam.i0$lower[1]), border = NA, 
+        col = rgb(20, 200, 20, alpha = 150, maxColorValue = 255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.i0$dowy, y = gam.i0$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.i1$dowy, max(gam.i1$dowy), rev(gam.i1$dowy), gam.i1$dowy[1]),
+        y = c(gam.i1$lower, gam.i1$upper[length(gam.i1$upper)], rev(gam.i1$upper), gam.i1$lower[1]), border = NA, 
+        col = rgb(20, 20, 200, alpha = 150, maxColorValue=255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.i1$dowy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
+
+```
+
+
+
+# Only for upstream region without inundation related factors
+
+## Filter to upstream
+
+```{r}
+sacr <- alldata %>% filter(region == "above")
+
+sacr$inundation = as.factor(sacr$inundation)
+sacr$station    = as.factor(sacr$station)
+sacr$inund_fac  = as.factor(sacr$inund_fac)
+
+```
+
+## scale covariates
+
+```{r}
+sacr_scaled <- yolo %>%
+  mutate(across(.cols = c(log_idys,log_qsdy,diurnal_range:Sradmwk), ~ scale(.x)))
+  
+x <- sacr_scaled
+
+```
+
+
+## constrain to "day of water year" when Yolo Bypass gets inundated
+
+```{r}
+
+x.idys = subset(x, x$inundation == 1)
+range(x.idys$dowy)
+# min "day of water year" 65; max 214
+
+x.idys = subset(x, (x$dowy >= 65 & x$dowy <= 214))
+table(x.idys$inundation)
+
+gam0 <- gam(log_chla ~ 1, method = "REML", data = x.idys, family = "gaussian")
+gam1.0 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = x.idys, family = "gaussian")
+gam1.1 <- gam(log_chla ~ s(log_qsdy) + s(dowy, bs = "cc"), method = "REML", data = x.idys, family = "gaussian")
+gam1.2 <- gam(log_chla ~ s(WTmwk), method = "REML", data = x.idys, family = "gaussian")
+gam1.3 <- gam(log_chla ~ s(WTmwk) + s(dowy, bs = "cc"), method = "REML", data = x.idys, family = "gaussian")
+gam1.4 <- gam(log_chla ~ s(log_qsdy) + s(WTmwk), method = "REML", data = x.idys, family = "gaussian")
+gam1.5 <- gam(log_chla ~ s(log_qsdy) + s(WTmwk) + s(dowy, bs = "cc"), method = "REML", data = x.idys, family = "gaussian")
+gam1.6 <- gam(log_chla ~ te(log_qsdy, dowy), method = "REML", data = x.idys, family = "gaussian")
+gam1.7 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = x.idys, family = "gaussian")
+
+AIC(gam0, gam1.0, gam1.1, gam1.2, gam1.3, gam1.4, gam1.5, gam1.6, gam1.7)
+
+gam.check(gam1.0)
+gam.check(gam1.1)
+gam.check(gam1.6)
+gam.check(gam1.7)
+
+summary(gam1.0)
+summary(gam1.1)
+summary(gam1.6)
+summary(gam1.7)
+
+resid = residuals(gam1.7)
+acf(resid)
+pacf(resid)
+
+```
+
+
+
+# Visualizing gam1.7 (flow + water temp. + dowy) for Sac River across day of water year
+
+```{r}
+
+# Determine the confidence interval to present in your figure and determine the
+# t-distribution value of which to multiply the standard error
+interval_value = 0.88
+t_distribution_probability = 1.0 - (1-interval_value)/2
+CI_factor = qt(t_distribution_probability, Inf)
+
+#~ Generate a data frame with the sequence from the minimum to the maximum
+# series of 5-95 percentile values of the predictor variable: day of water year
+dowy.range = range(x.idys$dowy)
+dowy.ser = seq(from = dowy.range[1], to = dowy.range[2], by = 1)
+n = length(dowy.ser)
+
+# take 10th and 90th percentile values of all other predictors
+lqsdy.1 = quantile(x.idys$log_qsdy, probs = 0.1)
+lqsdy.9 = quantile(x.idys$log_qsdy, probs = 0.9)
+lqsdy.5 = quantile(x.idys$log_qsdy, probs = 0.5)
+
+wtemp.1 = quantile(x.idys$WTmwk, probs = 0.1)
+wtemp.9 = quantile(x.idys$WTmwk, probs = 0.9)
+wtemp.5 = quantile(x.idys$WTmwk, probs = 0.5)
+
+new_dat_1 = data.frame(cbind(log_qsdy = sample(c(lqsdy.1, lqsdy.9), n, replace = TRUE),
+                             WTmwk = rep(wtemp.5, n), dowy = dowy.ser))
+
+new_dat_2 = data.frame(cbind(log_qsdy = rep(lqsdy.5, n), 
+                             WTmwk = sample(c(wtemp.1, wtemp.9), n, replace = TRUE),
+                             dowy = dowy.ser))
+
+#~ Use the *predict()* function to estimate model fit and standard error
+preds.1 = predict(gam1.7, newdata = new_dat_1, se.fit = TRUE)
+preds.2 = predict(gam1.7, newdata = new_dat_2, se.fit = TRUE)
+
+# Multiply the standard error fit by the t-distribution value to estimate
+fit = preds.1$fit
+upper = fit - CI_factor*preds.1$se.fit
+lower = fit + CI_factor*preds.1$se.fit
+new_dat_1 = cbind(new_dat_1, fit, upper, lower)
+
+fit = preds.2$fit
+upper = fit - CI_factor*preds.2$se.fit
+lower = fit + CI_factor*preds.2$se.fit
+new_dat_2 = cbind(new_dat_2, fit, upper, lower)
+
+# separate by log_qsdy at high and low value
+gam.i0 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.1)
+gam.i1 = subset(new_dat_1, new_dat_1$log_qsdy == lqsdy.9)
+
+# separate by WTmwk at high and low value
+gam.lowwt = subset(new_dat_2, new_dat_2$WTmwk == wtemp.1)
+gam.hghwt = subset(new_dat_2, new_dat_2$WTmwk == wtemp.9)
+
+new.dat = rbind(new_dat_1, new_dat_2)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~ Visualize the model for low and high flow for day of water year
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot the raw data and make the axes and labels aesthetically pleasing
+par(mfrow = c(1,1), mar = c(2.5, 4.5, 2,4.5) + 0.1, oma = c(1.5,0,0.5,0))
+
+# plot the actual data points separately for inundated and non-inundated
+plot(x.idys$log_chla ~ x.idys$dowy, pch = 20, col = "green", las = 1, ylab = "", xlab = "")
+#mtext(text = "Log(Chlorophyll-a)", side = 4, line = 3)
+mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
+#y_labs = c(0.0001,0.0003,0.001, 0.003,0.01,0.033,0.1,0.33, 1, 3, 8, 20, 55, 150)[c(T,F)]
+#axis(side = 4, at = log(y_labs), labels = y_labs, las=1)
+mtext(text = "Day of water year", side = 1, line = 2.25)
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.i0$dowy, max(gam.i0$dowy), rev(gam.i0$dowy), gam.i0$dowy[1]),
+        y = c(gam.i0$lower, gam.i0$upper[length(gam.i0$upper)], rev(gam.i0$upper), gam.i0$lower[1]), border = NA, 
+        col = rgb(20, 200, 20, alpha = 150, maxColorValue = 255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.i0$dowy, y = gam.i0$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.i1$dowy, max(gam.i1$dowy), rev(gam.i1$dowy), gam.i1$dowy[1]),
+        y = c(gam.i1$lower, gam.i1$upper[length(gam.i1$upper)], rev(gam.i1$upper), gam.i1$lower[1]), border = NA, 
+        col = rgb(20, 20, 200, alpha = 150, maxColorValue=255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.i1$dowy, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~ Visualize the model for low and high water temperature for day of water year
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+library("plot3D")
+library("ggplot2")
+
+# Plot the raw data and make the axes and labels aesthetically pleasing
+par(mfrow = c(1,1), mar = c(2.5, 4.5, 2,4.5) + 0.1, oma = c(1.5,0,0.5,0))
+
+# plot the actual data points separately for inundated and non-inundated
+plot(x.idys$log_chla ~ x.idys$dowy, pch = 20, col = "gray", las = 1, ylab = "", xlab = "")
+#mtext(text = "Log(Chlorophyll-a)", side = 4, line = 3)
+mtext(text = expression(log[e]~"(Chlorophyll-a)"), side = 2, line = 2.5)
+#y_labs = c(0.0001,0.0003,0.001, 0.003,0.01,0.033,0.1,0.33, 1, 3, 8, 20, 55, 150)[c(T,F)]
+#axis(side = 4, at = log(y_labs), labels = y_labs, las=1)
+mtext(text = "Day of water year", side = 1, line = 2.25)
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.lowwt$dowy, max(gam.lowwt$dowy), rev(gam.lowwt$dowy), gam.lowwt$dowy[1]),
+        y = c(gam.lowwt$lower, gam.lowwt$upper[length(gam.lowwt$upper)], rev(gam.lowwt$upper), gam.lowwt$lower[1]), border = NA, 
+        col = rgb(20, 200, 20, alpha = 150, maxColorValue = 255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.lowwt$dowy, y = gam.lowwt$fit, lwd = 2, col = rgb(20, 150, 20, alpha = 255, maxColorValue = 255))
+
+# Use the polygon function to add the CI
+polygon(x = c(gam.hghwt$dowy, max(gam.hghwt$dowy), rev(gam.hghwt$dowy), gam.hghwt$dowy[1]),
+        y = c(gam.hghwt$lower, gam.hghwt$upper[length(gam.hghwt$upper)], rev(gam.hghwt$upper), gam.hghwt$lower[1]), border = NA, 
+        col = rgb(20, 20, 200, alpha = 150, maxColorValue=255))
+
+# Use the lines() function to add the mean model prediction
+lines(x = gam.hghwt$dowy, y = gam.hghwt$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 255, maxColorValue = 255))
+
+
+# trying other ways to visualize
+
+# surf3D(new.dat$log_qsdy, new.dat$WTmwk, new.dat$log_chla, colvar = new.dat$log_chla,
+#        colkey = TRUE, box = TRUE, bty = "b", phi = 20, theta = 120)
+
+#install.packages("visreg")
+library("visreg")
+
+visreg2d(gam1.7, xvar='log_qsdy', yvar='WTmwk', scale='response', plot.type="image")
+visreg2d(gam1.7, xvar='log_qsdy', yvar='WTmwk', scale='response', plot.type="persp")
+
+# ggplot(new.dat, aes(x = log_qsdy, y = WTmwk)) + geom_tile(aes(fill = fit))
+
+
+```
