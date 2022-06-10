@@ -11,6 +11,7 @@ library(lubridate)
 library(readr)
 library(zoo)
 library(tidyr)
+library(ggplot2)
 
 f_load_model_chla_covars_data <- function() {
 
@@ -75,7 +76,7 @@ f_load_model_chla_covars_data <- function() {
    dplyr::filter(date>as.Date("1999-02-22") & water_year<2020) # this is when RIV starts
 
   # Full join for bayes
-  chla_covars_fulljoin <- full_join(covars_clean, chla_only)
+  chla_covars_fulljoin <- full_join(covars_clean, chla_nuts)
 
   # Dataset including extra variables
   chla_covars_extravars <- left_join(chla_nuts0, covars_long) %>%
@@ -89,12 +90,6 @@ f_load_model_chla_covars_data <- function() {
   # check missing data----------------------------------------------
   first(chla_covars$date)
   summary(chla_covars)
-      # missing Q from LIB for now. Need to fill in some lat/lons
-
-  # nutrients have a lot of missing data.
-  nutrients_span <- chla_nuts %>%
-    filter(!is.na(diss_ammonia)) %>%
-    mutate(date = lubridate::ymd(date))
 
   # final dataset cleanup -------------------------------
 
@@ -109,14 +104,12 @@ f_load_model_chla_covars_data <- function() {
   samplesize <- chla_covars %>%
   group_by(water_year,region) %>%
   summarize(n = n())
-  ggplot2::ggplot(samplesize) + geom_tile(aes(water_year, region, fill= n)) +   viridis::scale_fill_viridis()
-
-
+  #ggplot2::ggplot(samplesize) + geom_tile(aes(water_year, region, fill= n)) +   viridis::scale_fill_viridis()
 
   # export data ----------------------------------------
 
   readr::write_csv(chla_covars, "data_model/model_chla_covars_gam.csv")
-  readr::write_csv(chla_covars_extravars, "data_model/model_covars_chla_nuts_extravars.csv")
+  #readr::write_csv(chla_covars_extravars, "data_model/model_covars_chla_nuts_extravars.csv")
   readr::write_csv(chla_covars_fulljoin, "data_model/model_covars_chla_fulljoin.csv")
 }
 
