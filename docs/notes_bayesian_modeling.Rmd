@@ -17,7 +17,7 @@ The objective of this model is to determine how environmental variables during p
 
 Better understanding of this issue could inform implementation of the Delta Plan, Delta Adapts climate change scenario planning, ITP and BiOp restoration targets and performance metrics. Increasing floodplain connectivity could export fish food downstream, improve native fish survival and reduce reliance on hatcheries.
 
-Jessica Guo provided code for Model 1, off of which all subsequent model iterations were derived.  The code for iterations of the Bayesian model are located in numbered subfolders (e.g., mod01) within the folder /bayes_models.  Model-specific data are generated via f_make_bayes_x_dataset.R files, where x corresponds to the model number.  As appropriate, model subfolders contain output figures in /fig_out folders and saved initial (start) parameter values in /inits folders. For JAGS models, the R script is a wrapper that brings in and compiles the model-specific data, generates and/or loads initial values, calls the JAGs model (sam_model.JAGS), and visualizes model outputs. NAs were filled through ...
+Jessica Guo provided code for Model 1, off of which all subsequent model iterations were derived.  The code for iterations of the Bayesian model are located in numbered subfolders (e.g., mod01) within the folder /bayes_models.  Model-specific data are generated via f_make_bayes_x_dataset.R files, where x corresponds to the model number.  As appropriate, model subfolders contain output figures in /fig_out folders and saved initial (start) parameter values in /inits folders. For JAGS models, the R script is a wrapper that brings in and compiles the model-specific data, generates and/or loads initial values, calls the JAGS model (sam_model.JAGS), and visualizes model outputs. NAs were filled through ...
 
 ## Response Variable
 
@@ -28,7 +28,12 @@ In all model iterations, log(chl) was used as the response variable, and in many
 * Sampling station for chlorophyll measurements (random effect); 7 stations (USBR 16, 34, 44, USGS 657, 11455315, 11455350, 11455385)
 * Flow (discharge) on the same day as the chlorophyll observation (Source: DWR Dayflow, Q)
 * Flow at various lags up to 3 weeks prior to chlorophyll sampling (Source: DWR Dayflow, Q)
-* Solar radiation - mean daily (Source: daymet)
+* Solar radiation - mean daily (Source: daymet), for the first 10 models this is from Yolo Bypass (lat = 38.307857513, lon = -121.692428589).  For mod11, source is Rio Vista station 657 (lat = 38.15167, lon = -121.6883).  Subsequent regional analyses have yolo (STTD; bypass), Rio Vista 657 (below), SHR (upstream), and Pro (Cache).
+  SHR (upstream): 38.53188 -121.5280
+  STTD (yolo): 	38.35338 -121.6430
+  Pro (cache): 38.28080 -121.6651
+  657 (downstream): 38.15167 -121.6883
+  
 * Nutrients (dissolved inorganic nitrogen; DIN) (Sources: IEP Integrated WQ , 1998-2021: USGS (Cloern); EMP; USBR; USGS CA Water Science Center, 2012-2021; DWR Yolo Bypass Monitoring, Chla: 2009-2021)
 * Water temperature - max daily (Source: DWR/USBR (?) data at Rio Vista, or Yolo Bypass)
 * Air temperature - max daily (Source: daymet)
@@ -156,6 +161,11 @@ Water temperature data at Rio Vista was only available for dates >=1999-02-24, o
 * Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
 * Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
 
+### Notes
+Q and Srad_mwk continue to have relatively larger magnitude betas with higher credible intervals, compared to inund_days that has a lower magnitude beta posterior with a very narrow credible interval.  Included are plots of the observed vs. predicted chlorophyll (with the red 1:1 line), as well as chlorophyll over time for this particularly model because this was our best performing model based on DIC.  On the pred_vs_obs_20220405.png plot, the colored dots are the mean predictions, and colored error bars are credible intervals around predicted means. For pred_obs_time plot, the colored dots are observed chl values, and colored error bars are again credible intervals around predicted means. An R-squared value for predicted vs. observed chl was 0.22.  
+
+Also plotted are cases where the model was predicting high values of chlorophyll although observed chl values were quite low (highpred_lowobs_time_20220405.png).  Those observations were at USBR 16, USBR 34, and USBR 44.   
+
 ## Model 06_Wtemp (JAGS)
 
 ### Covariates included:
@@ -172,18 +182,74 @@ Water temperature data at Rio Vista was only available for dates >=1999-02-24, o
 * Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
 
 ### Notes
-This model is comparable to Model 6, but restricts the data to observations when there is inundation to determine if correlation between Srad_mwk and Wtemp_RIV_mwk decreases.  THIS MODEL NEEDS WORK.  
+This model is comparable to Model 6, but restricts the data to observations when there is inundation to determine if correlation between Srad_mwk and Wtemp_RIV_mwk decreases during inundation periods. THIS MODEL NEEDS WORK.  
 
 ## Model 07 (rethinking)
 
-### Covariates included:
+### Depending on the model, covariates could have included:
 * Flow (Q) on the day of chlorophyll observation
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
 * Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad)
 * Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
 * Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista
 
 ### Notes
-Model 07 is a second attempt to convert between JAGS and the rethinking package.  It mimics Model 06's covariates.  Therefore, sam_model.JAGS in the /mod07 folder can be ignored.  ulam function within rethinking is used to accommodate the hierarchical model. There are two models within the 07-run-model.R script, the first attempts to mimic the JAGS models but leaves the estimates of Estar and Bstar out (which can be calculated post model run).  The second does the same thing but tries to reparameterize the model to improve identifiability, based on McElreath's Statistical Rethinking section 13.4.2 Reparameterization.  Some analyses are provided based on rethinking commands.
+Model 07 is a second attempt to convert between JAGS and the rethinking package.  It mimics Model 06's covariates.  Therefore, sam_model.JAGS in the /mod07 folder can be ignored.  ulam function within rethinking is used to accommodate the hierarchical model. There are two models within the 07-run-model.R script, the first attempts to mimic the JAGS models but leaves the estimates of Estar and Bstar out (which can be calculated post model run).  The second does the same thing but tries to reparameterize the model to improve identifiability, based on McElreath's Statistical Rethinking section 13.4.2 Reparameterization.  There is also a version with just Q and Qant.  Some analyses are provided based on rethinking commands.  Note I could not figure out how to code a half (truncated at 0) student-t distribution.  It doesn't appear to be available?
+
+## Model 08 (JAGS)
+
+### Covariates included:
+* Flow (Q) on the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad).  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the mean. 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemp_RIV_mwk, the 7-day average of the daily max water temperature at Rio Vista.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the max. 
+
+### Notes
+Model 8 uses Srad and Wtemp that have each been deseasonalized with the stl function to isolate the seasonal (periodic) component that is then subtracted from the original time series.  The deseasonalized Srad and Wtemp time series are no longer correlated, nor are their corresponding posterior distributions.  The beta posteriors for the deseasonalized Srad and Wtemp seem to approximately switch magnitudes from previous outputs (e.g., see mod06), but given that we want seasonality represented within the analysis, this model does not make sense.
+
+## Model 09_brms (brms and rethinking)
+
+### Covariates included:
+* Flow (Q) on the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad).
+
+### Notes
+Since this is basically a continuation of mod07 in an attempt to translate the model code from JAGS to brms or rethinking, I used the same f_make_bayes_mod07_dataset.R function to bring in the data.  An advantage of the brms model vs. rethinking is that unlike rethinking, brms has an available half student-t distribution for the random effect of station.  The version of the brms model that finally ended up working was that with only Q and Srad.  Note, however, that the model structure still produced 21 divergent transitions after warmup.  This result may relate to an issue with identifiability with the hierarchical model, and one of the reasons for Bstar/Estar formulation provided within the JAGS models. I had also attempted to code Qant, but unfortunately could not figure out how to represent the dirichlet prior for the weights of the different Qant temporal lags.  As the dirichlet is the conjugate prior for the categorical distribution, I attempted to follow code that sets Qant to a monotonic variable and describe priors as components of that.  However, it didn't work and doesn't make sense in this scenario.  There is some leftover code from mod07 rethinking to aid in translation to brms. 
+
+## Model 10 (JAGS)
+
+### Covariates included:
+* Flow (Q) on the day of chlorophyll observation
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad).
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+
+### Notes
+Up through mod10 uses the 7-station data set within the downstream region.  Mod10 explores lags between increases in Q (or inund_days) and chl, 63-84 d lags not unusual, but may be due to all Q discharge coming from Verona while chl at downstream sites.  Note that this model is still maintaining separate Q and Qant variables, despite evidence that likely both are not needed.  Tried some wavelets (frequency analyses) to identify potential time scales of variation in but didn't see anything useful. Also contains a comparison of predicted (from the model) vs. observed chlorophyll plot, and predicted chl over time (see related plots in mod06_Srad for analogous plots for the best performing model focused on Q, Srad, and inund_days up until that point).  Note that mod10 does not apply new temporal lags explored in this script. Beta for Q was positive while beta for Qant was negative, but may be that these two covariates are correlated.  
+
+## Model 11 (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemp_RIV_mwk, the 7-day average of the daily MEAN water temperature at Rio Vista.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_RIV_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Rio Vista.  This variable was not deseasonalized.
+
+### Notes
+Mod11 only uses station 657 (Rio Vista) to see if performance improved by using only 1 chlorophyll station for data.  It also deseasonalizes water temperature, incorporates water temperature range, and incorporates longer temporal lags in the antecedant flow variable.  Dsum and deviance improve to 102 and 294 respectively (compare to best model up to this point - mod06_Srad - at 392 and 925, respectively, that had Q, Srad, inund_days).  It is unclear from this model whether the gain is from deseasonalizing water temp and adding water temp range or from incorporating longer lags. Now that there is no Q in addition to Qant, Qant has a positive slope albeit a large credible interval.  Perhaps also due to extending the lags.  Credible intervals for Wtemp and Wtemprange overlap, perhaps both are not needed.  Qant lag that extends back 2-5 weeks has a greater effect on chl, while lag that extends back 2 weeks has a lesser effect.
+
+## Model 11b (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 7, 21, 42, and 63 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemp_RIV_mwk, the 7-day average of the daily MEAN water temperature at Rio Vista.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_RIV_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Rio Vista.  This variable was not deseasonalized.
+
+### Notes
+See notes for mod11, except that note that temporal lags for Qant are different for mod11b.  The Dsum and deviance were also basically the same as for mod11, 102 and 295, respectively.  Changing the temporal lags did not really change the beta slope for Qant versus mod11. Weights for Qant show that first week's flows near the bypass don't really affect chl as much as flows that had been near bypass 2-3 weeks prior to chl measurement at Rio Vista.  Flows at longer lags in the past (up to 8 weeks prior) may also affect chl based on higher weights of those Qant terms.  Predictions using both mod11 and mod11b are still not great.  
 
 # Stats Links
 

@@ -317,4 +317,4 @@ rm6 <- ulam(
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod06/run_20211220.rda")
+

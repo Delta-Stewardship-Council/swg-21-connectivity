@@ -15,7 +15,7 @@ f_make_bayes_mod05_dataset <- function() {
   # pascale adds f_get and f_clean functions
   # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days
   inund <- read_csv("data_clean/clean_inundation_days.csv") %>% # lots of random NAs in here on join
-    select(date:inund.days) # drop row id column
+    select(date:inund_days) # drop row id column
 
  ## FLOW: Get Verona Flow -----------
 

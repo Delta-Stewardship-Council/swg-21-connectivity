@@ -14,7 +14,7 @@ f_make_bayes_mod07_dataset <- function() {
   # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days
   # LY: Note that the dataset also has inundation (0/1) but we focus on # days inundation
   inund <- read_csv("data_clean/clean_inundation_days.csv") %>% # lots of random NAs in here on join
-    select(date:inund.days) # drop row id column
+    select(date:inund_days) # drop row id column
 
   ## WATER TEMP: Continuous Water Temperature Data ------------------------------------------------
 
@@ -67,7 +67,7 @@ f_make_bayes_mod07_dataset <- function() {
     tidyr::fill(daymet_srad, .direction = "down") %>%
     tidyr::fill(daymet_vpd, .direction = "down") %>%
     tidyr::fill(wtemp_RIV, .direction = "down") %>%
-    tidyr::fill(inund.days, .direction = "down")
+    tidyr::fill(inund_days, .direction = "down")
 
   # make 7-day average of daily mean for Rad and Water temp, also constrain time period to
   # Water temp's dates
