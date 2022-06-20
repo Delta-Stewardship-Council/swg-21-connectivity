@@ -1,8 +1,8 @@
 # Code for making map
 
 # To add:
-# Buffer around regions so it is wider
-# Use mako palette so color-blind friendly
+# Add dayflow stations
+
 
 
 
@@ -65,7 +65,7 @@ library(ggspatial)
   regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shpExport.shp"))
   regions_4269 <- st_transform(regions_sf, crs = 4269)
 
-  regionnames <- data.frame(region = c("downstream", "cache", "yolo", "upstream"))
+  regionnames <- data.frame(region = c("mainsteam river downstream", "tidal slough complex", "floodplain bypass", "mainstem river upstream"))
   regions_final <- cbind(regions_4269, regionnames) %>%
     select(-notes)
 
@@ -109,7 +109,7 @@ stations_mult <- stations_all %>%
 # Convert to sf ---------------------------------------------
 stations_sf <- st_as_sf(stations_mult, coords = c("longitude", "latitude"), crs = 4326)
 stations_sf_4269 <- st_transform(stations_sf, crs = st_crs(California))
-station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct() %>%
+station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct()
 
 
 # Save shapefile - used this to create regions shapefile
@@ -117,27 +117,31 @@ station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct() %>%
 
 # Make maps -----------------------------------------------
 
+
+
     ## CA Inset -----------------
     insetbbox0 = st_as_sfc(st_bbox(stations_sf_4269))
     insetbbox = st_buffer(insetbbox0, dist = 0)
 
-    inset <- ggplot() +
+    (inset <- ggplot() +
       geom_sf(data = California, fill = "white") +
-      geom_sf(data = insetbbox0, fill = NA, color = "red", size = 1.1) +
+      geom_sf(data = WW_Delta, colour = "steelblue4", size = 0.3) +
+        geom_sf(data = insetbbox0, fill = NA, color = "red", size = 1) +
+
       theme_bw() +
       theme(axis.text = element_blank(),
             axis.title = element_blank(),
             axis.ticks = element_blank(),
             panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
+            panel.grid.minor = element_blank()))
       #theme_void()
 
 
     ## Cache inset ---------------
 
       ### Crop everything--------
-    sf::sf_use_s2(FALSE)
-    WW_Watershed_crop <- st_crop(WW_Watershed_4269,xmin = -122, xmax = -121.5, ymin = 38, ymax = 38.8)
+sf::sf_use_s2(FALSE)
+WW_Watershed_crop <- st_crop(WW_Watershed_4269,xmin = -122, xmax = -121.5, ymin = 38, ymax = 38.8)
     cacheyoloinset = st_as_sfc(st_bbox(filter(stations_sf_4269, station == "STTD" | station == "RIV")))
     cachebbox <- st_buffer(cacheyoloinset, dist = c(0.06, 0.02, 0.01, 0.02))
     stations_crop <- st_crop(stations_sf_4269, cachebbox)
@@ -148,8 +152,6 @@ station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct() %>%
 
       ### Map -------------------
     (cacheinset <- ggplot() +
-
-
         geom_sf(data = WW_Watershed_crop2,  colour = "darkgrey", alpha = 0.3, inherit.aes = FALSE) +
        geom_sf(data = Sloughs_crop, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
        geom_sf(data = regions_crop, aes(fill = region, color = region, linetype = region), size = 1, alpha = 0.5) +
@@ -182,13 +184,10 @@ station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct() %>%
 
     (map_stations <- ggplot() +
       geom_sf(data = yolo_4269, fill = "grey36", colour = "grey36", alpha = 0.3) +
-
       geom_sf(data = WW_Watershed_crop, fill = "lightgrey", colour = "lightgrey", alpha = 0.35, inherit.aes = FALSE) +
        geom_sf(data = Sloughs, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
       geom_sf(data = regions_buffer, aes(fill = region), size = 0.9,alpha = 0.2, color = "transparent") +
        geom_sf(data = regions_final, aes(fill = region, color = region, linetype = region), size = 0.9,alpha = 0.5) +
-
-
       #geom_sf(data = SacR, colour = "steelblue", fill = "steelblue", alpha = 0.6, inherit.aes = FALSE)+
       #geom_sf(data = ToeD, colour = "indianred4", fill = "lightsalmon2", alpha = 0.2, inherit.aes = FALSE)+
       geom_sf(data = stations_sf_4269, aes(shape = data_type), size = 1.9, alpha = 0.8, inherit.aes = FALSE) +
@@ -196,6 +195,8 @@ station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct() %>%
                              pad_x = unit(.005, "in"), pad_y = unit(0.15, "in"),
                              style = north_arrow_fancy_orienteering) +
       annotation_scale(location = "bl", bar_cols = c("darkgray", "white", "darkgray", "white"), text_cex = 1.1)+
+       annotate(geom = "text", x = -121.76, y = 38.8, label = "upstream", fontface = "italic") +
+       annotate(geom = "text", x = -121.84, y = 38.15, label = "downstream", fontface = "italic") +
       #scale_colour_viridis(discrete = TRUE, option = "plasma") +
         scale_shape_manual(values = c(8, 6, 16, 0)) +
         scale_linetype_manual(values = c(5, 1, 2, 3)) +
