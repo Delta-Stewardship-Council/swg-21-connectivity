@@ -1,5 +1,11 @@
 # Code for making map
 
+# To add:
+# Buffer around regions so it is wider
+# Use mako palette so color-blind friendly
+
+
+
 
 # Region outlines?
 # Chlorophyll stations
@@ -9,7 +15,10 @@
 
 # Shapefile of Yolo Bypass
 # Draw region for cache?
+# Zoom in from STTD to RVB, including part of the sloughs - replace current panel br
+# Color YB polygon, Steamboat sloughs a darker gray
 
+# dayflow data inputs are from USGS sites: 1 - USGS 11426000 SACRAMENTO WEIR SPILL TO YOLO BYPASS (Latitude 38°36'25", Longitude 121°33'15" NAD27), 2 - USGS 11453000 YOLO BYPASS NR WOODLAND CA (Latitude 38°40'40", Longitude 121°38'35" NAD27) and 3 - South Fork Putah Creek-Davis (A0-9115/11-4550.50), which I can't find anywhere except really old pdfs that don't give a lat/lon... maybe another question for the person Jared recommended?
 
 library(viridis)
 library(sf)
@@ -60,6 +69,10 @@ library(ggspatial)
   regions_final <- cbind(regions_4269, regionnames) %>%
     select(-notes)
 
+  ## regions buffer
+  regions_buffer <- st_buffer(regions_final, 0.01)
+  plot(regions_buffer)
+
 # Convert to stations data frames to bind -----------------------------
 wt_stations_filt <- wt_stations %>%
   janitor::clean_names() %>%
@@ -100,7 +113,7 @@ station_labels <- stations_sf_4269 %>% select(-data_type) %>% distinct() %>%
 
 
 # Save shapefile - used this to create regions shapefile
-write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
+#write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
 
 # Make maps -----------------------------------------------
 
@@ -123,22 +136,30 @@ write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
     ## Cache inset ---------------
 
       ### Crop everything--------
-    cacheyoloinset = st_as_sfc(st_bbox(filter(stations_sf_4269, station == "STTD" | station == "USGS-11455143")))
-    cachebbox <- st_buffer(cacheyoloinset, dist = 0.02)
+    sf::sf_use_s2(FALSE)
+    WW_Watershed_crop <- st_crop(WW_Watershed_4269,xmin = -122, xmax = -121.5, ymin = 38, ymax = 38.8)
+    cacheyoloinset = st_as_sfc(st_bbox(filter(stations_sf_4269, station == "STTD" | station == "RIV")))
+    cachebbox <- st_buffer(cacheyoloinset, dist = c(0.06, 0.02, 0.01, 0.02))
     stations_crop <- st_crop(stations_sf_4269, cachebbox)
     regions_crop <- st_crop(regions_final, cachebbox)
     stnlabel_crop <- st_crop(station_labels, cachebbox)
     WW_Watershed_crop2 <- st_crop(WW_Watershed_4269, cachebbox)
+   Sloughs_crop <- st_crop(Sloughs, cachebbox)
+
       ### Map -------------------
     (cacheinset <- ggplot() +
-      geom_sf(data = regions_crop, aes(fill = region, color = region, linetype = region), size = 1, alpha = 0.5) +
+
+
         geom_sf(data = WW_Watershed_crop2,  colour = "darkgrey", alpha = 0.3, inherit.aes = FALSE) +
+       geom_sf(data = Sloughs_crop, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
+       geom_sf(data = regions_crop, aes(fill = region, color = region, linetype = region), size = 1, alpha = 0.5) +
       geom_sf(data = stations_crop, aes(shape = data_type), size = 2, alpha = 0.8, inherit.aes = FALSE) +
+
       #  geom_sf_label(data = stnlabel_crop, aes(x = , y = , label = station), nudge_x = 0.03, inherit.aes = FALSE,) +
       #geom_sf(data = cachebbox, fill = NA, color = "red", size = 1.1) +
-      scale_colour_manual(values = c("#00AFA1","palegreen2"))+
-      scale_fill_manual(values = c("#00AFA1","palegreen2"))+
-        scale_linetype_manual(values = c(5, 3)) +
+       scale_fill_manual(values = viridis(6, option = "mako")[2:5])+
+       scale_colour_manual(values = viridis(5, option = "mako")[2:5])+
+       scale_linetype_manual(values = c(5, 1, 2, 3)) +
         scale_shape_manual(values = c(8, 6, 16, 0)) +
       theme_bw() +
       theme(axis.text = element_blank(),
@@ -150,20 +171,24 @@ write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
 
     ## Main map --------------------
 
-    ### crop watershed --------
-    sf::sf_use_s2(FALSE)
-    WW_Watershed_crop <- st_crop(WW_Watershed_4269,xmin = -122, xmax = -121.5, ymin = 38, ymax = 38.8)
 
     ### Make a sacramento river and toe drain highlight ---------------
     SacR <- WW_Watershed_crop %>% filter(HNAME %in% c("Sacramento River", "SACRAMENTO RIVER") )
     ToeD <- WW_Watershed_crop %>% filter(HNAME %in% c("Toe Drain"))
 
+    Sloughs <- WW_Watershed_crop %>% filter(HNAME %in% c("Steamboat Slough", "Miner Slough", "Sutter Slough", "Elk Slough", "Lindsey Slough"))
+
     ### Make map --------------
 
     (map_stations <- ggplot() +
-      geom_sf(data = yolo_4269, fill = "lightgrey", colour = "lightgrey", alpha = 0.3) +
-      geom_sf(data = WW_Watershed_crop, fill = "lightgrey", colour = "lightgrey", alpha = 0.3, inherit.aes = FALSE) +
-      geom_sf(data = regions_final, aes(fill = region, color = region, linetype = region), size = 0.9,alpha = 0.5) +
+      geom_sf(data = yolo_4269, fill = "grey36", colour = "grey36", alpha = 0.3) +
+
+      geom_sf(data = WW_Watershed_crop, fill = "lightgrey", colour = "lightgrey", alpha = 0.35, inherit.aes = FALSE) +
+       geom_sf(data = Sloughs, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
+      geom_sf(data = regions_buffer, aes(fill = region), size = 0.9,alpha = 0.2, color = "transparent") +
+       geom_sf(data = regions_final, aes(fill = region, color = region, linetype = region), size = 0.9,alpha = 0.5) +
+
+
       #geom_sf(data = SacR, colour = "steelblue", fill = "steelblue", alpha = 0.6, inherit.aes = FALSE)+
       #geom_sf(data = ToeD, colour = "indianred4", fill = "lightsalmon2", alpha = 0.2, inherit.aes = FALSE)+
       geom_sf(data = stations_sf_4269, aes(shape = data_type), size = 1.9, alpha = 0.8, inherit.aes = FALSE) +
@@ -174,8 +199,14 @@ write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
       #scale_colour_viridis(discrete = TRUE, option = "plasma") +
         scale_shape_manual(values = c(8, 6, 16, 0)) +
         scale_linetype_manual(values = c(5, 1, 2, 3)) +
-      scale_colour_manual(values = c("#00AFA1", "#00AEDB", "navy","palegreen2"))+
-      scale_fill_manual(values = c("#00AFA1", "#00AEDB", "lightslateblue","palegreen2"))+
+      #scale_colour_manual(values = c("#00AFA1", "#00AEDB", "navy","palegreen2"))+
+      #scale_fill_manual(values = c("#00AFA1", "#00AEDB", "lightslateblue","palegreen2"))+
+
+      scale_fill_manual(values = viridis(6, option = "mako")[2:5])+
+       scale_colour_manual(values = viridis(5, option = "mako")[2:5])+
+       #scale_fill_manual(values = c("#00AFA1", "#00AEDB", "lightslateblue","palegreen2"))+
+       #scale_fill_viridis(discrete = TRUE, option = "mako", direction = -1) +
+       #scale_colour_viridis(discrete = TRUE, option = "mako", direction = -1) +
       theme_bw() +
       theme(axis.title = element_blank(),
             axis.text = element_text(size = 16),
@@ -200,7 +231,7 @@ write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
 
     ## Save map png--------------------------------------------
     patchmap
-    ggsave("figures/manuscript_map2.png", width = 8, height = 9, units = "in", device = 'png', dpi = 300)
+    ggsave("figures/manuscript_map.png", width = 8, height = 10, units = "in", device = 'png', dpi = 300)
 
 
     gg_inset_map
