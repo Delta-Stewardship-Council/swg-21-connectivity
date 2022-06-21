@@ -14,7 +14,7 @@ f_make_bayes_model_dataset <- function() {
   # (from Pascale's code inundation_days.R): will replace with f_load_inund after
   # pascale adds f_get and f_clean functions
   # this has DayFlow Yolo, Stage of Sac at Fremont Weir, inundation days
-  inund <- read_csv("data/inundation_days.csv") %>% # lots of random NAs in here on join
+  inund <- read_csv("data_clean/inundation_days.csv") %>% # lots of random NAs in here on join
     select(date:inund_days) # drop row id column
 
  ## FLOW: Get Verona Flow -----------
@@ -112,8 +112,8 @@ f_make_bayes_model_dataset <- function() {
 
   # write out
   # if needed write to rds files:
-  write_rds(chla_all, "bayes_models/mod_chla_data.rds")
-  write_rds(covars, file = "bayes_models/mod_covariates_complete.rds")
+  write_rds(chla_all, "bayes_models/mod01/mod_chla_data.rds")
+  write_rds(covars, file = "bayes_models/mod01/mod_covariates_complete.rds")
   cat("Model datasets saved in list:\nmodel_df$covars and model_df$chla_all")
 
   # return data
