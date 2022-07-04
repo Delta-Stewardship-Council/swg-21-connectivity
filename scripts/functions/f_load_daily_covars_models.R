@@ -20,12 +20,9 @@ f_load_daily_covars_models <- function() {
   # Add connectivity metric
 
   print("Downloading data...")
-  (inun_id <- contentid::store("data_clean/inundation_days.csv"))
+  (inun_id <- contentid::store("data_clean/inundation_metrics.csv"))
   inun_file <- contentid::resolve(inun_id)
-  flow_id <- contentid::store("data_clean/clean_flow_usgs_11425500.csv")
-  flow_file <- contentid::resolve(flow_id)
-  #flow_id_LIB <- contentid::store("data_raw/raw_flow_LIB.csv")
- # flow_file_LIB <- contentid::resolve(flow_id_LIB)
+  # daymet
   (daymet_id_sttd <- contentid::store("data_clean/clean_daymet_sttd_1998-2020.csv"))
   daymet_file_sttd <- contentid::resolve(daymet_id_sttd)
   daymet_id_657 <- contentid::store("data_clean/clean_daymet_657_1998-2020.csv")
@@ -34,11 +31,14 @@ f_load_daily_covars_models <- function() {
   daymet_file_shr <- contentid::resolve(daymet_id_shr)
   daymet_id_pro <- contentid::store("data_clean/clean_daymet_pro_1998-2020.csv")
   daymet_file_pro <- contentid::resolve(daymet_id_pro)
-  #water_temp_id <- contentid::store("data_clean/clean_watertemp_continuous.rds")
-  #watertemp_file <- contentid::resolve(water_temp_id)
-  # Want to add sttd-screw trap @ toe drain (yolo), shr-sherwood (above), riv-rio vista (below) water temp, usgs tide and flow- all separate-------------------------
+  # usgs tide and flow
+  flow_id <- contentid::store("data_clean/clean_flow_usgs_11425500.csv")
+  flow_file <- contentid::resolve(flow_id)
   SRV_flow_tide_id <- contentid::store("data_clean/clean_flow_tides_usgs_11455420.csv")
   SRV_flow_tide_file <- contentid::resolve(SRV_flow_tide_id)
+  LIB_flow_id <- contentid::store("data_clean/clean_lib_model_flow.csv")
+  LIB_flow_file <- contentid::resolve(LIB_flow_id)
+
   # water temps
   watertemp_shr_id <- contentid::store("data_clean/SHWharbor_temp_98_20.csv")
   watertemp_shr_file <- contentid::resolve(watertemp_shr_id)
@@ -56,11 +56,11 @@ f_load_daily_covars_models <- function() {
 # Read in data, filter for date, add doy1998 ----------------------------
 
   #  inundation
-  inun <- readr::read_csv(inun_file, ) %>%
+  inun <- readr::read_csv(inun_file) %>%
     dplyr::filter(lubridate::year(date)>=1998) %>%
     dplyr::rename(flow_yolo = yolo_dayflow) %>%
     dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1) %>%
-    dplyr::select(-`...1`)
+    dplyr::select(-`...1`, -water_year)
 
   #  flow @ Verona
   flow_verona <- readr::read_csv(flow_file) %>%
@@ -80,6 +80,15 @@ f_load_daily_covars_models <- function() {
     dplyr::filter(lubridate::year(date)>=1998) %>%
     dplyr::mutate(
       doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+  # flow @ LIB
+
+  flow_LIB <- readr::read_csv(LIB_flow_file) %>%
+    dplyr::select(date, lib_flow_for_GAM) %>%
+    dplyr::rename(flow_LIB = lib_flow_for_GAM) %>%
+    dplyr::filter(lubridate::year(date)>=1998) %>%
+    dplyr::mutate(
+      doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+
 
   #  daymet
   daymet_yolo <- readr::read_csv(daymet_file_sttd) %>%
@@ -189,7 +198,8 @@ f_load_daily_covars_models <- function() {
     dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
 
   daymet_flow <- full_join(flow_verona, daymets3, by = c("doy1998", "date"))
-  daymet_flow_inun <- full_join(daymet_flow, inun, by = c("date", "doy1998"))
+  daymet_flow2 <- full_join(daymet_flow, flow_LIB, by = c("doy1998", "date"))
+  daymet_flow_inun <- full_join(daymet_flow2, inun, by = c("date", "doy1998"))
   daymet_flow_inun_wtRIV <- full_join(daymet_flow_inun, watertemp_RV, by = c("date", "doy1998")) %>%
     filter(date<as.Date("2020-01-01")) # filter to before 2020
   daymet_flow_inun_wtRIV_wtSHR <- full_join(daymet_flow_inun_wtRIV, watertemp_SHR,  by = c("date", "doy1998"))
@@ -218,12 +228,12 @@ f_load_daily_covars_models <- function() {
     tidyr::fill(stage_SRV, .direction = "down") %>%
     tidyr::fill(diurnal_range, .direction = "down") %>%
     tidyr::fill(normalized_diurnal_range, .direction = "down") %>%
-    dplyr::filter(date>as.Date("1999-02-22") & date<as.Date("2020-01-01"))
+    dplyr::filter(date>as.Date("1999-02-22") & water_year<2020) # filter dates
 
 
   # Check that there are data for everyday ------------------------------
   # check for distinct dates:
-  covars_fill %>% distinct(date) %>% nrow() # n=7617
+  covars_fill %>% distinct(date) %>% nrow() # n=7525
 
   # check there are no NAs, except in flow/tide data
   summary(covars_fill)
@@ -284,6 +294,7 @@ f_load_daily_covars_models <- function() {
     dplyr::rename(Q_above = flow_verona,
            Q_yolo = flow_yolo,
            Q_below = flow_mean_SRV,
+           Q_cache = flow_LIB,
            precip_yolo=daymet_precip_mm_yolo,
            precip_below=daymet_precip_mm_below,
            precip_above=daymet_precip_mm_above,

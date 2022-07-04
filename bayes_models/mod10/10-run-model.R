@@ -2,7 +2,7 @@
 # Q, Qant, Rad, inund_days
 # Accounts for random effect of site (intercept-only, due to low sample size)
 # Explore lags between increases in Q (or inund_days) and chl, 63-84 d lags not unusual, but may be due to all Q discharge coming from Verona while chl at downstream sites.  Tried some wavelets but didn't
-# see anything useful.
+# see anything useful. Does not apply new time lags in this model (see mod11)
 
 # Libraries ---------------------------------------------------------------
 
@@ -50,7 +50,7 @@ covars_2016_17 <- covars %>%
   filter(date > "2016-10-01", date < "2017-07-01")
 
 zoom_in_2016_17 <- left_join(chl_2016_17, covars_2016_17) %>%
-  select(station, date, doy1998, chl, inund.days, Srad_mwk, Q)
+  select(station, date, doy1998, chl, inund_days, Srad_mwk, Q)
 
 zoom_in_2016_17 %>%
   pivot_longer(-c(date, station), names_to = "Variable", values_to = "Measurement")
@@ -110,7 +110,7 @@ as.numeric(difftime(lubridate::ymd(zoom_in_2016_17_day$date[9]),
                     units = "days")) # 95 days between max slope increases of chl and Q
 
 # Inundation days is first 1
-start_inund <- covars_2016_17 %>% filter(inund.days == "1")
+start_inund <- covars_2016_17 %>% filter(inund_days == "1")
 
 as.numeric(difftime(lubridate::ymd(zoom_in_2016_17_day$date[9]),
                     lubridate::ymd(start_inund$date[1]),
@@ -124,7 +124,7 @@ chl_2018_20 <- as.data.frame(chla_all) %>% filter(date > "2018-10-01", date < "2
 covars_2018_20 <- covars %>%
   filter(date > "2018-10-01", date < "2020-03-01")
 zoom_in_2018_20 <- left_join(chl_2018_20, covars_2018_20) %>%
-  select(station, date, doy1998, chl, inund.days, Srad_mwk, Q)
+  select(station, date, doy1998, chl, inund_days, Srad_mwk, Q)
 
 zoom_in_2018_20_day <- zoom_in_2018_20 %>%
   select(date, station, doy1998, chl) %>%
@@ -183,7 +183,7 @@ as.numeric(difftime(lubridate::ymd(zoom_in_2018_20_day$date[17]),
          units = "days")) # 84 days between max slope increases of chl and Q
 
 # Inundation days is first 1
-start_inund <- covars_2018_20%>% filter(inund.days == "1")
+start_inund <- covars_2018_20%>% filter(inund_days == "1")
 
 as.numeric(difftime(lubridate::ymd(zoom_in_2018_20_day$date[17]),
                     lubridate::ymd(start_inund$date[1]),
@@ -217,7 +217,7 @@ plot(wt.t1, plot.cb = TRUE, plot.phase = FALSE)
 # wt.avg(my.wy, siglvl=0.05, sigcol="red")
 
 # wavelet for inundation days
-di_inund <- data.frame(d1$date, d1$inund.days)
+di_inund <- data.frame(d1$date, d1$inund_days)
 wt.t2 = wt(di_inund)
 par(oma = c(0, 0, 0, 1), mar = c(5, 4, 4, 5) + 0.1)
 plot(wt.t2, plot.cb = TRUE, plot.phase = FALSE)
@@ -234,7 +234,7 @@ plot(wtc.t1t2, plot.cb = TRUE, plot.phase = TRUE)
 datlist <- list(chl = log(chla_all$chl),
                 Q = c(covars$Q),
                 Srad_mwk = c(covars$Srad_mwk),
-                inund_days = c(covars$inund.days),
+                inund_days = c(covars$inund_days),
                 station_id = chla_all$station_id,
                 Nstation = length(unique(chla_all$station_id)),
                 doy1998 = chla_all$doy1998,
@@ -288,7 +288,7 @@ jm_coda <- coda.samples(jm,
 
 # Load Saved Model --------------------------------------------------------
 
-#load("bayes_models/mod10/run_2022405.rda")
+load("bayes_models/mod10/run_20220405.rda")
 
 # Visualize
 mcmcplot(jm_coda, col = c("red", "blue", "green"))

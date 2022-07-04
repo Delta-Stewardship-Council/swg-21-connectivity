@@ -1,5 +1,5 @@
 # Create a brms version of model based on mod06 (see also mod07 for rethinking version)
-# Q, Rad, Wtemp, inund_days
+# Q, Rad,
 # Accounts for random effect of site (intercept-only, due to low sample size)
 
 
@@ -54,7 +54,7 @@ datlist <- list(chl = log(chla_all$chl),
 #nlagA = 5, # index for for loop
 #alphaA = rep(1, 5)) # for prior
 
-# Adjust Data for use with rethinking model -------------------------------
+# Adjust Data for use with brms model -------------------------------
 Q_2 <- covars$Q[c(chla_all$doy1999),]
 Srad_mwk_2 <- covars$Srad_mwk[c(chla_all$doy1999),]
 Wtemp_RIV_mwk_2 <- covars$Wtemp_RIV_mwk[c(chla_all$doy1999),]
@@ -364,4 +364,4 @@ rm6 <- ulam(
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod06/run_20211220.rda")
+

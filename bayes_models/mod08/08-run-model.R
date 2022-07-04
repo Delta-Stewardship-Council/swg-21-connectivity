@@ -1,5 +1,5 @@
 # Create input for SAM model
-# Q, Qant, Rad
+# Q, Rad (deseasonalized), Wtemp (deseasonalized), inund_days
 # Accounts for random effect of site (intercept-only, due to low sample size)
 
 
