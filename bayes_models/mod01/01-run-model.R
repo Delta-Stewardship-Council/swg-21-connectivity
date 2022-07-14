@@ -20,7 +20,7 @@ library(postjags)
 
 # Bring in Data For Model -------------------------------------------------
 
-source("scripts/functions/f_make_bayes_model_dataset.R")
+source("scripts/functions/f_make_bayes_mod01_dataset.R")
 mod_df <- f_make_bayes_model_dataset()
 
 # pull out datasets
