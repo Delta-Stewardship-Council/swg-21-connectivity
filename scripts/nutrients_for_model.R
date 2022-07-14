@@ -273,4 +273,4 @@ nuts_month_col_final <- subset(nuts_month_col, select = c(location, month, inund
 
 #write .csv--------------------------------
 
-write.csv(nuts_month_col_final, "data_model/nutrients_for_model")
+write.csv(nuts_month_col_final, "data_model/nutrients_for_model.csv")
