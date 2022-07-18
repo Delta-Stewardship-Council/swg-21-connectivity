@@ -163,6 +163,22 @@ corplot1
 library(plotly)
 ggplotly(corplot1)
 
+#summarize new dat to see what needs to be imputed?
+#try this - add year and month_year coloumn
+new_dat$year <- lubridate::year(new_dat$date)
+
+new_dat$month_year <- month_year(new_dat$date)
+
+new_dat$month_year <- format(new_dat$date, '%Y-%m')
+
+#summarize data by month_year to look for gaps
+
+din_test <- new_dat %>%
+  group_by(month_year, location) %>%
+  summarize(mean_din = mean(din))
+
+summary(din_test)
+
 # drop diss_nitrite_nitrate and longitude, both are above 0.7
 # drop ammonia, it is ~0.62-0.68 and correlated with long/lat and DIN
 new_dat <- new_dat %>%
@@ -220,52 +236,85 @@ nuts_month_col$DIN_for_model <- ifelse(is.na(nuts_month_col$din), nuts_month_col
 
 nuts_month_col$orthop_for_model <- ifelse(is.na(nuts_month_col$diss_orthophos), nuts_month_col$month_orthop, nuts_month_col$diss_orthophos)
 
+nuts_month_col$din_flag <- ifelse(is.na(nuts_month_col$din), "0", "1")
+
+nuts_month_col$din_flag <- as.numeric(nuts_month_col$din_flag)
+
+nuts_month_col$orthop_flag <- ifelse(is.na(nuts_month_col$diss_orthophos), "0", "1")
+
+nuts_month_col$orthop_flag <- as.numeric(nuts_month_col$orthop_flag)
+
 #cache - higher mean DIN concentration and greater range during non-inundation
 
 cache <- subset(nuts_month_col, location=="cache")
-plot(cache$date, cache$DIN_for_model)
+plot(cache$date, cache$DIN_for_model, col = ifelse(cache$din_flag>0, "1", "2"), xlab = "date", ylab = "din_mgL", main = "Cache din")
+legend("topleft", legend = c("discrete (n = 89)", "mean (n = 104)"), col = 1:2, pch = 1)
 boxplot(cache$DIN_for_model~cache$inundation)
+
+print(table(cache$din_flag)) #means = 104, #discrete = 89
 
 #cache - slightly higher mean ortho-p concentration and greater range during non-inundation
 
 cache <- subset(nuts_month_col, location=="cache")
-plot(cache$date, cache$orthop_for_model)
+plot(cache$date, cache$orthop_for_model, col = ifelse(cache$orthop_flag>0, "1", "2"), xlab = "date", ylab = "orthop_mgL", main = "Cache orthop")
+legend("top", legend = c("discrete (n = 110)", "mean (n = 83)"), col = 1:2, pch = 1)
 boxplot(cache$orthop_for_model~cache$inundation)
 
-#above - higher mean DIN concentration during inundation
-above <- subset(nuts_month_col, location=="above")
-plot(above$date, above$DIN_for_model)
-boxplot(above$DIN_for_model~above$inundation)
+print(table(cache$orthop_flag)) #means = 83, #discrete = 110
 
 #above - higher mean DIN concentration during inundation
 above <- subset(nuts_month_col, location=="above")
-plot(above$date, above$orthop_for_model)
+plot(above$date, above$DIN_for_model, col = ifelse(above$din_flag>0, "1", "2"), xlab = "date", ylab = "din_mgL", main = "Above din")
+legend("top", legend = c("discrete (n = 96)", "mean (n = 224)"), col = 1:2, pch = 1)
+boxplot(above$DIN_for_model~above$inundation)
+
+print(table(above$din_flag)) #means = 224, #discrete = 96
+
+#above - higher mean DIN concentration during inundation
+
+above <- subset(nuts_month_col, location=="above")
+plot(above$date, above$orthop_for_model, col = ifelse(above$orthop_flag>0, "1", "2"), xlab = "date", ylab = "orthop_mgL", main = "Above orthop")
+legend("top", legend = c("discrete (n = 130)", "mean (n = 190)"), col = 1:2, pch = 1)
 boxplot(above$orthop_for_model~above$inundation)
+
+print(table(above$orthop_flag)) #means = 190, #discrete = 130
 
 #below - higher mean ortho-p concentration inundation but greater range during non-inundatation
 
 below <- subset(nuts_month_col, location=="below")
-plot(below$date, below$DIN_for_model)
+plot(below$date, below$DIN_for_model, col = ifelse(below$din_flag>0, "1", "2"), xlab = "date", ylab = "din_mgL", main = "Below din")
+legend("top", legend = c("discrete (n = 194)", "mean (n = 162)"), col = 1:2, pch = 1)
 boxplot(below$DIN_for_model~below$inundation)
+
+print(table(below$din_flag)) #means = 162, #discrete = 194
 
 #below - slightly higher mean ortho-p concentration and similar range during inundation and
 #non-inundation
 
 below <- subset(nuts_month_col, location=="below")
-plot(below$date, below$orthop_for_model)
+plot(below$date, below$orthop_for_model, col = ifelse(below$orthop_flag>0, "1", "2"), xlab = "date", ylab = "orthop_mgL", main = "Below orthop")
+legend("top", legend = c("discrete (n = 196)", "mean (n = 160)"), col = 1:2, pch = 1)
 boxplot(below$orthop_for_model~below$inundation)
+
+print(table(below$orthop_flag)) #means = 160, #discrete = 196
 
 #yolo - higher mean DIN concentration and greater range during non-inundation
 
 yolo <- subset(nuts_month_col, location=="yolo")
-plot(yolo$date, yolo$DIN_for_model)
+plot(yolo$date, yolo$DIN_for_model, col = ifelse(yolo$din_flag>0, "1", "2"), xlab = "date", ylab = "din_mgL", main = "Yolo din")
+legend("top", legend = c("discrete (n = 194)", "mean (n = 162)"), col = 1:2, pch = 1)
 boxplot(yolo$DIN_for_model~yolo$inundation)
+
+print(table(yolo$din_flag)) #means = 189, discrete = 175
 
 #yolo - higher mean ortho-p concentration and greater range during non-inundation
 
 yolo <- subset(nuts_month_col, location=="yolo")
-plot(yolo$date, yolo$orthop_for_model)
+plot(yolo$date, yolo$orthop_for_model, col = ifelse(yolo$orthop_flag>0, "1", "2"), xlab = "date", ylab = "orthop_mgL", main = "Yolo orthop")
+legend("top", legend = c("discrete (n = 185)", "mean (n = 179)"), col = 1:2, pch = 1)
 boxplot(yolo$orthop_for_model~yolo$inundation)
+
+print(table(yolo$orthop_flag)) #means = 179, discrete = 185
 
 #subset final df ------------------------
 
