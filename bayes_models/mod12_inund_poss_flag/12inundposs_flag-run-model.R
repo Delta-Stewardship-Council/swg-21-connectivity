@@ -181,7 +181,7 @@ coda.rep_sum <- tidyMCMC(coda.rep, conf.int = TRUE, conf.method = "HPDinterval")
 pred <- cbind.data.frame(chl = datlist$chl, coda.rep_sum)
 
 m1 <- lm(pd.mean ~ chl, data = pred)
-summary(m1) # Adjusted R2 = 0.1484
+summary(m1) # Adjusted R2 = 0.3698
 
 pred %>%
   filter(!is.na(chl)) %>%

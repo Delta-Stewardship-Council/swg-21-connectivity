@@ -95,7 +95,7 @@ jm_coda <- coda.samples(jm,
 
 # Load Saved Model --------------------------------------------------------
 
-#load("bayes_models/mod12_inund_poss/run_20220621.rda")
+load("bayes_models/mod12_inund_poss/run_20220621.rda")
 
 mcmcplot(jm_coda, col = c("red", "blue", "green"))
 # Look at R-hat values. >1.02 would indicate did not converge
@@ -180,7 +180,7 @@ coda.rep_sum <- tidyMCMC(coda.rep, conf.int = TRUE, conf.method = "HPDinterval")
 pred <- cbind.data.frame(chl = datlist$chl, coda.rep_sum)
 
 m1 <- lm(pd.mean ~ chl, data = pred)
-summary(m1) # Adjusted R2 = 0.1484
+summary(m1) # Adjusted R2 = 0.3688
 
 pred %>%
   filter(!is.na(chl)) %>%
