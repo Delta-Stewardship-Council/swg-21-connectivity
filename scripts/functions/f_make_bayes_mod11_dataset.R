@@ -17,7 +17,7 @@ f_make_bayes_mod11_dataset <- function() {
   # to restrict analysis to Rio Vista, station_wq_chl = 657, starting in 1999
   chla_RV <- chla_all %>% filter(date > "1999-02-22") %>% filter(station_wq_chl == "657")
 
-  covars_RV <- mod_df %>% select(-chlorophyll, -method, -latitude, -longitude, -source, -doy1998) %>%
+  covars_RV <- mod_df %>% select(-chlorophyll, -latitude, -longitude, -source, -doy1998) %>%
     filter(is.na(station_wq_chl)| station_wq_chl == "657") %>%
     filter(region == "below") %>% filter(date > "1999-02-22")
 
@@ -32,7 +32,7 @@ f_make_bayes_mod11_dataset <- function() {
   covars_checkNAs <- covars_RV %>% filter(date > "1999-02-22") %>% filter(is.na(year))
   covars_datesNAs <- covars_checkNAs %>% select(date)
 
-  covars_RV_fillNAs <- mod_df %>% select(-chlorophyll, -method, -latitude, -longitude, -source, -doy1998) %>%
+  covars_RV_fillNAs <- mod_df %>% select(-chlorophyll, -latitude, -longitude, -source, -doy1998) %>%
     filter(region == "below") %>% filter(date > "1999-02-22") %>%
     filter(station_wq_chl != "657")
 

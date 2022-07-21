@@ -7,21 +7,21 @@ library(glue)
 library(tidyr)
 library(zoo)
 
-f_make_bayes_mod12inundposs_dataset <- function() {
+f_make_bayes_mod13inundnotposs_dataset <- function() {
 
   mod_df <- read_csv("data_model/model_covars_chla_fulljoin.csv") %>%
   mutate(rdoy  = lubridate::yday(date) + 92,
         dowy = ifelse(rdoy > 366, rdoy - 366, rdoy))
 
-  # constrain to "day of water year" when Yolo Bypass gets inundated
+  # constrain to "day of water year" when Yolo Bypass is not getting inundated
   mod_df.idys = subset(mod_df, mod_df$inundation == 1)
   range(mod_df.idys$dowy)
   # min "day of water year" 65; max 237
 
-  mod_df.idys = subset(mod_df, (mod_df$dowy >= 65 & mod_df$dowy <= 237))
+ mod_df.nidys <- mod_df %>% filter(dowy < 65 | dowy > 237)
 
   # pull out datasets
-  chla_all <- mod_df.idys %>% select(region, station_wq_chl, date, chlorophyll) %>%
+  chla_all <- mod_df.nidys %>% select(region, station_wq_chl, date, chlorophyll) %>%
     mutate(doy1999 = as.numeric(difftime(date, as.Date("1999-02-22"), "day")))
   # starting in 1999, and don't have covars beyond 2019-09-30
   chla_yolo <- chla_all %>% filter(date > "1999-02-22", date < "2019-10-01") %>% filter(region == "yolo") %>%
@@ -89,8 +89,8 @@ f_make_bayes_mod12inundposs_dataset <- function() {
 
   # write out
   # if needed write to rds files:
-  write_rds(chla_yolo, "bayes_models/mod12_inund_poss/mod_chla_data.rds")
-  write_rds(covars_yolo_scaled, file = "bayes_models/mod12_inund_poss/mod_covariates_complete.rds")
+  write_rds(chla_yolo, "bayes_models/mod13_yolo_inund_notposs/mod_chla_data.rds")
+  write_rds(covars_yolo_scaled, file = "bayes_models/mod13_yolo_inund_notposs/mod_covariates_complete.rds")
   cat("Model datasets saved in list:\nmodel_df$covars and model_df$chla_all")
 
   # return data

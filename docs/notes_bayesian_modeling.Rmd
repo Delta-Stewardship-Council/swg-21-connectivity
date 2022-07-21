@@ -17,17 +17,17 @@ The objective of this model is to determine how environmental variables during p
 
 Better understanding of this issue could inform implementation of the Delta Plan, Delta Adapts climate change scenario planning, ITP and BiOp restoration targets and performance metrics. Increasing floodplain connectivity could export fish food downstream, improve native fish survival and reduce reliance on hatcheries.
 
-Jessica Guo provided code for Model 1, off of which all subsequent model iterations were derived.  The code for iterations of the Bayesian model are located in numbered subfolders (e.g., mod01) within the folder /bayes_models.  Model-specific data are generated via f_make_bayes_x_dataset.R files, where x corresponds to the model number.  As appropriate, model subfolders contain output figures in /fig_out folders and saved initial (start) parameter values in /inits folders. For JAGS models, the R script is a wrapper that brings in and compiles the model-specific data, generates and/or loads initial values, calls the JAGS model (sam_model.JAGS), and visualizes model outputs. NAs were filled through ...
+Jessica Guo provided code for Model 1, off of which all subsequent model iterations were derived.  The code for iterations of the Bayesian model are located in numbered subfolders (e.g., mod01) within the folder /bayes_models.  Model-specific data are generated via scripts/functions/f_make_bayes_x_dataset.R files, where x corresponds to the model number.  As appropriate, model subfolders contain output figures in /fig_out folders and saved initial (start) parameter values in /inits folders. For JAGS models, the R script is a wrapper that brings in and compiles the model-specific data, generates and/or loads initial values, calls the JAGS model (sam_model.JAGS), and visualizes model outputs. See R_workflow.pptx and references to scripts therein for data sources and initial processing.
 
 ## Response Variable
 
-In all model iterations, log(chl) was used as the response variable, and in many models the time series spanned date >= 1998-01-01 and < 2020-10-01, with daily measurements as possible.  Sources: IEP Integrated WQ , 1998-2021: USGS (Cloern); EMP; USBR; USGS CA Water Science Center, 2012-2021; DWR Yolo Bypass Monitoring, Chla: 2009-2021
+In all model iterations, log(chl) was used as the response variable, and in many models the time series spanned date >= 1998-01-01 and < 2020-10-01, with daily measurements as possible.  
 
 ## Covariates of Interest
 
-* Sampling station for chlorophyll measurements (random effect); 7 stations (USBR 16, 34, 44, USGS 657, 11455315, 11455350, 11455385)
-* Flow (discharge) on the same day as the chlorophyll observation (Source: DWR Dayflow, Q)
-* Flow at various lags up to 3 weeks prior to chlorophyll sampling (Source: DWR Dayflow, Q)
+* Sampling station for chlorophyll measurements (random effect); 7 stations (USBR 16, 34, 44, USGS 657, 11455315, 11455350, 11455385) for first 10 models, For mod11, source is Rio Vista station 657 (lat = 38.15167, lon = -121.6883).  Subsequent regional analyses have yolo (STTD; bypass), Rio Vista 11455420 (below), SHR (upstream), and Pro (Cache).
+* Flow (discharge) on the same day as the chlorophyll observation 
+* Flow at various lags up to 3 weeks prior to chlorophyll sampling 
 * Solar radiation - mean daily (Source: daymet), for the first 10 models this is from Yolo Bypass (lat = 38.307857513, lon = -121.692428589).  For mod11, source is Rio Vista station 657 (lat = 38.15167, lon = -121.6883).  Subsequent regional analyses have yolo (STTD; bypass), Rio Vista 657 (below), SHR (upstream), and Pro (Cache).
   SHR (upstream): 38.53188 -121.5280
   STTD (yolo): 	38.35338 -121.6430
@@ -35,10 +35,10 @@ In all model iterations, log(chl) was used as the response variable, and in many
   657 (downstream): 38.15167 -121.6883
   
 * Nutrients (dissolved inorganic nitrogen; DIN) (Sources: IEP Integrated WQ , 1998-2021: USGS (Cloern); EMP; USBR; USGS CA Water Science Center, 2012-2021; DWR Yolo Bypass Monitoring, Chla: 2009-2021)
-* Water temperature - max daily (Source: DWR/USBR (?) data at Rio Vista, or Yolo Bypass)
-* Air temperature - max daily (Source: daymet)
-* Tidal stage (Source: )
-* Number of days of floodplain inundation (Source: DWR dayflow Q and river stage)
+* Water temperature - max daily, although also range of daily values for >= Mod11
+* Air temperature - max daily 
+* Tidal stage 
+* Number of days of floodplain inundation 
 * Other metrics of water quality
 
 ## General model notes
