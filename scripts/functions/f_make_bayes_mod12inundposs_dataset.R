@@ -18,7 +18,7 @@ f_make_bayes_mod12inundposs_dataset <- function() {
   range(mod_df.idys$dowy)
   # min "day of water year" 65; max 237
 
-  mod_df.idys = subset(mod_df.idys, (mod_df.idys$dowy >= 65 & mod_df.idys$dowy <= 237))
+  mod_df.idys = subset(mod_df, (mod_df$dowy >= 65 & mod_df$dowy <= 237))
 
   # pull out datasets
   chla_all <- mod_df.idys %>% select(region, station_wq_chl, date, chlorophyll) %>%
@@ -27,7 +27,7 @@ f_make_bayes_mod12inundposs_dataset <- function() {
   chla_yolo <- chla_all %>% filter(date > "1999-02-22", date < "2019-10-01") %>% filter(region == "yolo") %>%
    drop_na()
 
-  covars_yolo <- mod_df.idys %>% select(-chlorophyll,-latitude, -longitude, -source, -doy1998) %>%
+  covars_yolo <- mod_df %>% select(-chlorophyll,-latitude, -longitude, -source, -doy1998) %>%
     filter(region == "yolo") %>% filter(date > "1999-02-22")
 
 
