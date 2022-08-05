@@ -1,0 +1,275 @@
+---
+title: "diagnostic_plots"
+author: "Pascale Goertler"
+date: "2022-08-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+```
+
+## Diagnostic plots (8/4/2022)
+# look at each varaible against chl, by region and inundation season
+# look at each varaible against dowy with chl and possible interactions
+
+```{r library}
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(tidyverse)
+```
+
+## Get data
+
+```{r data, echo=FALSE}
+# from make_gam_byregion.R
+alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
+  mutate(month = lubridate::month(date),
+         year  = lubridate::year(date),
+         rdoy  = lubridate::yday(date) + 92,
+         week  = lubridate::week(date),
+         water_year = ifelse(month > 9, year + 1, year),
+         dowy = ifelse(rdoy > 366, rdoy - 366, rdoy))
+
+inundation_yes <- subset(alldata0, inundation ==1)
+min(inundation_yes$dowy) #65
+max(inundation_yes$dowy) #215
+
+alldata0$season <- ifelse(alldata0$dowy >= 65 & alldata0$dowy <= 215, "inundation_possible", "inundation_not_possible")
+```
+
+# each variable
+```{r chl, echo=FALSE}
+ggplot(alldata0, aes(WTmwk, chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(WTrangemwk, chlorophyll, colour = inundation)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(Q_sday, chlorophyll, colour = inundation)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(inund_days, chlorophyll, colour = WTrangemwk)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+# highest chl values for 'below' are during inudation not possible season
+
+ggplot(alldata0, aes(total_inund_last_year, chlorophyll, colour = inundation)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+# highest chl values in 'yolo' were no or low inundation last year with inundation during chl collection (4 out of 6)
+
+ggplot(alldata0, aes(days_since_last_inundation, chlorophyll, colour = Q_sday)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(Sradmwk, chlorophyll, colour = inund_days)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+```
+
+
+# day of water year vs mean water temperature for the week
+```{r WT, echo=FALSE}
+ggplot(alldata0, aes(dowy, WTmwk, colour = log(Q_sday), size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+# something si wring with the Qsday in Cache... returning NAs
+
+ggplot(alldata0, aes(dowy, WTmwk, colour = inund_days, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, WTmwk, colour = total_inund_last_year, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, WTmwk, colour = days_since_last_inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+```
+# day of water year vs range in water temperature for the week
+```{r range, echo=FALSE}
+ggplot(alldata0, aes(dowy, WTrangemwk, size = Q_sday, colour = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+# range is only high in yolo and Cache (could be habitat complexity from inundation?)
+
+ggplot(alldata0, aes(dowy, WTrangemwk, colour = total_inund_last_year, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, WTrangemwk, colour = days_since_last_inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+# not as seasonal as we thought... 
+```
+
+# look into drainage period for yolo
+```{r drainage, echo=FALSE}
+yolo <- subset(alldata0, region == "yolo" & water_year == "2011" | water_year == "2016" | water_year == "2017" | water_year == "2019")
+
+hist(yolo$WTrangemwk)
+
+yolo$cols <- ifelse(yolo$WTrangemwk > 14, "red",
+                    ifelse(yolo$WTrangemwk <14 & yolo$WTrangemwk >= 5, "blue",
+                           ifelse(yolo$WTrangemwk <5 & yolo$WTrangemwk > 1, "darkgreen", "orange")))
+
+plot(yolo$dowy, yolo$Q_sday, cex = (yolo$inund_days/10), color = yolo$cols)
+
+ggplot(yolo, aes(dowy, Q_sday, size = inund_days)) + 
+  geom_point(aes(colour = WTrangemwk))+
+  scale_color_gradientn(colours = yolo$cols,
+                       values = yolo$WTrangemwk)+ 
+  facet_grid(vars(water_year))
+
+hist(yolo$WTrangemwk)
+
+# two large values in 2016 (might be outliers?) throughing off the gradient in plot
+yolo_sub <- subset(yolo, WTrangemwk < 14)
+ggplot(yolo_sub, aes(dowy, Q_sday, size = inund_days)) + 
+  geom_point(aes(colour = WTrangemwk))+
+  facet_grid(vars(water_year))
+
+# WTrangemwk is higher after flooding, but not showing a clear pattern with drainage (continues into summer)
+
+hist(alldata0$WTrangemwk) # might need to investigate outliers for this variable 
+boxplot(alldata0$WTrangemwk)
+dotchart(alldata0$WTrangemwk)
+```
+
+# day of water year vs solar radiation 
+```{r Srad, echo=FALSE}
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = Q_sday, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = total_inund_last_year, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = days_since_last_inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = chlorophyll, size = inund_days)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = WTmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Sradmwk, colour = WTrangemwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+```
+
+# flow
+```{r flow, echo=FALSE}
+ggplot(alldata0, aes(dowy, Q_sday, colour = inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Q_sday, colour = Sradmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Q_sday, colour = WTmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Q_sday, colour = WTrangemwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Q_sday, colour = total_inund_last_year, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Q_sday, colour = days_since_last_inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, Q_sday, colour = chlorophyll, size = inund_days)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+```
+
+# inundation
+```{r inundation, echo=FALSE}
+ggplot(alldata0, aes(dowy, inund_days, colour = Sradmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, inund_days, colour = WTmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, inund_days, colour = WTrangemwk, size = Q_sday)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, inund_days, colour = total_inund_last_year, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+```
+
+# inundation other metrics that are not directly related to what is happening on the day of chl collection (lag variables)
+```{r metrics, echo=FALSE}
+ggplot(alldata0, aes(dowy, total_inund_last_year, colour = inundation, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, total_inund_last_year, colour = Sradmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, total_inund_last_year, colour = WTmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, total_inund_last_year, colour = WTrangemwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, total_inund_last_year, colour = Q_sday, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+#
+
+ggplot(alldata0, aes(dowy, days_since_last_inundation, colour = inund_days, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, days_since_last_inundation, colour = Sradmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, days_since_last_inundation, colour = WTmwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, days_since_last_inundation, colour = WTrangemwk, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+
+ggplot(alldata0, aes(dowy, days_since_last_inundation, colour = Q_sday, size = chlorophyll)) + 
+  geom_point()+ 
+  facet_grid(vars(region), vars(season))
+# opposite of inundation and Qsday
+```

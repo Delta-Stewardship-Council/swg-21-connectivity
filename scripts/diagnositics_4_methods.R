@@ -128,3 +128,6 @@ bwplot(inundation ~  din | region, data = chl)
 
 # independence
 acf(chl_rmnas$chlorophyll) # nope
+
+
+
