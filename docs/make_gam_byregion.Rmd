@@ -92,9 +92,10 @@ alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
                               TRUE ~ "months"),
          tily_fac = as.factor(tily_fac),
          inund_fac = as.factor(inund_fac)) %>%
-  rename(station  = station_wq_chl)
+  rename(station = station_wq_chl, tily = total_inund_last_year, 
+         dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
 
-alldatalook <- select(alldata0, date,total_inund_last_year, tily_fac)
+alldatalook <- select(alldata0, date, tily, tily_fac)
 str(alldata0)
 
 
@@ -136,11 +137,10 @@ ggplot(downstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_w
 
 1. try constraining the time series
 2. categorize inundation (high, low, no_inundation)
-3. year as random effect
+3. year as random effect (didn't do)
 4. plots of normalized data
 5. plots of response vs. covar
 6. residuals mean 0 and variance similar across the range
-
 
 1. "Days_since_last_inundation"
 2. "days_of_inundation_until_now"
@@ -157,47 +157,45 @@ Model 5: log_chla = te(Q_sday, dowy, days_since_inundation, by = inundated)
 
 ```{r}
 gamd0 <- gam(log_chla ~ 1, method = "REML", data = d.idys, family = "gaussian")
-gamd1.0 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.1 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
-gamd1.2 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.3 <- gam(log_chla ~ te(log_idys, dowy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.4 <- gam(log_chla ~ te(log_qsdy, dowy, by = inund_fac),  method = "REML", data = d.idys, family = "gaussian")
-gamd1.5 <- gam(log_chla ~ s(WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.6 <- gam(log_chla ~ s(WTmwk, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
-gamd1.7 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(WTmwk, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
-gamd1.8 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(Sradmwk, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
-gamd1.9 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.10 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.11 <- gam(log_chla ~ te(log_idys, Sradmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.12 <- gam(log_chla ~ te(log_idys, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.13 <- gam(log_chla ~ te(log_qsdy, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.14 <- gam(log_chla ~ te(log_idys, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.0 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.1 <- gam(log_chla ~ s(log_qsdy) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.2 <- gam(log_chla ~ s(log_idys), method = "REML", data = d.idys, family = "gaussian")
+gamd1.3 <- gam(log_chla ~ s(log_idys) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.4 <- gam(log_chla ~ s(WTmwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.5 <- gam(log_chla ~ s(WTmwk) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.6 <- gam(log_chla ~ s(Sradmwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.7 <- gam(log_chla ~ s(Sradmwk) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.8 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.9 <- gam(log_chla ~ s(WTrangemwk) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.10 <- gam(log_chla ~ s(diurnal_range), method = "REML", data = d.idys, family = "gaussian")
+gamd1.11 <- gam(log_chla ~ s(diurnal_range) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.12 <- gam(log_chla ~ s(tily), method = "REML", data = d.idys, family = "gaussian")
+gamd1.13 <- gam(log_chla ~ s(tily) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.14 <- gam(log_chla ~ s(dsli), method = "REML", data = d.idys, family = "gaussian")
+gamd1.15 <- gam(log_chla ~ s(dsli) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
 
-gamd1.15 <- gam(log_chla ~ s(total_inund_last_year), method = "REML", data = d.idys, family = "gaussian")
-gamd1.16 <- gam(log_chla ~ s(days_since_last_inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.17 <- gam(log_chla ~ s(diurnal_range), method = "REML", data = d.idys, family = "gaussian")
-gamd1.18 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = d.idys, family = "gaussian")
-gamd1.19 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.16 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+gamd1.17 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.18 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+gamd1.19 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+gamd1.20 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+gamd1.21 <- gam(log_chla ~ te(log_qsdy, dowy, by = inund_fac),  method = "REML", data = d.idys, family = "gaussian")
 
-gamd1.20 <- gam(log_chla ~ te(log_qsdy, total_inund_last_year, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.21 <- gam(log_chla ~ te(log_qsdy, days_since_last_inundation, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.22 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.23 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.24 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.22 <- gam(log_chla ~ te(log_qsdy, tily, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.23 <- gam(log_chla ~ te(log_qsdy, dsli, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.24 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.25 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.26 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = d.idys, family = "gaussian")
 
+gamd1.27 <- gam(log_chla ~ te(log_qsdy, tily, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.28 <- gam(log_chla ~ te(log_qsdy, dsli, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.29 <- gam(log_chla ~ te(log_qsdy, diurnal_range, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.30 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
+gamd1.31 <- gam(log_chla ~ te(log_qsdy, WTmwk, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
 
-AIC(gamd1.20, gamd1.21, gamd1.22, gamd1.23, gamd1.24, gamd1.13, gamd1.2)
-AIC(gamd0, gamd1.15, gamd1.16, gamd1.17, gamd1.18, gamd1.19)
-# total_inund_last_year, days_since_last_inundation, diurnal_range, WTrangemwk
-
-AIC(gamd0, gamd1.0, gamd1.1, gamd1.2, gamd1.3, gamd1.4, gamd1.5, gamd1.6, gamd1.7, gamd1.8, gamd1.9, gamd1.10, gamd1.11, gamd1.12, gamd1.13, gamd1.14)
-#ggplot(alldata0, aes(date, WTrangemwk)) + geom_line(aes(color = region))
-#ggplot(alldata0, aes(doy1998, WTmwk)) + geom_line(aes(color = region))
-
-resd <- (AIC(gamd0, gamd1.0, gamd1.1, gamd1.2, gamd1.3, gamd1.4, gamd1.5, gamd1.6, gamd1.7, gamd1.8, gamd1.9, gamd1.10, gamd1.11, gamd1.12, gamd1.13, gamd1.14, gamd1.15, gamd1.16, gamd1.17, gamd1.18, gamd1.19, gamd1.20, gamd1.21, gamd1.22, gamd1.23, gamd1.24))
+resd <- (AIC(gamd0, gamd1.0, gamd1.1, gamd1.2, gamd1.3, gamd1.4, gamd1.5, gamd1.6, gamd1.7, gamd1.8, gamd1.9, gamd1.10, gamd1.11, gamd1.12, gamd1.13, gamd1.14, gamd1.15, gamd1.16, gamd1.17, gamd1.18, gamd1.19, gamd1.20, gamd1.21, gamd1.22, gamd1.23, gamd1.24,
+gamd1.25, gamd1.26, gamd1.27, gamd1.28, gamd1.29, gamd1.30, gamd1.31))
 resd %>% arrange(AIC)
-
-
 
 gam.check(gamd1.3)
 gam.check(gamd1.13)
@@ -486,7 +484,9 @@ lines(x = gamd.i1$log_qsdy, y = gamd.i1$fit, lwd = 2, col = rgb(20, 20, 150, alp
 
 
 ## Yolo
+
 ### Filter to yolo
+
 ```{r}
 yolo <- alldata %>% filter(region == "yolo")
 
@@ -497,6 +497,7 @@ yo.idys <- yolo_scaled
 ```
 
 ### Model
+
 ```{r}
 gamyo0 <- gam(log_chla ~ 1, method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.0 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
@@ -515,33 +516,30 @@ gamyo1.12 <- gam(log_chla ~ te(log_idys, WTmwk, by = inundation), method = "REML
 gamyo1.13 <- gam(log_chla ~ te(log_qsdy, dowy), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.14 <- gam(log_chla ~ te(log_idys, dowy), method = "REML", data = yo.idys, family = "gaussian")
 
-gamyo1.15 <- gam(log_chla ~ s(total_inund_last_year, k = 6), method = "REML", data = yo.idys, family = "gaussian")
-gamyo1.16 <- gam(log_chla ~ s(days_since_last_inundation), method = "REML", data = yo.idys, family = "gaussian")
+gamyo1.15 <- gam(log_chla ~ s(tily, k = 6), method = "REML", data = yo.idys, family = "gaussian")
+gamyo1.16 <- gam(log_chla ~ s(dsli), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.17 <- gam(log_chla ~ s(diurnal_range), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.18 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.19 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = yo.idys, family = "gaussian")
 
-gamyo1.20 <- gam(log_chla ~ te(log_qsdy, total_inund_last_year, dowy), method = "REML", data = yo.idys, family = "gaussian") # BEST MODEL
+gamyo1.20 <- gam(log_chla ~ te(log_qsdy, tily, dowy), method = "REML", data = yo.idys, family = "gaussian") # BEST MODEL
 
-
-gamyo1.21 <- gam(log_chla ~ te(log_qsdy, days_since_last_inundation, dowy), method = "REML", data = yo.idys, family = "gaussian")
+gamyo1.21 <- gam(log_chla ~ te(log_qsdy, dsli, dowy), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.22 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.23 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy), method = "REML", data = yo.idys, family = "gaussian")
-#gamyo1.23b <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
 gamyo1.24 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = yo.idys, family = "gaussian")
+gamyo1.25 <- gam(log_chla ~ te(log_qsdy, dowy, by = tily_fac), method = "REML", data = yo.idys, family = "gaussian")
 
-ggplot(yo.idys) + geom_point(aes(dowy, WTrangemwk, color = inundation))
 # AIC
 res <- (AIC(gamyo0, gamyo1.0, gamyo1.1, gamyo1.2, gamyo1.3, gamyo1.4, gamyo1.5, gamyo1.6, gamyo1.7, gamyo1.8, gamyo1.9, gamyo1.10, gamyo1.11, gamyo1.12, gamyo1.13, gamyo1.14, gamyo1.15, gamyo1.16, gamyo1.17, gamyo1.18, gamyo1.19, gamyo1.20, gamyo1.21, gamyo1.22, gamyo1.23, gamyo1.24))
 res %>% arrange(AIC)
 
+write.csv(res,"CompRegYolo.csv")
 
 summary(gamyo1.2) # 64.3% R2 0.603
 summary(gamyo1.13) # 61.2% R2 0.578
 summary(gamyo1.20) # 72% R2 0.66 BEST ONE
 summary(gamyo1.21) # 69.5% R2 0.635 
-
-
 
 par(mfrow = c(2,2))
 gam.check(gamyo1.1)
@@ -550,10 +548,10 @@ gam.check(gamyo1.3)
 gam.check(gamyo1.4)
 gam.check(gamyo1.20)
 
-summary(gamyo1.1)
-summary(gamyo1.2)
-summary(gamyo1.3)
-summary(gamyo1.4)
+summary(gamyo1.19)
+summary(gamyo1.22)
+summary(gamyo1.23)
+summary(gamyo1.24)
 
 resid = residuals(gamyo1.20)
 acf(resid)
@@ -604,14 +602,14 @@ pacf(resid)
   dev.off()
 
 
-  # validate model gamyo1.6 - log_chla ~ te(log_qsdy, dowy, by = inundation)
+  # validate model gamyo1.20 - log_chla ~ te(log_qsdy, dowy, tily)
   # -----------------------------------------------------------------------
   # validate the final model by plotting residuals and save to a tiff
-  tiff(filename = "figures/gam_model_validation_qsdy_noi_yolo.tiff", width = 6, height = 9, units = "in", res = 100)
-  resid = residuals(gamyo1.6)
+  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 100)
+  resid = residuals(gamyo1.20)
   op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
   # Plot 1: Residuals vs. Fitted values; should be centered around 0
-  plot(fitted(gamyo1.6), resid, xlab = "Fitted values", ylab = "Residuals")
+  plot(fitted(gamyo1.20), resid, xlab = "Fitted values", ylab = "Residuals")
   # Plot 2: histogram of the residuals; should be centered around 0
   hist(resid, xlab = 'Residuals', main = "")
   # Plot 3: is there autocorrelation in the residuals?
@@ -619,19 +617,21 @@ pacf(resid)
   # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
   plot(yo.idys$log_qsdy, resid, xlab = "Flow",   ylab = "Residuals")
   plot(yo.idys$dowy, resid, xlab = "day of water year",   ylab = "Residuals")
-  plot(yo.idys$inundation, resid, xlab = "inundation flag",   ylab = "Residuals")
+  plot(yo.idys$tily, resid, xlab = "total inundation last year",   ylab = "Residuals")
   par(op)
   dev.off()
 
 ```
 
 #### Visualize gamyo1.20
+
 * Low Flow (10 percentile), High Flow (90 percentile)
 * Inundation last year to 5 and 95 percentile
 * Visualize dowy at 5-95 percentile
+
+
 ```{r}
 gamyo1.20 <- gam(log_chla ~ te(log_qsdy, total_inund_last_year, dowy), method = "REML", data = yo.idys, family = "gaussian") # BEST MODEL
-
 
 
 # Determine the confidence interval to present in your figure and determine the
@@ -654,7 +654,6 @@ lqsdy.5 = quantile(yo.idys$log_qsdy, probs = 0.5)
 tily.1 = quantile(yo.idys$total_inund_last_year, probs = 0.1)
 tily.9 = quantile(yo.idys$total_inund_last_year, probs = 0.9)
 tily.5 = quantile(yo.idys$total_inund_last_year, probs = 0.5)
-tily.75 = quantile(yo.idys$total_inund_last_year, probs = 0.75)
 
 yo_dat_1 = data.frame(cbind(log_qsdy = sample(c(lqsdy.1, lqsdy.9), n, replace = TRUE),
                              total_inund_last_year = rep(40, n), dowy = dowy.ser))
@@ -787,13 +786,6 @@ tempmeans <- alldata %>% group_by(dowy, region) %>%
 
 
 
-
-
-
-
-
-
-
 ```
 
 ```{r}
@@ -805,11 +797,6 @@ par(new=TRUE)
 plot(yo.idys$dowy, yo.idys$days_since_last_inundation, xlim = c(75, 240), cex = yo.idys$WTmwk+2, xaxt = "n", yaxt = "n", ylab = "")
 
 ```
-
-
-
-
-
 
 
 
@@ -1169,11 +1156,11 @@ upstream <- alldata %>% filter(region == "above")
 ### Filter to upstream
 ```{r}
 upstream_scaled <- upstream %>%
-  mutate(across(.cols = c(log_idys,t_qsdy,diurnal_range:Sradmwk), ~ scale(.x)))
+  mutate(across(.cols = c(diurnal_range:Sradmwk, t_qsdy:log_qsdy), ~ scale(.x)))
   
 u.idys <- upstream_scaled
 
-upstream_s_long <- pivot_longer(u.idys, cols = c(log_idys,t_qsdy,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+upstream_s_long <- pivot_longer(u.idys, cols = c(diurnal_range:Sradmwk, log_idys:log_qsdy), names_to = "Parameter", values_to = "Value")
 
 ggplot(upstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
 ```
@@ -1186,22 +1173,26 @@ gamu1.0 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = u.idys, family = 
 gamu1.1 <- gam(log_chla ~ s(log_qsdy) + s(dowy, bs = "cc"), method = "REML", data = u.idys, family = "gaussian")
 gamu1.2 <- gam(log_chla ~ s(WTmwk), method = "REML", data = u.idys, family = "gaussian")
 gamu1.3 <- gam(log_chla ~ s(WTmwk) + s(dowy, bs = "cc"), method = "REML", data = u.idys, family = "gaussian")
-gamu1.4 <- gam(log_chla ~ s(log_qsdy) + s(WTmwk), method = "REML", data = u.idys, family = "gaussian")
-gamu1.5 <- gam(log_chla ~ s(log_qsdy) + s(WTmwk) + s(dowy, bs = "cc"), method = "REML", data = u.idys, family = "gaussian")
-gamu1.6 <- gam(log_chla ~ te(log_qsdy, dowy), method = "REML", data = u.idys, family = "gaussian")
-gamu1.7 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = u.idys, family = "gaussian")
-gamu1.8 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy), method = "REML", data = u.idys, family = "gaussian")
-gamu1.9 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy), method = "REML", data = u.idys, family = "gaussian")
-gamu1.10 <- gam(log_chla ~ te(log_qsdy, WTmwk), method = "REML", data = u.idys, family = "gaussian")
-gamu1.11 <- gam(log_chla ~ te(log_qsdy, WTrangemwk), method = "REML", data = u.idys, family = "gaussian")
-gamu1.12 <- gam(log_chla ~ te(log_qsdy, diurnal_range), method = "REML", data = u.idys, family = "gaussian")
-
+gamu1.4 <- gam(log_chla ~ s(Sradmwk), method = "REML", data = u.idys, family = "gaussian")
+gamu1.5 <- gam(log_chla ~ s(Sradmwk) + s(dowy, bs = "cc"), method = "REML", data = u.idys, family = "gaussian")
+gamu1.6 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = u.idys, family = "gaussian")
+gamu1.7 <- gam(log_chla ~ s(WTrangemwk) + s(dowy, bs = "cc"), method = "REML", data = u.idys, family = "gaussian")
+gamu1.8 <- gam(log_chla ~ te(WTmwk, dowy), method = "REML", data = u.idys, family = "gaussian")
+gamu1.9 <- gam(log_chla ~ te(WTmwk, log_qsdy, dowy), method = "REML", data = u.idys, family = "gaussian")
+gamu1.10 <- gam(log_chla ~ te(WTmwk, Sradmwk, dowy), method = "REML", data = u.idys, family = "gaussian")
+gamu1.11 <- gam(log_chla ~ te(WTmwk, WTrangemwk, dowy), method = "REML", data = u.idys, family = "gaussian")
+gamu1.12 <- gam(log_chla ~ te(WTmwk, diurnal_range, dowy), method = "REML", data = u.idys, family = "gaussian")
 
 # AIC
 resu <- AIC(gamu0, gamu1.0, gamu1.1, gamu1.2, gamu1.3, gamu1.4, gamu1.5, gamu1.6, gamu1.7, gamu1.8, gamu1.9, gamu1.10, gamu1.11, gamu1.12)
 resu %>% arrange(AIC)
 
+write.csv(resu, "CompRegUpstream.csv")
 
+summary(gamu1.2)
+summary(gamu1.3)
+summary(gamu1.11)
+summary(gamu1.12)
 
 par(mfrow = c(2,2))
 gam.check(gamu1.2)
