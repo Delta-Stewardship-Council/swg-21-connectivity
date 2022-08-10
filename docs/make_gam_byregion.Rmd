@@ -181,11 +181,11 @@ gamd1.19 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML"
 gamd1.20 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
 gamd1.21 <- gam(log_chla ~ te(log_qsdy, dowy, by = inund_fac),  method = "REML", data = d.idys, family = "gaussian")
 
-gamd1.22 <- gam(log_chla ~ te(log_qsdy, tily, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.23 <- gam(log_chla ~ te(log_qsdy, dsli, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.24 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.25 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.26 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.22 <- gam(log_chla ~ te(log_qsdy, tily, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
+gamd1.23 <- gam(log_chla ~ te(log_qsdy, dsli, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
+gamd1.24 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
+gamd1.25 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
+gamd1.26 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
 
 gamd1.27 <- gam(log_chla ~ te(log_qsdy, tily, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
 gamd1.28 <- gam(log_chla ~ te(log_qsdy, dsli, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
@@ -197,11 +197,15 @@ resd <- (AIC(gamd0, gamd1.0, gamd1.1, gamd1.2, gamd1.3, gamd1.4, gamd1.5, gamd1.
 gamd1.25, gamd1.26, gamd1.27, gamd1.28, gamd1.29, gamd1.30, gamd1.31))
 resd %>% arrange(AIC)
 
+gam.check(gamd1.28)
+gam.check(gamd1.26)
 gam.check(gamd1.3)
 gam.check(gamd1.13)
 gam.check(gamd1.24)
 gam.check(gamd1.23)
 
+summary(gamd1.28) # 32.3%, 0.29
+summary(gamd1.26) #33.7%, 0.293
 summary(gamd1.3) #28% R2 0.26
 summary(gamd1.13) # 26.4% R2 0.243
 summary(gamd1.24) #31% 0.272
@@ -274,6 +278,189 @@ pacf(resid)
   dev.off()
 
 ```
+
+#### Visualize gamd1.28
+
+```{r}
+library(tidymv)
+gamd1.28 <- gam(log_chla ~ te(log_qsdy, dsli, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
+
+
+pred_gamd1.28_q <- predict_gam(gamd1.28, values = list(log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8), 
+                                                          median(d.idys$log_qsdy)),
+                                             Sradmwk = c(quantile(d.idys$Sradmwk, 0.2),
+                                                       quantile(d.idys$Sradmwk, 0.8)))) %>%
+    mutate(dsli_orig = (dsli*sd(downstream$dsli)+mean(downstream$dsli))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.28_srad <- predict_gam(gamd1.28, values = list(Sradmwk = c(quantile(d.idys$Sradmwk, 0.2),
+                                                          quantile(d.idys$Sradmwk, 0.8), 
+                                                          median(d.idys$Sradmwk)),
+                                             log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8)))) %>%
+   mutate(dsli_orig = (dsli*sd(downstream$dsli)+mean(downstream$dsli))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.28_dsli <- predict_gam(gamd1.28, values = list(dsli = c(-0.873, -0.021, 1.992
+),
+                                             log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8)))) %>%
+   mutate(dsli_orig = (dsli*sd(downstream$dsli)+mean(downstream$dsli))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.28_srad_dsli <- predict_gam(gamd1.28, values = list(dsli = c(-0.873, -0.021, 1.992
+),
+                                             Sradmwk = c(quantile(d.idys$Sradmwk, 0.2),
+                                                          quantile(d.idys$Sradmwk, 0.8)))) %>%
+   mutate(dsli_orig = (dsli*sd(downstream$dsli)+mean(downstream$dsli))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+
+pred_gamd1.28_all <- predict_gam(gamd1.28) %>%
+   mutate(dsli_orig = (dsli*sd(downstream$dsli)+mean(downstream$dsli))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+
+```
+
+Plot predictions
+```{r}
+# by Srad and dsli
+pred_gamd1.28_srad_dsli %>%
+  ggplot(aes(log_qsdy, fit)) +
+  geom_smooth_ci(dsli_orig, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~Sradmwk,
+             labeller= label_both) +
+  labs(y = "chlorophyll") +
+  theme_bw()
+
+# difference by Srad and flow
+pred_gamd1.28_srad %>%
+  ggplot(aes(dsli_orig, fit)) +
+  geom_smooth_ci(Sradmwk, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~log_qsdy,
+             labeller = label_both) +
+  labs(y = "chlorophyll")+
+  theme_bw()
+
+# difference by days since last inundation and flow
+pred_gamd1.28_dsli %>%
+  ggplot(aes(Sradmwk, fit)) +
+  geom_smooth_ci(dsli_orig, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  labs(y = "chlorophyll")+
+  facet_wrap(~log_qsdy,
+             labeller = label_both) +
+  theme_bw()
+
+# difference by days since last inundation and flow
+pred_gamd1.28_dsli %>%
+  ggplot(aes(Sradmwk, fit)) +
+  geom_smooth_ci(log_qsdy, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  labs(y = "chlorophyll")+
+  facet_wrap(~dsli_orig,
+             labeller = label_both) +
+  theme_bw()
+```
+
+
+#### Visualize gamd1.26
+gamd1.26 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
+
+Predictions 
+```{r}
+library(tidymv)
+
+pred_gamd1.26_q <- predict_gam(gamd1.26, values = list(log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8), 
+                                                          median(d.idys$log_qsdy)),
+                                             WTmwk = c(quantile(d.idys$WTmwk, 0.2),
+                                                       quantile(d.idys$WTmwk, 0.8)))) %>%
+  mutate(WTmwk_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.26_wt <- predict_gam(gamd1.26, values = list(WTmwk = c(quantile(d.idys$WTmwk, 0.2),
+                                                          quantile(d.idys$WTmwk, 0.8), 
+                                                          median(d.idys$WTmwk)),
+                                             log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8)))) %>%
+   mutate(WTmwk_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.26_dowy <- predict_gam(gamd1.26, values = list(dowy = c(quantile(d.idys$dowy, 0.2),
+                                                          quantile(d.idys$dowy, 0.8), 
+                                                          median(d.idys$dowy)),
+                                             log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8)))) %>%
+    mutate(WTmwk_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.26_dowy_qsdy <- predict_gam(gamd1.26, values = list(dowy = c(quantile(d.idys$dowy, 0.1),
+                                                          quantile(d.idys$dowy, 0.3),
+                                                          quantile(d.idys$dowy, 0.5), 
+                                                          quantile(d.idys$dowy, 0.7), 
+                                                          quantile(d.idys$dowy, 0.9)),
+                                             log_qsdy = c(quantile(d.idys$log_qsdy, 0.2),
+                                                          quantile(d.idys$log_qsdy, 0.8), 
+                                                          median(d.idys$log_qsdy)))) %>%
+  mutate(WTmwk_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamd1.26_all <- predict_gam(gamd1.26) %>%
+   mutate(WTmwk_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+```
+
+Higher chlorophyll at higher temps. Increase in chlorophyll from 100-180 (Spring)
+```{r}
+pred_gamd1.26_q %>%
+  ggplot(aes(dowy, fit)) +
+  geom_smooth_ci(log_qsdy, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~WTmwk_orig,
+             labeller= label_both) +
+  labs(y = "chlorophyll") +
+  theme_bw()
+```
+
+Higher chlorophyll at higher flow during higher temps
+```{r}
+pred_gamd1.26_wt %>%
+  ggplot(aes(dowy, fit)) +
+  geom_smooth_ci(WTmwk_orig, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~log_qsdy,
+             labeller = label_both) +
+  labs(y = "chlorophyll")+
+  theme_bw()
+```
+
+Increase in chlorophyll with higher temps. No difference by dowy. 
+```{r}
+pred_gamd1.26_dowy %>%
+  ggplot(aes(WTmwk_orig, fit)) +
+  geom_smooth_ci(dowy, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  labs(y = "chlorophyll")+
+  facet_wrap(~log_qsdy,
+             labeller = label_both) +
+  theme_bw()
+```
+
+```{r}
+pred_gamd1.26_all %>%
+  ggplot(aes(WTmwk_orig, log_qsdy, z = fit)) +
+  geom_tile(aes(fill = fit)) +
+  geom_contour(colour = "white") +
+  scale_fill_viridis(name = "chla") +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
 
 #### Visualize gamd1.2
 ```{r}
