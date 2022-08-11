@@ -34,8 +34,6 @@ covars_yolo <- mod_df$covars_yolo
 # check histogram of logged chlorophyll
 hist(log(chla_yolo$chlorophyll))
 
-# Remove the first observation of chlorophyll because covars data don't go back that far
-#chla_yolo_1 <- chla_yolo[-1,]
 # Create Model Datalist ---------------------------------------------------
 
 datlist <- list(chl = log(chla_yolo$chlorophyll),
@@ -96,7 +94,7 @@ jm_coda <- coda.samples(jm,
 
 # Load Saved Model --------------------------------------------------------
 
-#load("bayes_models/mod12_inund_poss_flag/run_20220621.rda")
+#load("bayes_models/mod12_inund_poss_flag/run_20220728.rda")
 
 mcmcplot(jm_coda, col = c("red", "blue", "green"))
 # Look at R-hat values. >1.02 would indicate did not converge
@@ -106,7 +104,7 @@ gelman.diag(jm_coda, multivariate = FALSE)
 newinits <- initfind(coda = jm_coda)
 #saved.state <- removevars(initsin = newinits, variables=c(2:5, 8, 9))
 saved.state <- newinits
-save(saved.state, file = "bayes_models/mod12_inund_poss_flag/inits/sstate_20220621.Rda")
+save(saved.state, file = "bayes_models/mod12_inund_poss_flag/inits/sstate_20220728.Rda")
 
 
 # Look at Outputs ---------------------------------------------------------
@@ -146,7 +144,7 @@ coda_sum %>%
   scale_x_discrete(labels = c("Qant*inundation", "Srad_mwk*inundation", "Wtemprange_mwk*inundation")) +
   scale_y_continuous("Slope of covariates") +
   theme_bw()
-ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/slope_of_betas_qant_20220621.png",
+ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/slope_of_betas_qant_20220728.png",
        dpi=300, width = 11, height = 8)
 
 # weights of Qant
@@ -158,12 +156,12 @@ coda_sum %>%
   scale_x_discrete(labels = c("1d", "4d", "7d", "14d", "21d")) +
   scale_y_continuous("Weights of past Q") +
   theme_bw()
-ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/weights_of_qant_20220621.png",
+ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/weights_of_qant_20220728.png",
        dpi=300, width = 10, height = 8)
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod12_inund_poss_flag/run_20220621.rda")
+save(jm_coda, coda_sum, file = "bayes_models/mod12_inund_poss_flag/run_20220728.rda")
 
 # save model summary
 sink("bayes_models/mod12_inund_poss_flag/fig_out/jm_coda_summary.txt")
@@ -181,7 +179,7 @@ coda.rep_sum <- tidyMCMC(coda.rep, conf.int = TRUE, conf.method = "HPDinterval")
 pred <- cbind.data.frame(chl = datlist$chl, coda.rep_sum)
 
 m1 <- lm(pd.mean ~ chl, data = pred)
-summary(m1) # Adjusted R2 = 0.3698
+summary(m1) # Adjusted R2 = 0.3684
 
 pred %>%
   filter(!is.na(chl)) %>%
@@ -194,7 +192,7 @@ pred %>%
   scale_y_continuous("Predicted") +
   theme_bw(base_size = 12)
 
-ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/pred_vs_obs_20220621.png",
+ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/pred_vs_obs_20220728.png",
        dpi=300, width = 10, height = 8)
 
 # Observed vs. predicted chlorophyll as a function of time
@@ -214,7 +212,7 @@ pred_time %>%
   theme_bw(base_size = 12) +
   scale_x_date(date_labels = "%m-%Y")
 
-ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/pred_obs_time_20220621.png",
+ggsave(filename = "bayes_models/mod12_inund_poss_flag/fig_out/pred_obs_time_20220728.png",
        dpi=300, width = 10, height = 8)
 
 
