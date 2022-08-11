@@ -122,24 +122,29 @@ gamu5 <- gam(log_chla ~ s(Sradmwk), method = "REML", data = u.noni, family = "ga
 gamu6 <- gam(log_chla ~ s(Sradmwk) + s(doy, bs = "cc"), method = "REML", data = u.noni, family = "gaussian")
 gamu7 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = u.noni, family = "gaussian")
 gamu8 <- gam(log_chla ~ s(WTrangemwk) + s(doy, bs = "cc"), method = "REML", data = u.noni, family = "gaussian")
-gamu9 <- gam(log_chla ~ te(WTmwk, doy, bs = c( "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
-gamu10 <- gam(log_chla ~ te(WTmwk, log_qsdy, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
-gamu11 <- gam(log_chla ~ te(WTmwk, Sradmwk, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
-gamu12 <- gam(log_chla ~ te(WTmwk, WTrangemwk, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
-gamu13 <- gam(log_chla ~ te(WTmwk, diurnal_range, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
-gamu14 <- gam(log_chla ~ te(WTmwk, month, log_qsdy), method = "REML", data = u.noni, family = "gaussian")
-gamu15 <- gam(log_chla ~ te(Sradmwk, month, log_qsdy), method = "REML", data = u.noni, family = "gaussian")
+gamu9 <- gam(log_chla ~ te(WTmwk, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu16 <- gam(log_chla ~ te(Sradmwk, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu17 <- gam(log_chla ~ te(log_qsdy, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu18 <- gam(log_chla ~ te(WTrangemwk, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu14 <- gam(log_chla ~ te(diurnal_range, doy), method = "REML", data = u.noni, family = "gaussian")
+
+gamu10 <- gam(log_chla ~ te(WTmwk, log_qsdy, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu11 <- gam(log_chla ~ te(WTmwk, Sradmwk, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu12 <- gam(log_chla ~ te(WTmwk, WTrangemwk, doy), method = "REML", data = u.noni, family = "gaussian")
+gamu13 <- gam(log_chla ~ te(WTmwk, diurnal_range, doy), method = "REML", data = u.noni, family = "gaussian")
+
+#gamu15 <- gam(log_chla ~ te(Sradmwk, month, log_qsdy), method = "REML", data = u.noni, family = "gaussian")
 #gamu15 <- gam(log_chla ~ s(month), method = "REML", data = u.noni, family = "gaussian")
 # AIC
 
-(table_aic <- AIC(gamu0, gamu1, gamu2, gamu3, gamu4, gamu5, gamu6, gamu7, gamu8, gamu9, gamu10, gamu11, gamu12, gamu13, gamu14, gamu15)%>% arrange(AIC))
+(table_aic <- AIC(gamu0, gamu1, gamu2, gamu3, gamu4, gamu5, gamu6, gamu7, gamu8, gamu9, gamu10, gamu11, gamu12, gamu13, gamu14, gamu16, gamu17, gamu18)%>% arrange(AIC))
+gamu0$null.deviance
 
-summary(gamu10) #0.503 | 55.4% 
-summary(gamu14) #0.494 | 54.1%
-summary(gamu13) #0.455|  52.2%
-summary(gamu9)  #0.413|  45.5%
+summary(gamu10) #0.486 | 52.4% 
+summary(gamu13) #0.477|  54.1%
+summary(gamu9)  #0.447|  48.8%
 
-
+results <- data.frame(model = NA, R2 = NA, Dev = NA)
 ```
 
 There is some autocorrelation here
@@ -224,6 +229,14 @@ pred_gamu10_q %>%
   labs(y = "chlorophyll") +
   theme_bw()
 ```
+
+```{r}
+
+```
+
+
+
+
 
 ### by water temp
 Low chlorophyll around July, higher more towards May and October.
