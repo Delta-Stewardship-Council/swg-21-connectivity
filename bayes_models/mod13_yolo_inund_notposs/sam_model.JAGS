@@ -8,7 +8,7 @@ model{
              B[2] * Qant[i] +
              B[3] * Srad_mwk[doy1999[i]] +
              B[4] * Wtemprange_mwk[doy1999[i]] +
-             B[5] * inund_days[doy1999[i]]
+             B[5] * Wtemp_mwk[doy1999[i]]
 
   # Sum antecedent components across all timesteps
    Qant[i] <- sum(qTemp[i,])
