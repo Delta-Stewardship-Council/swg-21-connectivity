@@ -1,0 +1,152 @@
+---
+title: "make_gam_hypothesis"
+author: "NCEAS"
+date: '2022-08-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#detach(gam)
+library(dplyr)
+library(readr)
+library(lubridate)
+library(glue)
+library(tidyr)
+library(zoo)
+library(car)
+library(MuMIn)
+library(psych)
+library(mgcv)
+library(ggplot2)
+library(viridis)
+library(nlme)
+library(kader)#cuberoot
+library(mgcv)
+
+# tinytex::install_tinytex() - run in console before knitting
+```
+
+# Notes 
+* Srad = WT and dowy (highest correlation with both) or choose most ecologically relevant
+
+Test: log_chla~te(WTmwk, log_qsdy, by = "inundation")
+
+* Plot residuals of model against other variables we think are important
+* Or separate analysis for legacy effects
+* Or don't analyze and mention in discussion
+* break into factor-combos (inundation & tily_fac combos, one by statement)
+
+# Read in data
+```{r}
+alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
+  mutate(month = lubridate::month(date),
+         year  = lubridate::year(date),
+         rdoy  = lubridate::yday(date) + 92,
+         week  = lubridate::week(date),
+         water_year = ifelse(month > 9, year + 1, year),
+         dowy = ifelse(rdoy > 366, rdoy - 366, rdoy),
+         log_chla = log(chlorophyll),
+         log_idys = log(inund_days + 1),
+         t_qsdy = kader:::cuberoot(Q_sday), 
+         log_qsdy = log(Q_sday),
+         inund_fac = ifelse(inund_days == 0, "none", ifelse(inund_days > 14, "long", "short")),
+         inundation = as.factor(inundation),
+         station_wq_chl = as.factor(station_wq_chl),
+         tily_fac = case_when(total_inund_last_year == 0 ~ "none",
+                              total_inund_last_year>0 & total_inund_last_year < 16 ~ "2wk",
+                              total_inund_last_year>16 & total_inund_last_year < 41 ~ "month",
+                              TRUE ~ "months"),
+         tily_fac = as.factor(tily_fac),
+         inund_fac = as.factor(inund_fac)) %>%
+  rename(station = station_wq_chl, tily = total_inund_last_year, 
+         dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
+
+alldatalook <- select(alldata0, date, tily, tily_fac)
+str(alldata0)
+```
+
+```{r}
+cor(alldata0$Sradmwk, alldata0$WTmwk, method = "spearman")
+cor(alldata0$Sradmwk, alldata0$dowy, method = "spearman")
+cor(alldata0$WTmwk, alldata0$dowy, method = "spearman")
+```
+
+
+## Filter datasets to region
+```{r}
+downstream <- alldata %>% filter(region == "below")
+upstream <- alldata %>% filter(region == "above")
+yolo <- alldata %>% filter(region == "yolo")
+```
+
+## Scale datasets
+```{r}
+d.idys <- downstream %>%
+  mutate(across(.cols = c(log_idys, t_qsdy, log_qsdy, tily:Sradmwk), ~ scale(.x)))
+u.idys <- upstream %>%
+  mutate(across(.cols = c(log_idys, t_qsdy, log_qsdy, tily:Sradmwk), ~ scale(.x)))
+yo.idys <- yolo %>%
+  mutate(across(.cols = c(log_idys, t_qsdy, log_qsdy, tily:Sradmwk), ~ scale(.x)))
+```
+
+# Model
+
+## Run Models
+```{r}
+gamd1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+
+gamu1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = u.idys, family = "gaussian")
+
+gamyo1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
+```
+
+## Validation
+gamd1
+```{r}
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
+  resid = residuals(gamyo1.20)
+  op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gamyo1.20), resid, xlab = "Fitted values", ylab = "Residuals")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(yo.idys$log_qsdy, resid, xlab = "Flow",   ylab = "Residuals")
+  plot(yo.idys$dowy, resid, xlab = "day of water year",   ylab = "Residuals")
+  plot(yo.idys$tily, resid, xlab = "total inundation last year",   ylab = "Residuals")
+  par(op)
+  dev.off()
+```
+
+gamu1
+```{r}
+
+```
+
+gamyo1
+```{r}
+
+```
+
+# Predict data
+```{r}
+
+```
+
+## Constrain data
+```{r}
+
+```
+
+# Visualize data
+```{r}
+
+```
+
