@@ -22,7 +22,7 @@ library(postjags)
 # Bring in Data For Model -------------------------------------------------
 
 source("scripts/functions/f_make_bayes_mod13inundnotposs_dataset.R")
-mod_df <- f_make_bayes_mod12inundposs_dataset()
+mod_df <- f_make_bayes_mod13inundnotposs_dataset()
 
 # pull out datasets
 # to restrict analysis to yolo region
@@ -41,8 +41,8 @@ hist(log(chla_yolo$chlorophyll))
 datlist <- list(chl = log(chla_yolo$chlorophyll),
                 Q = c(covars_yolo$Q),
                 Srad_mwk = c(covars_yolo$Srad_mwk),
-                inund_days = c(covars_yolo$inund_days),
-                #Wtemp_mwk = c(covars_yolo$Wtemp_mwk),
+                #inund_days = c(covars_yolo$inund_days),
+                Wtemp_mwk = c(covars_yolo$Wtemp_mwk),
                 Wtemprange_mwk = c(covars_yolo$Wtemprange_mwk),
                 #station_id = chla_RV$station_id,
                 #Nstation = length(unique(chla_RV$station_id)),
@@ -59,25 +59,25 @@ datlist <- list(chl = log(chla_yolo$chlorophyll),
 # Initials functions for root node parameters
 inits <- function(){
   list(tau = runif(1, 0, 1),
-       B = rnorm(5, 0, 1000)) # for 6 B parameters, adjust as needed
+       B = rnorm(5, 0, 1)) # for 6 B parameters, adjust as needed
 }
 initslist <- list(inits(), inits(), inits())
 
 # run this if model has been successfully run already:
 
 # Or load saved.state
-#load("bayes_models/mod12_redlags/inits/sstate_20220621.Rda")
-#inits_2 <- function(){
-#   list(sig.eps = runif(1, 0, 1),
-#        tau = runif(1, 0, 1),
-#        B = rnorm(6, 0, 1)) # for 6 B parameters, adjust as needed
-# }
-# initslist <- list(list(sig.eps = saved.state[[2]][[1]]$sig.eps, tau = saved.state[[2]][[1]]$tau, B = inits_2()$B), list(sig.eps = saved.state[[2]][[3]]$sig.eps, tau = saved.state[[2]][[3]]$tau, B = inits_2()$B), inits_2())
+load("bayes_models/mod13_yolo_inund_notposs/inits/sstate_20220803.Rda")
+inits_2 <- function(){
+  list(
+       tau = runif(1, 0, 1),
+       B = rnorm(4, 0, 1)) # for 6 B parameters, adjust as needed
+}
+initslist <- list(list(tau = saved.state[[2]][[2]]$tau, B = inits_2()$B), list(tau = saved.state[[2]][[3]]$tau, B = inits_2()$B), inits_2())
 
 # Run Model ---------------------------------------------------------------
 
 # Run model
-jm <- jags.model("bayes_models/mod12_inund_poss/sam_model.JAGS",
+jm <- jags.model("bayes_models/mod13_yolo_inund_notposs/sam_model.JAGS",
                  data = datlist,
                  inits = initslist,
                  n.chains = 3)
@@ -95,7 +95,7 @@ jm_coda <- coda.samples(jm,
 
 # Load Saved Model --------------------------------------------------------
 
-load("bayes_models/mod13_yolo_inund_notposs/run_20220715.rda")
+load("bayes_models/mod13_yolo_inund_notposs/run_20220803.rda") # run_20220715.rda had the wrong data and model
 
 mcmcplot(jm_coda, col = c("red", "blue", "green"))
 # Look at R-hat values. >1.02 would indicate did not converge
@@ -105,7 +105,7 @@ gelman.diag(jm_coda, multivariate = FALSE)
 newinits <- initfind(coda = jm_coda)
 #saved.state <- removevars(initsin = newinits, variables=c(2:5, 8, 9))
 saved.state <- newinits
-save(saved.state, file = "bayes_models/mod13_yolo_inund_notposs/inits/sstate_20220715.Rda")
+save(saved.state, file = "bayes_models/mod13_yolo_inund_notposs/inits/sstate_20220803.Rda")
 
 
 # Look at Outputs ---------------------------------------------------------
@@ -142,10 +142,10 @@ coda_sum %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_x_discrete(labels = c("Qant", "Srad_mwk", "Wtemprange_mwk", "inund_days")) +
+  scale_x_discrete(labels = c("Qant", "Srad_mwk", "Wtemprange_mwk", "Wtemp_mwk")) +
   scale_y_continuous("Slope of covariates") +
   theme_bw()
-ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/slope_of_betas_qant_20220715.png",
+ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/slope_of_betas_qant_20220803.png",
        dpi=300, width = 11, height = 8)
 
 # weights of Qant
@@ -157,12 +157,12 @@ coda_sum %>%
   scale_x_discrete(labels = c("1d", "4d", "7d", "14d", "21d")) +
   scale_y_continuous("Weights of past Q") +
   theme_bw()
-ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/weights_of_qant_20220715.png",
+ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/weights_of_qant_20220803.png",
        dpi=300, width = 10, height = 8)
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod13_yolo_inund_notposs/run_20220715.rda")
+save(jm_coda, coda_sum, file = "bayes_models/mod13_yolo_inund_notposs/run_20220803.rda")
 
 # save model summary
 sink("bayes_models/mod13_yolo_inund_notposs/fig_out/jm_coda_summary.txt")
@@ -180,7 +180,7 @@ coda.rep_sum <- tidyMCMC(coda.rep, conf.int = TRUE, conf.method = "HPDinterval")
 pred <- cbind.data.frame(chl = datlist$chl, coda.rep_sum)
 
 m1 <- lm(pd.mean ~ chl, data = pred)
-summary(m1) # Adjusted R2 = 0.3688
+summary(m1) # Adjusted R2 = 0.16
 
 pred %>%
   filter(!is.na(chl)) %>%
@@ -193,7 +193,7 @@ pred %>%
   scale_y_continuous("Predicted") +
   theme_bw(base_size = 12)
 
-ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/pred_vs_obs_20220715.png",
+ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/pred_vs_obs_20220803.png",
        dpi=300, width = 10, height = 8)
 
 # Observed vs. predicted chlorophyll as a function of time
@@ -213,7 +213,7 @@ pred_time %>%
   theme_bw(base_size = 12) +
   scale_x_date(date_labels = "%m-%Y")
 
-ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/pred_obs_time_20220715.png",
+ggsave(filename = "bayes_models/mod13_yolo_inund_notposs/fig_out/pred_obs_time_20220803.png",
        dpi=300, width = 10, height = 8)
 
 

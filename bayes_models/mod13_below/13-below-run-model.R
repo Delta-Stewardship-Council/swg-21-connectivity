@@ -83,7 +83,7 @@ initslist <- list(list(sig.eps = saved.state[[2]][[1]]$sig.eps, tau = saved.stat
 # Run Model ---------------------------------------------------------------
 
 # Run model
-jm <- jags.model("bayes_models/mod13_below/sam_model2.JAGS",
+jm <- jags.model("bayes_models/mod13_below/sam_model.JAGS",
                  data = datlist,
                  inits = initslist,
                  n.chains = 3)

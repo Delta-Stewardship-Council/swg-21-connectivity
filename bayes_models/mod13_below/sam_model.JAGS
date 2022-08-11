@@ -10,8 +10,9 @@ model{
              B[4] * Wtemp_mwk[doy1999[i]] +
              B[5] * Wtemprange_mwk[doy1999[i]] +
              B[6] * days_of_inund_until_now[doy1999[i]] +
-             B[7] * inund_season[doy1999[i]] +
-             eps[station_id[i]]
+             B[7] * inund_season[doy1999[i]]
+             #+
+             #eps[station_id[i]]
 
   # Sum antecedent components across all timesteps
    Qant[i] <- sum(qTemp[i,])
@@ -49,18 +50,18 @@ model{
 
 
   # Priors for random effects
-  #for(r in 1:Nstation){
+ # for(r in 1:Nstation){
   # non-identifiable random effects
-    eps[r] ~ dnorm(0, tau.eps)
+    #eps[r] ~ dnorm(0, tau.eps)
   # identifable random effects
-    Estar[r] <- eps[r] - mean(eps[])
-  }
+    #Estar[r] <- eps[r] - mean(eps[])
+ # }
 
   # Diffuse normal priors for regression coefficients
   for(k in 1:7){
     B[k] ~ dnorm(0, 0.001)
     # Identifiable parameter vector
-    Bstar[k] <- B[k] + equals(k, 1)*mean(eps[])
+    Bstar[k] <- B[k] #+ equals(k, 1)*mean(eps[])
   }
 
 
