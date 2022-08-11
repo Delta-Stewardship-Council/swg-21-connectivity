@@ -1,0 +1,295 @@
+---
+title: "make_gam_noninund"
+author: "Cat"
+date: '2022-08-09'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#detach(gam)
+library(dplyr)
+library(readr)
+library(lubridate)
+library(glue)
+library(tidyr)
+library(zoo)
+library(car)
+library(MuMIn)
+library(psych)
+library(mgcv)
+library(ggplot2)
+library(viridis)
+library(nlme)
+library(kader)#cuberoot
+library(mgcv)
+library("AICcmodavg")
+
+# tinytex::install_tinytex() - run in console before knitting
+```
+
+# Read in data
+```{r}
+alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
+  mutate(month = lubridate::month(date),
+         month_fac = as.factor(month),
+         year  = lubridate::year(date),
+         rdoy  = lubridate::yday(date) + 92,
+         doy = lubridate::yday(date),
+         week  = lubridate::week(date),
+         water_year = ifelse(month > 9, year + 1, year),
+         wy_fac = as.factor(water_year),
+         dowy = ifelse(rdoy > 366, rdoy - 366, rdoy),
+         log_chla = log(chlorophyll),
+         log_idys = log(inund_days + 1),
+         t_qsdy = kader:::cuberoot(Q_sday), 
+         log_qsdy = log(Q_sday),
+         inund_fac = ifelse(inund_days == 0, "none", ifelse(inund_days > 14, "long", "short")),
+         inundation = as.factor(inundation),
+         station_wq_chl = as.factor(station_wq_chl),
+         tily_fac = case_when(total_inund_last_year == 0 ~ "none",
+                              total_inund_last_year>0 & total_inund_last_year < 16 ~ "2wk",
+                              total_inund_last_year>16 & total_inund_last_year < 41 ~ "month",
+                              TRUE ~ "months"),
+         tily_fac = as.factor(tily_fac),
+         inund_fac = as.factor(inund_fac)) %>%
+  rename(station = station_wq_chl, tily = total_inund_last_year, 
+         dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
+
+alldatalook <- select(alldata0, date, tily, tily_fac)
+str(alldata0)
+```
+
+
+Filter to inundation period
+```{r}
+inundPd <- alldata0 %>% filter(inundation == 1) 
+inMin <- min(inundPd$dowy)
+inMax <- max(inundPd$dowy)
+
+alldata <- alldata0 %>%
+  filter(dowy < inMin | dowy > inMax)
+  #mutate(dnoni0 = ifelse(dowy < 65, dowy+365, dowy),
+  #       dnoni = ifelse(year%%4>0, dnoni0-214, dnoni0-215))
+```
+
+```{r}
+ggplot(alldata, aes(x = month, y = doy, color = month)) + geom_point() + theme_bw()
+```
+May - early December
+
+Model upstream
+
+## Upstream
+```{r}
+upstream <- alldata %>% filter(region == "above")
+```
+
+### Filter to upstream
+
+```{r}
+upstream_scaled <- upstream %>%
+  mutate(across(.cols = c(diurnal_range:Sradmwk, t_qsdy:log_qsdy), ~ scale(.x)))
+  
+u.noni <- upstream_scaled
+
+upstream_s_long <- pivot_longer(u.noni, cols = c(diurnal_range:Sradmwk, log_idys:log_qsdy), names_to = "Parameter", values_to = "Value")
+
+ggplot(upstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+```
+
+### Model 
+
+* log_qsdy
+* WTrangemwk
+* WTmwk
+* diurnal_range
+* doy
+* month
+
+```{r}
+gamu0 <- gam(log_chla ~ 1, method = "REML", data = u.noni, family = "gaussian")
+gamu1 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = u.noni, family = "gaussian")
+gamu2 <- gam(log_chla ~ s(log_qsdy) + s(doy, bs = "cc"), method = "REML", data = u.noni, family = "gaussian")
+gamu3 <- gam(log_chla ~ s(WTmwk), method = "REML", data = u.noni, family = "gaussian")
+gamu4 <- gam(log_chla ~ s(WTmwk) + s(doy, bs = "cc"), method = "REML", data = u.noni, family = "gaussian")
+gamu5 <- gam(log_chla ~ s(Sradmwk), method = "REML", data = u.noni, family = "gaussian")
+gamu6 <- gam(log_chla ~ s(Sradmwk) + s(doy, bs = "cc"), method = "REML", data = u.noni, family = "gaussian")
+gamu7 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = u.noni, family = "gaussian")
+gamu8 <- gam(log_chla ~ s(WTrangemwk) + s(doy, bs = "cc"), method = "REML", data = u.noni, family = "gaussian")
+gamu9 <- gam(log_chla ~ te(WTmwk, doy, bs = c( "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
+gamu10 <- gam(log_chla ~ te(WTmwk, log_qsdy, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
+gamu11 <- gam(log_chla ~ te(WTmwk, Sradmwk, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
+gamu12 <- gam(log_chla ~ te(WTmwk, WTrangemwk, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
+gamu13 <- gam(log_chla ~ te(WTmwk, diurnal_range, doy, bs = c("tp", "tp", "cc")), method = "REML", data = u.noni, family = "gaussian")
+gamu14 <- gam(log_chla ~ te(WTmwk, month, log_qsdy), method = "REML", data = u.noni, family = "gaussian")
+gamu15 <- gam(log_chla ~ te(Sradmwk, month, log_qsdy), method = "REML", data = u.noni, family = "gaussian")
+#gamu15 <- gam(log_chla ~ s(month), method = "REML", data = u.noni, family = "gaussian")
+# AIC
+
+(table_aic <- AIC(gamu0, gamu1, gamu2, gamu3, gamu4, gamu5, gamu6, gamu7, gamu8, gamu9, gamu10, gamu11, gamu12, gamu13, gamu14, gamu15)%>% arrange(AIC))
+
+summary(gamu10) #0.503 | 55.4% 
+summary(gamu14) #0.494 | 54.1%
+summary(gamu13) #0.455|  52.2%
+summary(gamu9)  #0.413|  45.5%
+
+
+```
+
+There is some autocorrelation here
+```{r}
+par(mfrow = c(2,2))
+gam.check(gamu10)
+gam.check(gamu13)
+gam.check(gamu9)
+
+resid = residuals(gamu10)
+acf(resid)
+pacf(resid)
+```
+
+## Prediction
+https://cran.r-project.org/web/packages/tidymv/vignettes/predict-gam.html
+
+```{r}
+library(tidymv)
+
+pred_gamu10_q <- predict_gam(gamu10, values = list(log_qsdy = c(quantile(u.noni$log_qsdy, 0.2),
+                                                          quantile(u.noni$log_qsdy, 0.8), 
+                                                          median(u.noni$log_qsdy)),
+                                             WTmwk = c(quantile(u.noni$WTmwk, 0.2),
+                                                       quantile(u.noni$WTmwk, 0.8)))) %>%
+  mutate(WTmwk_orig = (WTmwk*sd(upstream$WTmwk)+mean(upstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamu10_wt <- predict_gam(gamu10, values = list(WTmwk = c(quantile(u.noni$WTmwk, 0.2),
+                                                          quantile(u.noni$WTmwk, 0.8), 
+                                                          median(u.noni$WTmwk)),
+                                             log_qsdy = c(quantile(u.noni$log_qsdy, 0.2),
+                                                          quantile(u.noni$log_qsdy, 0.8)))) %>%
+   mutate(WTmwk_orig = (WTmwk*sd(upstream$WTmwk)+mean(upstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamu10_doy <- predict_gam(gamu10, values = list(doy = c(quantile(u.noni$doy, 0.2),
+                                                          quantile(u.noni$doy, 0.8), 
+                                                          median(u.noni$doy)),
+                                             log_qsdy = c(quantile(u.noni$log_qsdy, 0.2),
+                                                          quantile(u.noni$log_qsdy, 0.8)))) %>%
+    mutate(WTmwk_orig = (WTmwk*sd(upstream$WTmwk)+mean(upstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamu10_doy_qsdy <- predict_gam(gamu10, values = list(doy = c(quantile(u.noni$doy, 0.1),
+                                                          quantile(u.noni$doy, 0.3),
+                                                          quantile(u.noni$doy, 0.5), 
+                                                          quantile(u.noni$doy, 0.7), 
+                                                          quantile(u.noni$doy, 0.9)),
+                                             log_qsdy = c(quantile(u.noni$log_qsdy, 0.2),
+                                                          quantile(u.noni$log_qsdy, 0.8), 
+                                                          median(u.noni$log_qsdy)))) %>%
+  mutate(WTmwk_orig = (WTmwk*sd(upstream$WTmwk)+mean(upstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+
+pred_gamu10_all <- predict_gam(gamu10) %>%
+   mutate(WTmwk_orig = (WTmwk*sd(upstream$WTmwk)+mean(upstream$WTmwk))) %>%
+  mutate(across(.cols = everything(), round, digits = 3))
+```
+
+
+## Visualization
+* CI = 95% CIs
+
+Temperatures are only applicable to certain months. This may be true for flow too. 
+```{r}
+ggplot(upstream, aes(x = doy, y = WTmwk, color = factor(month))) + geom_point(size = 3) + theme_bw() + scale_color_viridis(discrete = TRUE) + labs(title = "Temperature possibilities")
+
+ggplot(upstream, aes(x = doy, y = log_qsdy, color = factor(month))) + geom_point(size = 3) + theme_bw() + scale_color_viridis(discrete = TRUE) + labs(title = "Flow possibilities")
+```
+
+
+### by q
+* We are not able to really predict middles of these, because 16 degrees not relevant July/August and 21 degrees not relevant 207+
+```{r}
+pred_gamu10_q %>%
+  ggplot(aes(doy, fit)) +
+  geom_smooth_ci(log_qsdy, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~WTmwk_orig,
+             labeller= label_both) +
+  labs(y = "chlorophyll") +
+  theme_bw()
+```
+
+### by water temp
+Low chlorophyll around July, higher more towards May and October.
+Similar patterns for low and high flow. Low water temp has different pattern from higher water temps. 
+```{r}
+pred_gamu10_wt %>%
+  ggplot(aes(doy, fit)) +
+  geom_smooth_ci(WTmwk_orig, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~log_qsdy,
+             labeller = label_both) +
+  labs(y = "chlorophyll")+
+  theme_bw()
+```
+
+### day of year
+Pattern similar across low and high flow.
+Increase in chlorophyll with increase in water temp (generally), though weird decrease around WT = 18
+```{r}
+pred_gamu10_doy %>%
+  ggplot(aes(WTmwk_orig, fit)) +
+  geom_smooth_ci(doy, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  labs(y = "chlorophyll")+
+  facet_wrap(~log_qsdy,
+             labeller = label_both) +
+  theme_bw()
+```
+
+### by flow, and faceted by ~approximately month?
+For higher flows, increase with increasing temperature. For lower flow, not much clear pattern
+```{r}
+pred_gamu10_doy_qsdy %>%
+  ggplot(aes(WTmwk_orig, fit)) +
+  geom_smooth_ci(log_qsdy, size = 1.5) +
+  facet_wrap(~doy) + 
+  scale_color_viridis(discrete = TRUE) +
+  labs(y = "chlorophyll")+
+  theme_bw()
+```
+
+
+```{r}
+pred_gamu10_all %>%
+  ggplot(aes(WTmwk_orig, log_qsdy, z = fit)) +
+  geom_tile(aes(fill = fit)) +
+  geom_contour(colour = "white") +
+  scale_fill_viridis(name = "chla") +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+pred_gamu10_all %>%
+  ggplot(aes(doy, log_qsdy, z = fit)) +
+  geom_raster(aes(fill = fit)) +
+  geom_contour(colour = "white") +
+  scale_fill_viridis(name = "chla") +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+# Conclusions
+- Higher chlorophyll with higher flow and temperature
+- Some dips in chlorophyll around doy 250 (July)
+
+# Questions
+* How much should we be playing with k? 
+* How to deal with autocorrelation
+* Should we add random effects?
+* Should doy be scaled?
