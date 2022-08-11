@@ -6,12 +6,12 @@ model{
   # regression
     mu[i] <- B[1] +
              B[2] * Qant[i] +
-             B[3] * Srad_mwk[doy1999[i]] +
-             B[4] * Wtemp_mwk[doy1999[i]] +
-             #B[5] * Wtemprange_mwk[doy1999[i]] +
-             B[5] * days_of_inund_until_now[doy1999[i]] +
-             Inun[inund_season[doy1999[i]]]
-             #Inun2[inund_season[doy1999[i]]] *  Qant[i]
+             B[3] * Srad_mwk[doy2012[i]] +
+             B[4] * Wtemp_mwk[doy2012[i]] +
+             B[5] * days_of_inund_until_now[doy2012[i]] +
+             B[6] * Wtemprange_mwk[doy2012[i]] +
+             Inun[inund_season[doy2012[i]]]
+             #Inun2[inund_season[doy2012[i]]] *  Qant[i]
              #eps[station_id[i]]
 
   # Sum antecedent components across all timesteps
@@ -19,14 +19,14 @@ model{
 
   # Create temporary antecedent variable
   # here we create index (of Q or temp or radians) multiply weight by
-  # index based on days since 1999, average of next day period, etc
+  # index based on days since 2012, average of next day period, etc
 
     # use lag of
     #for(k in 1:1){ # current day's Q
-      #qTemp[i,k] <- Q[(doy1999[i])]*wA[1]
+      #qTemp[i,k] <- Q[(doy2012[i])]*wA[1]
       #} if using this statement, change to k=2 in for(k in 1:nlagA)
     for(k in 1:nlagA){ # flow from lags
-      qTemp[i,k] <-  mean(Q[(doy1999[i]-sum(pA[1:k])):(doy1999[i]-sum(pA[1:k])+pA[k] - 1)])*wA[k]
+      qTemp[i,k] <-  mean(Q[(doy2012[i]-sum(pA[1:k])):(doy2012[i]-sum(pA[1:k])+pA[k] - 1)])*wA[k]
     }
 
   # part of dsum
@@ -58,7 +58,7 @@ model{
   #}
 
   # Diffuse normal priors for regression coefficients
-  for(k in 1:5){
+  for(k in 1:6){
     B[k] ~ dnorm(0, 0.001)
     # Identifiable parameter vector
     Bstar[k] <- B[k] #+ equals(k, 1)*mean(eps[])

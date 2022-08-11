@@ -10,7 +10,7 @@ model{
              B[4] * Wtemp_mwk[doy1999[i]] +
              #B[5] * Wtemprange_mwk[doy1999[i]] +
              B[5] * days_of_inund_until_now[doy1999[i]] +
-             Inun[inund_season[doy1999[i]]] +
+             Inun[inundation[doy1999[i]]]
              #Inun2[inund_season[doy1999[i]]] *  Qant[i]
              #eps[station_id[i]]
 

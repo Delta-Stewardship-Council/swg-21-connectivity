@@ -37,7 +37,7 @@ hist(log(chla$chlorophyll))
 # check sd among site mean chlorophyll, set as parameter for folded-t prior
 sd(tapply(chla$chlorophyll, chla$station_id, mean))
 
-# Remove the first observation of chlorophyll because covars data don't go back that far
+# Remove the first observations of chlorophyll because covars data don't go back that far
 chla_1 <- chla[-c(1:3),]
 # Make inundation = 0 (not inundated) as category 1, and inundation = 1 (inundated) as category 2
 covars$inundation <- as.integer(ifelse(covars$inundation == "0", 1, 2))
@@ -51,7 +51,7 @@ datlist <- list(chl = log(chla_1$chlorophyll),
                 #Wtemprange_mwk = c(covars$Wtemprange_mwk),
                 #station_id = chla_1$station_id,
                 days_of_inund_until_now = c(covars$days_of_inund_until_now),
-                inund_season = c(as.integer(covars$inundation)),
+                inundation = c(as.integer(covars$inundation)),
                 #Nstation = length(unique(chla_1$station_wq_chl)),
                 doy1999 = chla_1$doy1999,
                 N = nrow(chla_1),
@@ -74,18 +74,18 @@ initslist <- list(inits(), inits(), inits())
 # run this if model has been successfully run already:
 
 # Or load saved.state
-#load("bayes_models/mod13_below/inits/sstate_20220714.Rda")
+#load("bayes_models/mod13_below/inits/sstate_20220728.Rda")
 inits_2 <- function(){
   list(#sig.eps = runif(1, 0, 1),
        tau = runif(1, 0, 1),
-       B = rnorm(6, 0, 1)) # for 6 B parameters, adjust as needed
+       B = rnorm(5, 0, 1)) # for 6 B parameters, adjust as needed
 }
 initslist <- list(list(sig.eps = saved.state[[2]][[1]]$sig.eps, tau = saved.state[[2]][[1]]$tau, B = inits_2()$B), list(sig.eps = saved.state[[2]][[3]]$sig.eps, tau = saved.state[[2]][[3]]$tau, B = inits_2()$B), inits_2())
 
 # Run Model ---------------------------------------------------------------
 
 # Run model
-jm <- jags.model("bayes_models/mod13_below_inund_poss/sam_model2.JAGS",
+jm <- jags.model("bayes_models/mod13_below_inund_poss/sam_model.JAGS",
                  data = datlist,
                  inits = initslist,
                  n.chains = 3)
@@ -113,7 +113,7 @@ gelman.diag(jm_coda, multivariate = FALSE)
 newinits <- initfind(coda = jm_coda)
 #saved.state <- removevars(initsin = newinits, variables=c(2:5, 8, 9))
 saved.state <- newinits
-save(saved.state, file = "bayes_models/mod13_below_inund_poss/inits/sstate_20220715.Rda")
+save(saved.state, file = "bayes_models/mod13_below_inund_poss/inits/sstate_20220728.Rda")
 
 
 # Look at Outputs ---------------------------------------------------------
@@ -134,14 +134,16 @@ coda_sum <- tidyMCMC(jm_coda,
                      conf.level = 0.95,
                      conf.method = "HPDinterval")
 
-# intercept (interpreted as log(chlA) at average conditions, since covariates are standardized)
+# Inundation term (2nd inun is added offset due to being inundated)
 coda_sum %>%
   filter(grepl("Inun", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_y_continuous("Intercept") +
+  scale_y_continuous("Inun") +
   theme_bw()
+ggsave(filename = "bayes_models/mod13_below_inund_poss/fig_out/slope_of_beta_inund_20220728.png",
+       dpi=300, width = 11, height = 8)
 
 # slope of Q, Qant, Srad, inundation days
 # can interpret relative influence of each covariate, since covariates are standardized
@@ -153,7 +155,7 @@ coda_sum %>%
   scale_x_discrete(labels = c("Qant", "Srad_mwk", "Wtemp_mwk", "days_inund_til_now")) + #"Wtemprange_mwk",
   scale_y_continuous("Slope of covariates") +
   theme_bw()
-ggsave(filename = "bayes_models/mod13_below_inund_poss/fig_out/slope_of_betas_qant_20220715.png",
+ggsave(filename = "bayes_models/mod13_below_inund_poss/fig_out/slope_of_betas_qant_20220728.png",
        dpi=300, width = 11, height = 8)
 
 # weights of Qant
@@ -165,12 +167,12 @@ coda_sum %>%
   scale_x_discrete(labels = c("previous 2wk", "prev. 2-5wk", "prev. 5-8wk")) +
   scale_y_continuous("Weights of past Q") +
   theme_bw()
- ggsave(filename = "bayes_models/mod13_below_inund_poss/fig_out/weights_of_qant_20220715.png",
+ ggsave(filename = "bayes_models/mod13_below_inund_poss/fig_out/weights_of_qant_20220728.png",
        dpi=300, width = 10, height = 8)
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod13_below_inund_poss/run_20220715.rda")
+save(jm_coda, coda_sum, file = "bayes_models/mod13_below_inund_poss/run_20220728.rda")
 
 # save model summary
 sink("bayes_models/mod13_below_inund_poss/fig_out/jm_coda_summary.txt")

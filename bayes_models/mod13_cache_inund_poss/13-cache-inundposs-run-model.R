@@ -21,11 +21,11 @@ library(postjags)
 
 # Bring in Data For Model -------------------------------------------------
 
-source("scripts/functions/f_make_bayes_mod13_below_dataset.R")
-mod_df <- f_make_bayes_mod13_below_dataset()
+source("scripts/functions/f_make_bayes_mod13_cache_inundposs_dataset.R")
+mod_df <- f_make_bayes_mod13_cache_inundposs_dataset()
 
 # pull out datasets
-# to restrict analysis to below region
+# to restrict analysis to Cache region
 chla <- mod_df$chla
 covars <- mod_df$covars
 
@@ -38,21 +38,23 @@ hist(log(chla$chlorophyll))
 sd(tapply(chla$chlorophyll, chla$station_id, mean))
 
 # Remove the first observation of chlorophyll because covars data don't go back that far
-chla_1 <- chla[-c(1:3),]
+#chla_1 <- chla[-c(1:3),]
+# Make inundation = 0 (not inundated) as category 1, and inundation = 1 (inundated) as category 2
+covars$inundation <- as.integer(ifelse(covars$inundation == "0", 1, 2))
 
 # Create Model Datalist ---------------------------------------------------
 
-datlist <- list(chl = log(chla_1$chlorophyll),
+datlist <- list(chl = log(chla$chlorophyll),
                 Q = c(covars$Q),
                 Srad_mwk = c(covars$Srad_mwk),
                 Wtemp_mwk = c(covars$Wtemp_mwk),
                 Wtemprange_mwk = c(covars$Wtemprange_mwk),
                 #station_id = chla_1$station_id,
                 days_of_inund_until_now = c(covars$days_of_inund_until_now),
-                inund_season = c(covars$inund_season),
+                inund_season = c(as.integer(covars$inundation)),
                 #Nstation = length(unique(chla_1$station_wq_chl)),
-                doy1999 = chla_1$doy1999,
-                N = nrow(chla_1),
+                doy2012 = chla$doy2012,
+                N = nrow(chla),
                 pA = c(14, 21, 21),
                 # mean of previous 14 days, mean of 21 days before that, etc
                 nlagA = 3, # index for for loop
@@ -63,9 +65,9 @@ datlist <- list(chl = log(chla_1$chlorophyll),
 
 # Initials functions for root node parameters
 inits <- function(){
-  list( sig.eps = runif(1, 0, 1),
+  list( #sig.eps = runif(1, 0, 1),
         tau = runif(1, 0, 1),
-       B = rnorm(7, 0, 1000)) # for 6 B parameters, adjust as needed
+       B = rnorm(6, 0, 1000)) # for 6 B parameters, adjust as needed
 }
 initslist <- list(inits(), inits(), inits())
 
@@ -76,14 +78,14 @@ initslist <- list(inits(), inits(), inits())
 inits_2 <- function(){
   list(#sig.eps = runif(1, 0, 1),
        tau = runif(1, 0, 1),
-       B = rnorm(7, 0, 1)) # for 6 B parameters, adjust as needed
+       B = rnorm(6, 0, 1)) # for 6 B parameters, adjust as needed
 }
 initslist <- list(list(sig.eps = saved.state[[2]][[1]]$sig.eps, tau = saved.state[[2]][[1]]$tau, B = inits_2()$B), list(sig.eps = saved.state[[2]][[3]]$sig.eps, tau = saved.state[[2]][[3]]$tau, B = inits_2()$B), inits_2())
 
 # Run Model ---------------------------------------------------------------
 
 # Run model
-jm <- jags.model("bayes_models/mod13_below/sam_model.JAGS",
+jm <- jags.model("bayes_models/mod13_cache_inund_poss/sam_model.JAGS",
                  data = datlist,
                  inits = initslist,
                  n.chains = 3)
@@ -92,7 +94,7 @@ update(jm, n.iter = 1000)
 
 # Sample Posterior
 jm_coda <- coda.samples(jm,
-                        variable.names = c("deviance", "Dsum", "Bstar",  "wA",
+                        variable.names = c("deviance", "Dsum", "Bstar",  "Inun", "wA",
                                            "deltaA",
                                            "sig", "tau"),
                         n.iter = 1000*30,
@@ -111,7 +113,7 @@ gelman.diag(jm_coda, multivariate = FALSE)
 newinits <- initfind(coda = jm_coda)
 #saved.state <- removevars(initsin = newinits, variables=c(2:5, 8, 9))
 saved.state <- newinits
-save(saved.state, file = "bayes_models/mod13_below/inits/sstate_20220714.Rda")
+save(saved.state, file = "bayes_models/mod13_cache_inund_poss/inits/sstate_20220721.Rda")
 
 
 # Look at Outputs ---------------------------------------------------------
@@ -134,7 +136,7 @@ coda_sum <- tidyMCMC(jm_coda,
 
 # intercept (interpreted as log(chlA) at average conditions, since covariates are standardized)
 coda_sum %>%
-  filter(grepl("Bstar\\[1", term)) %>%
+  filter(grepl("Inun", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
@@ -144,14 +146,14 @@ coda_sum %>%
 # slope of Q, Qant, Srad, inundation days
 # can interpret relative influence of each covariate, since covariates are standardized
 coda_sum %>%
-  filter(grepl("Bstar\\[[2-7]{1}", term)) %>%
+  filter(grepl("Bstar\\[[2-6]{1}", term)) %>%
   ggplot(aes(x = term, y = estimate)) +
   geom_hline(yintercept = 0, color = "red") +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  scale_x_discrete(labels = c("Qant", "Srad_mwk", "Wtemp_mwk", "Wtemprange_mwk", "days_inund_til_now", "inund_season")) +
+  scale_x_discrete(labels = c("Qant", "Srad_mwk", "Wtemp_mwk", "days_inund_til_now", "Wtemprange_mwk")) + #
   scale_y_continuous("Slope of covariates") +
   theme_bw()
-ggsave(filename = "bayes_models/mod13_below/fig_out/slope_of_betas_qant_20220714.png",
+ggsave(filename = "bayes_models/mod13_cache_inund_poss/fig_out/slope_of_betas_qant_20220721.png",
        dpi=300, width = 11, height = 8)
 
 # weights of Qant
@@ -163,15 +165,15 @@ coda_sum %>%
   scale_x_discrete(labels = c("previous 2wk", "prev. 2-5wk", "prev. 5-8wk")) +
   scale_y_continuous("Weights of past Q") +
   theme_bw()
- ggsave(filename = "bayes_models/mod13_below/fig_out/weights_of_qant_20220714.png",
+ ggsave(filename = "bayes_models/mod13_cache_inund_poss/fig_out/weights_of_qant_20220721.png",
        dpi=300, width = 10, height = 8)
 
 
 # save model
-save(jm_coda, coda_sum, file = "bayes_models/mod13_below/run_20220714.rda")
+save(jm_coda, coda_sum, file = "bayes_models/mod13_cache_inund_poss/run_20220721.rda")
 
 # save model summary
-sink("bayes_models/mod13_below/fig_out/jm_coda_summary.txt")
+sink("bayes_models/mod13_cache_inund_poss/fig_out/jm_coda_summary.txt")
 summary(jm_coda)
 sink()
 
@@ -186,7 +188,7 @@ coda.rep_sum <- tidyMCMC(coda.rep, conf.int = TRUE, conf.method = "HPDinterval")
 pred <- cbind.data.frame(chl = datlist$chl, coda.rep_sum)
 
 m1 <- lm(pd.mean ~ chl, data = pred)
-summary(m1) # Adjusted R2 = 0.383
+summary(m1) # Adjusted R2 = 0.1659
 
 pred %>%
   filter(!is.na(chl)) %>%
@@ -199,12 +201,12 @@ pred %>%
   scale_y_continuous("Predicted") +
   theme_bw(base_size = 12)
 
-ggsave(filename = "bayes_models/mod13_below/fig_out/pred_vs_obs_20220714.png",
+ggsave(filename = "bayes_models/mod13_cache_inund_poss/fig_out/pred_vs_obs_20220721.png",
        dpi=300, width = 10, height = 8)
 
 # Observed vs. predicted chlorophyll as a function of time
-chl_obs_dates <- as.data.frame(chla_1) %>%
-  select(date, doy1999)
+chl_obs_dates <- as.data.frame(chla) %>%
+  select(date, doy2012)
 pred_time <- cbind.data.frame(pred, chl_obs_dates)
 pred_time$date <- as.Date(pred_time$date, format = "%Y-%m-%d")
 
@@ -219,7 +221,7 @@ pred_time %>%
   theme_bw(base_size = 12) +
   scale_x_date(date_labels = "%m-%Y")
 
-ggsave(filename = "bayes_models/mod13_below/fig_out/pred_obs_time_20220714.png",
+ggsave(filename = "bayes_models/mod13_cache_inund_poss/fig_out/pred_obs_time_20220721.png",
        dpi=300, width = 10, height = 8)
 
 
