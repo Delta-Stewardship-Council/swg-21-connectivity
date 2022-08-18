@@ -3,6 +3,8 @@ title: "make_gam_hypothesis"
 author: "NCEAS"
 date: '2022-08-11'
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -40,6 +42,12 @@ Test: log_chla~te(WTmwk, log_qsdy, by = "inundation")
 * Or don't analyze and mention in discussion
 * break into factor-combos (inundation & tily_fac combos, one by statement)
 
+To do:
+* Run models with un-transformed data
+* Predict upstream and yolo models
+* Figure out autocorrelation and if it matters
+* More visualizations
+
 # Read in data
 ```{r}
 alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
@@ -54,6 +62,7 @@ alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
          t_qsdy = kader:::cuberoot(Q_sday), 
          log_qsdy = log(Q_sday),
          inund_fac = ifelse(inund_days == 0, "none", ifelse(inund_days > 14, "long", "short")),
+         inund_fac2 = ifelse(inund_days == 0, "none", ifelse(inund_days > 21, "long", "short")),
          inundation = as.factor(inundation),
          station_wq_chl = as.factor(station_wq_chl),
          tily_fac = case_when(total_inund_last_year == 0 ~ "none",
@@ -61,7 +70,8 @@ alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
                               total_inund_last_year>16 & total_inund_last_year < 41 ~ "month",
                               TRUE ~ "months"),
          tily_fac = as.factor(tily_fac),
-         inund_fac = as.factor(inund_fac)) %>%
+         inund_fac = as.factor(inund_fac),
+         inund_fac2 = as.factor(inund_fac2)) %>%
   rename(station = station_wq_chl, tily = total_inund_last_year, 
          dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
 
@@ -73,6 +83,17 @@ str(alldata0)
 cor(alldata0$Sradmwk, alldata0$WTmwk, method = "spearman")
 cor(alldata0$Sradmwk, alldata0$dowy, method = "spearman")
 cor(alldata0$WTmwk, alldata0$dowy, method = "spearman")
+```
+
+
+Filter to inundation period
+```{r}
+inundPd <- alldata0 %>% filter(inundation == 1) 
+inMin <- min(inundPd$dowy)
+inMax <- max(inundPd$dowy)
+
+alldata <- alldata0 %>%
+  filter(dowy >= inMin & dowy <= inMax)
 ```
 
 
@@ -96,57 +117,289 @@ yo.idys <- yolo %>%
 # Model
 
 ## Run Models
+### Upstream
+```{r}
+gamu1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = u.idys, family = "gaussian")
+summary(gamu1)
+
+gamu2 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = u.idys, family = "gaussian")
+summary(gamu2)
+
+gamu3 <- gam(log_chla ~ te(log_qsdy, WTmwk, log_idys), method = "REML", data = u.idys, family = "gaussian")
+summary(gamu3)
+
+gamu4 <- gam(log_chla ~ te(log_idys, WTmwk, by = inundation), method = "REML", data = u.idys, family = "gaussian")
+summary(gamu4)
+
+
+gamu5 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inund_fac2), method = "REML", data = u.idys, family = "gaussian")
+
+######################
+gamu6 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.idys, family = "gaussian")
+summary(gamu6)
+######################
+
+AIC(gamu1, gamu2, gamu3, gamu4, gamu6)
+
+```
+
+### Yolo
+```{r}
+gamyo1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
+summary(gamyo1) # best
+
+gamyo2 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
+summary(gamyo2)
+
+gamyo3 <- gam(log_chla ~ te(log_qsdy, WTmwk, log_idys), method = "REML", data = yo.idys, family = "gaussian")
+summary(gamyo3)
+
+gamyo4 <- gam(log_chla ~ te(log_idys, WTmwk, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
+summary(gamyo4)
+
+gamyo5 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac), method = "REML", data = yo.idys, family = "gaussian")
+summary(gamyo5)
+
+#######################
+gamyo6 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = yo.idys, family = "gaussian")
+summary(gamyo6)
+######################
+
+AIC(gamyo1, gamyo2, gamyo3, gamyo4, gamyo5, gamyo6)
+```
+
+### Downstream
 ```{r}
 gamd1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+summary(gamd1)
 
-gamu1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = u.idys, family = "gaussian")
+gamd2 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+summary(gamd2)
 
-gamyo1 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = yo.idys, family = "gaussian")
+gamd3 <- gam(log_chla ~ te(log_qsdy, WTmwk, log_idys), method = "REML", data = d.idys, family = "gaussian")
+summary(gamd3)
+
+gamd4 <- gam(log_chla ~ te(log_idys, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
+summary(gamd4)
+
+#####################
+gamd6 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = d.idys, family = "gaussian")
+summary(gamd6)
+#####################
+
+AIC(gamd1, gamd2, gamd3, gamd4, gamd6)
 ```
 
 ## Validation
-gamd1
+
+gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.idys, family = "gaussian")
+
+### gamd6
 ```{r}
   # validate the final model by plotting residuals and save to a tiff
   tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
-  resid = residuals(gamyo1.20)
+  resid = residuals(gamd6)
   op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
   # Plot 1: Residuals vs. Fitted values; should be centered around 0
-  plot(fitted(gamyo1.20), resid, xlab = "Fitted values", ylab = "Residuals")
+  plot(fitted(gamd6), resid, xlab = "Fitted values", ylab = "Residuals")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(d.idys$log_qsdy, resid, xlab = "Flow",   ylab = "Residuals")
+  plot(d.idys$WTmwk, resid, xlab = "WTmwk",   ylab = "Residuals")
+  plot(d.idys$inund_fac2, resid, xlab = "inundation factor",   ylab = "Residuals")
+  par(op)
+  dev.off()
+```
+
+### gamu6
+* some minor autocorrelation at t-1
+```{r}
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
+  resid = residuals(gamu6)
+  op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gamu6), resid, xlab = "Fitted values", ylab = "Residuals")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  plot(u.idys$log_qsdy, resid, xlab = "Flow",   ylab = "Residuals")
+  plot(u.idys$WTmwk, resid, xlab = "WTmwk",   ylab = "Residuals")
+  plot(u.idys$inund_fac2, resid, xlab = "inundation factor",   ylab = "Residuals")
+  par(op)
+  dev.off()
+  
+  pacf(resid)
+```
+
+### gamyo6
+```{r}
+  # validate the final model by plotting residuals and save to a tiff
+  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
+  resid = residuals(gamyo6)
+  op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gamyo6), resid, xlab = "Fitted values", ylab = "Residuals")
   # Plot 2: histogram of the residuals; should be centered around 0
   hist(resid, xlab = 'Residuals', main = "")
   # Plot 3: is there autocorrelation in the residuals?
   acf(resid)
   # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
   plot(yo.idys$log_qsdy, resid, xlab = "Flow",   ylab = "Residuals")
-  plot(yo.idys$dowy, resid, xlab = "day of water year",   ylab = "Residuals")
-  plot(yo.idys$tily, resid, xlab = "total inundation last year",   ylab = "Residuals")
+  plot(yo.idys$WTmwk, resid, xlab = "WTmwk",   ylab = "Residuals")
+  plot(yo.idys$inund_fac2, resid, xlab = "inundation factor",   ylab = "Residuals")
   par(op)
   dev.off()
-```
-
-gamu1
-```{r}
-
-```
-
-gamyo1
-```{r}
-
+  
+  pacf(resid)
 ```
 
 # Predict data
-```{r}
 
+* chlorophyll vs flow 5% WT, 95% WT
+* chlorophyll vs WT 5% flow, 95% flow
+
+cat trying to work on lists
+```{r}
+test <- d.idys %>%
+group_by(inund_fac2)%>%
+ mutate(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  ungroup()
+
+d <- list(NA, NA, NA)
+d[[1]] <- test %>% filter(inund_fac2 == "none")
+d[[2]] <- test %>% filter(inund_fac2 == "short")
+d[[3]] <- test %>% filter(inund_fac2 == "long")
+library(purrr)
+View(d[[3]])
+
+predict_list <- map(d, ~ .x, predict_gam(gamd6, values = list(log_qsdy = seq(minQ, maxQ, by = 0.05))))
+
+predict_list <- map(d, ~ .x, minQ + 2)
+```
+
+```{r}
+library(tidymv)
+
+# Get values 
+d.idys %>%
+  group_by(inund_fac2)%>%
+ summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  ungroup()
+
+# Prediction datasets - Downstream
+pred_gamd6_none <- predict_gam(gamd6, values = list(log_qsdy = seq(-1.47, 0.944, by = 0.05),
+                                                    WTmwk = seq(-1.53, 1.87, by = 0.1),
+                                                    inund_fac2 = "none"))
+pred_gamd6_short <- predict_gam(gamd6, values = list(log_qsdy = seq(-0.652, 2.22, by = 0.05),
+                                                    WTmwk = seq(-1.18, 0.890, by = 0.1),
+                                                    inund_fac2 = "short"))
+pred_gamd6_long <- predict_gam(gamd6, values = list(log_qsdy = seq(1.22, 2.23, by = 0.05),
+                                                    WTmwk = seq(-0.581, 1.03, by = 0.1),
+                                                    inund_fac2 = "long"))
+
+
+
+    
+    
+# Other predictions
+pred_gamd6_q <- predict_gam(gamd6, values = list(log_qsdy = c(quantile(d.idys$log_qsdy, 0.05),
+                                                          quantile(d.idys$log_qsdy, 0.95), 
+                                                          median(d.idys$log_qsdy)),
+                                             WTmwk = c(quantile(d.idys$WTmwk, 0.05),
+                                                       quantile(d.idys$WTmwk, 0.95))))
+    mutate(WT_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk)))
+  #mutate(across(.cols = everything(), round, digits = 3))
+
+      
+pred_gamd6_q2 <- predict_gam(gamd6, values = list(log_qsdy = c(quantile(d.idys$log_qsdy, 0.05),
+                                                          quantile(d.idys$log_qsdy, 0.95), 
+                                                          median(d.idys$log_qsdy))))
+      #mutate(WTmwk = as.numeric(WTmwk))
+  #mutate(across(.cols = everything(), round, digits = 3))
+      
+      
+      
+pred_gamd6 <- predict_gam(gamd6) 
 ```
 
 ## Constrain data
+- constrain by the data we have for each inund_fac level
 ```{r}
 
 ```
 
 # Visualize data
 ```{r}
+# by flow and WT
+pred_gamd6_none %>%
+  ggplot(aes(log_qsdy, fit, color = WTmwk)) +
+  geom_point() +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis() +
+  labs(y = "chlorophyll", title = "no inundation downstream") +
+  theme_bw()
 
+pred_gamd6_short %>%
+  ggplot(aes(log_qsdy, fit, color = WTmwk)) +
+  geom_point() +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis() +
+  labs(y = "chlorophyll", title = "short inundation downstream") +
+  theme_bw()
+
+pred_gamd6_long %>%
+  ggplot(aes(log_qsdy, fit, color = WTmwk)) +
+  geom_point() +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis() +
+  labs(y = "chlorophyll", title = "long inundation downstream") +
+  theme_bw()
+
+# Long: Flow is dominant factor
+# Short: At high temps
+
+
+
+
+
+
+# limited data by WT divisions
+pred_gamd6_q %>%
+  ggplot(aes(log_qsdy, fit)) +
+  geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis(discrete = TRUE) +
+  facet_wrap(~inund_fac2,
+             labeller= label_both) +
+  labs(y = "chlorophyll") +
+  theme_bw()
+
+
+# All the prediction data
+pred_gamd6 %>%
+ggplot(aes(log_qsdy, fit, color = WTmwk)) +
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  geom_point() +
+ # geom_errorbar(aes(ymax = fit + se.fit, ymin = fit-se.fit)) + 
+  #scale_color_manual(values = c("red", "blue")) +
+  scale_color_viridis() +
+  facet_wrap(~inund_fac2,
+             labeller= label_both) +
+  labs(y = "chlorophyll") +
+  theme_bw()
 ```
 
