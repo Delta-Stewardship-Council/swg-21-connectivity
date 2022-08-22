@@ -158,34 +158,35 @@ Model 5: log_chla = te(Q_sday, dowy, days_since_inundation, by = inundated)
 ```{r}
 gamd0 <- gam(log_chla ~ 1, method = "REML", data = d.idys, family = "gaussian")
 gamd1.0 <- gam(log_chla ~ s(log_qsdy), method = "REML", data = d.idys, family = "gaussian")
-gamd1.1 <- gam(log_chla ~ s(log_qsdy) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.1 <- gam(log_chla ~ s(log_qsdy) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.1b <- gam(log_chla ~ te(log_qsdy, dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.2 <- gam(log_chla ~ s(log_idys), method = "REML", data = d.idys, family = "gaussian")
-gamd1.3 <- gam(log_chla ~ s(log_idys) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.3 <- gam(log_chla ~ s(log_idys) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.4 <- gam(log_chla ~ s(WTmwk), method = "REML", data = d.idys, family = "gaussian")
-gamd1.5 <- gam(log_chla ~ s(WTmwk) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.5 <- gam(log_chla ~ s(WTmwk) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.6 <- gam(log_chla ~ s(Sradmwk), method = "REML", data = d.idys, family = "gaussian")
-gamd1.7 <- gam(log_chla ~ s(Sradmwk) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.7 <- gam(log_chla ~ s(Sradmwk) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.8 <- gam(log_chla ~ s(WTrangemwk), method = "REML", data = d.idys, family = "gaussian")
-gamd1.9 <- gam(log_chla ~ s(WTrangemwk) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.9 <- gam(log_chla ~ s(WTrangemwk) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.10 <- gam(log_chla ~ s(diurnal_range), method = "REML", data = d.idys, family = "gaussian")
-gamd1.11 <- gam(log_chla ~ s(diurnal_range) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.11 <- gam(log_chla ~ s(diurnal_range) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.12 <- gam(log_chla ~ s(tily), method = "REML", data = d.idys, family = "gaussian")
-gamd1.13 <- gam(log_chla ~ s(tily) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.13 <- gam(log_chla ~ s(tily) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.14 <- gam(log_chla ~ s(dsli), method = "REML", data = d.idys, family = "gaussian")
-gamd1.15 <- gam(log_chla ~ s(dsli) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.15 <- gam(log_chla ~ s(dsli) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 
 gamd1.16 <- gam(log_chla ~ s(log_qsdy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
-gamd1.17 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy, bs = "cc"), method = "REML", data = d.idys, family = "gaussian")
+gamd1.17 <- gam(log_chla ~ s(log_qsdy, by = inundation) + s(dowy), method = "REML", data = d.idys, family = "gaussian")
 gamd1.18 <- gam(log_chla ~ te(log_qsdy, dowy, by = inundation), method = "REML", data = d.idys, family = "gaussian")
 gamd1.19 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
 gamd1.20 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inundation), method = "REML", data = d.idys, family = "gaussian")
 gamd1.21 <- gam(log_chla ~ te(log_qsdy, dowy, by = inund_fac),  method = "REML", data = d.idys, family = "gaussian")
 
-gamd1.22 <- gam(log_chla ~ te(log_qsdy, tily, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
-gamd1.23 <- gam(log_chla ~ te(log_qsdy, dsli, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
-gamd1.24 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
-gamd1.25 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
-gamd1.26 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy, bs = c("tp", "tp", "cc")), method = "REML", data = d.idys, family = "gaussian")
+gamd1.22 <- gam(log_chla ~ te(log_qsdy, tily, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.23 <- gam(log_chla ~ te(log_qsdy, dsli, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.24 <- gam(log_chla ~ te(log_qsdy, diurnal_range, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.25 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, dowy), method = "REML", data = d.idys, family = "gaussian")
+gamd1.26 <- gam(log_chla ~ te(log_qsdy, WTmwk, dowy), method = "REML", data = d.idys, family = "gaussian")
 
 gamd1.27 <- gam(log_chla ~ te(log_qsdy, tily, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
 gamd1.28 <- gam(log_chla ~ te(log_qsdy, dsli, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
@@ -193,7 +194,7 @@ gamd1.29 <- gam(log_chla ~ te(log_qsdy, diurnal_range, Sradmwk), method = "REML"
 gamd1.30 <- gam(log_chla ~ te(log_qsdy, WTrangemwk, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
 gamd1.31 <- gam(log_chla ~ te(log_qsdy, WTmwk, Sradmwk), method = "REML", data = d.idys, family = "gaussian")
 
-resd <- (AIC(gamd0, gamd1.0, gamd1.1, gamd1.2, gamd1.3, gamd1.4, gamd1.5, gamd1.6, gamd1.7, gamd1.8, gamd1.9, gamd1.10, gamd1.11, gamd1.12, gamd1.13, gamd1.14, gamd1.15, gamd1.16, gamd1.17, gamd1.18, gamd1.19, gamd1.20, gamd1.21, gamd1.22, gamd1.23, gamd1.24,
+resd <- (AIC(gamd0, gamd1.0, gamd1.1,gamd1.1b, gamd1.2, gamd1.3, gamd1.4, gamd1.5, gamd1.6, gamd1.7, gamd1.8, gamd1.9, gamd1.10, gamd1.11, gamd1.12, gamd1.13, gamd1.14, gamd1.15, gamd1.16, gamd1.17, gamd1.18, gamd1.19, gamd1.20, gamd1.21, gamd1.22, gamd1.23, gamd1.24,
 gamd1.25, gamd1.26, gamd1.27, gamd1.28, gamd1.29, gamd1.30, gamd1.31))
 resd %>% arrange(AIC)
 
@@ -1442,7 +1443,7 @@ lines(x = gam.i1$WTmwk, y = gam.i1$fit, lwd = 2, col = rgb(20, 20, 150, alpha = 
 ```
 
 
-#### Visualize gamyo1.12 across day of water year
+#### Visualize gamu1.12 across day of water year
 
 * Low and high water temperature
 * Low and high tidal range
