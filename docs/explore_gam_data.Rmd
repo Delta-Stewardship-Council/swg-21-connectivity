@@ -10,7 +10,7 @@ editor_options:
 
     Here we read in cleaned dataset, plot data, look at outliers and correlations between variables. 
 
-*Last updated 4/21/2022 by C. Pien
+*Last updated 8/24/2022 by C. Pien
 
 
 ```{r setup, include=FALSE}
@@ -36,39 +36,231 @@ alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
   mutate(month = lubridate::month(date),
          year = lubridate::year(date),
          doy = lubridate::yday(date)-60,
-         water_year = ifelse(month>9, year + 1, year)) %>%
+         water_year = ifelse(month>9, year + 1, year),
+         log_chla = log(chlorophyll+1)) %>%
   rename(station = station_wq_chl)
 
-#chla_nuts <- read_csv("data_model/model_chla_nuts_combined.csv")
+chla_nuts <- read_csv("data_model/model_covars_chla_nuts_extravars.csv") %>%
+  select(-c(diss_ammonia_sign:diss_nitrate_nitrite, diss_orthophos_sign))%>%
+  mutate(month = lubridate::month(date),
+         year = lubridate::year(date),
+         doy = lubridate::yday(date)-60,
+         water_year = ifelse(month>9, year + 1, year),
+         log_chla = log(chlorophyll+1)) %>%
+  rename(station = station_wq_chl)
 ```
 
-Filter to downstream
+## Full dataset
+```{r}
+data_long <- pivot_longer(chla_nuts, cols = c(din, diss_orthophos, diss_silica, inund_days,total_inund_last_year:precip_mm), names_to = "Parameter", values_to = "Value")
+
+ggplot(data_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
+```
+
+### Scale covars
+```{r}
+data_scaled <- chla_nuts %>%
+  mutate(across(.cols = c(din, diss_orthophos, diss_silica, inund_days,total_inund_last_year:precip_mm), ~ scale(.x)))
+
+data_s_long <- pivot_longer(data_scaled, cols = c(din, diss_orthophos, diss_silica, inund_days,total_inund_last_year:precip_mm), names_to = "Parameter", values_to = "Value")
+```
+
+### Explore data
+
+#### See span and distribution of data 
+Chlorophyll
+```{r}
+ggplot(alldata) + geom_point(aes(date, log_chla))
+ggplot(alldata) + geom_histogram(aes(log_chla)) + facet_wrap(~region, scales="free")
+```
+
+Covars
+```{r}
+# point plot over time
+ggplot(data_long) + geom_point(aes(x = date, y = Value, color = Parameter), alpha = 0.5) + facet_wrap(Parameter~., scales = "free_y")
+
+# boxplot by month
+ggplot(data_long) + geom_boxplot(aes(x = factor(month), y = Value, fill = Parameter)) + facet_wrap(Parameter~., scales = "free_y") + theme_bw()
+
+# boxplot by water year
+(boxplot_year <- ggplot(data_long) + geom_boxplot(aes(x = factor(water_year), y = Value, fill = Parameter)) + facet_wrap(Parameter~., scales = "free_y") + theme_bw() + theme(axis.text.x = element_text(angle = 90)) + theme(legend.position = "top"))
+```
+
+Save
+```{r}
+tiff(filename = "figures/boxplot_year_covars.tiff", width = 11, height = 8, units = "in", res = 300)
+ # plot with R2 values on the diagnolly opposite side
+boxplot_year
+ dev.off()
+```
+
+
+
+#### Chlorophyll Outliers
+```{r}
+chl_clean <- alldata %>%
+  filter(!is.na(chlorophyll))
+
+ggplot(chl_clean) + geom_histogram(aes(chlorophyll))
+ggplot(chl_clean) + geom_point(aes(date, chlorophyll, color = month), size = 3) + scale_color_viridis()
+ggplot(chl_clean) + geom_boxplot(aes(x = factor(month), y = chlorophyll))
+ggplot(chl_clean) + geom_boxplot(aes(x = factor(water_year), y = chlorophyll)) + theme(axis.text.x = element_text(angle = 90))
+par(mfrow = c(1,1))
+dotchart(chl_clean$chlorophyll, lcolor = "white", xlab = "Chla", ylab = "row")
+```
+Possibly two outliers 
+
+#### Relationship with chlorophyll
+```{r}
+ggplot(data_s_long) + geom_point(aes(x = Value, y = chlorophyll, color = factor(month))) +
+  geom_smooth(aes(x = Value, y = chlorophyll), method = "gam") +
+  facet_wrap(~Parameter, scales = "free") 
+```
+
+####  Correlation Plots
+
+##### Nutrients
+```{r}
+nuts <- chla_nuts %>%
+  select(c(date, month, water_year, region, Q_sday, WTmwk, inund_days, din, diss_orthophos, diss_silica, chlorophyll)) 
+
+nuts_corr <- nuts %>%
+  na.omit() %>%
+  dplyr::select(Q_sday, WTmwk, inund_days, din, diss_orthophos, diss_silica, chlorophyll)
+  
+(corr_plot_nut <- pairs.panels(nuts_corr, hist.col = "white", cex.cor = 1.5, pch = 21, stars = TRUE))
+```
+
+##### Covariates
+```{r}
+covars <- chla_nuts %>%
+  select(c(date, month, water_year, region, precip_mm, Q_sday, WTmwk, WTrangemwk, Sradmwk, inund_days, days_since_last_inundation, total_inund_last_year, chlorophyll, diurnal_range))
+
+covars_corr <- covars %>%
+  na.omit() %>%
+  dplyr::select(precip_mm, Q_sday, WTmwk, WTrangemwk, Sradmwk, diurnal_range, inund_days, days_since_last_inundation, total_inund_last_year, chlorophyll) %>%
+  mutate(log_chl = log(chlorophyll+1))
+
+(corr_plot_covar <- pairs.panels(covars_corr, hist.col = "white", cex.cor = 1.5, pch = 21, stars = TRUE))
+```
+
+Save correlation plot
+```{r}
+tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
+ # plot with R2 values on the diagnolly opposite side
+corr_plot_covar
+ dev.off()
+ 
+tiff(filename = "figures/corr_plot_nuts.tiff", width = 10, height = 8, units = "in", res = 300)
+ # plot with R2 values on the diagnolly opposite side
+corr_plot_nut
+ dev.off()
+```
+
+
+#### Regional Patterns
+
+Look at nutrients
+```{r}
+data_s_long %>%
+  filter(inundation == 0) %>%
+  filter(Parameter %in% c("din", "diss_orthophos", "diss_silica")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, chlorophyll, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+```{r}
+data_long %>%
+  filter(inundation == 1) %>%
+  filter(Parameter %in% c("din", "diss_orthophos", "diss_silica")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, chlorophyll, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+Temp, Srad
+```{r}
+data_s_long %>%
+  filter(inundation == 0) %>%
+  filter(Parameter %in% c("WTmwk", "Sradmwk")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, log_chl, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+```{r}
+data_s_long %>%
+  filter(inundation == 1) %>%
+  filter(Parameter %in% c("WTmwk", "Sradmwk")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, log_chl, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+Flow, diurnal range, WTrange
+* Interesting pattern in flow
+```{r}
+data_s_long %>%
+  filter(inundation == 0) %>%
+  filter(Parameter %in% c("Q_sday", "WTrangemwk", "diurnal_range")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, chlorophyll, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+```{r}
+data_s_long %>%
+  filter(inundation == 1) %>%
+  filter(Parameter %in% c("Q_sday", "WTrangemwk", "diurnal_range")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, chlorophyll, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+Inundation metrics
+```{r}
+data_s_long %>%
+  filter(inundation == 0) %>%
+  filter(Parameter %in% c("total_inund_last_year", "inund_days", "days_since_last_inundation")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, chlorophyll, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+```{r}
+data_s_long %>%
+  filter(inundation == 1) %>%
+  filter(Parameter %in% c("total_inund_last_year", "inund_days", "days_since_last_inundation")) %>%
+  mutate(log_chl = log(chlorophyll+1)) %>%
+  ggplot(aes(Value, chlorophyll, color = region)) + geom_point() + geom_smooth() +facet_wrap(~Parameter, scales = "free")
+```
+
+
+
+
+## Downstream only 
+### Filter to downstream
 ```{r}
 downstream <- alldata %>%
   filter(region== "below")
 ```
 
-Look at covariates
+### Look at covariates
 ```{r}
-downstream_long <- pivot_longer(downstream, cols = c(inund_days,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+downstream_long <- pivot_longer(downstream, cols = c(inund_days,total_inund_last_year, days_since_last_inundation, diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
 
 ggplot(downstream_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
 ```
 
-These are very different scales. Scale covars.
+#### These are very different scales. Scale covars.
 ```{r}
 downstream_scaled <- downstream %>%
   mutate(across(.cols = c(inund_days,diurnal_range:Sradmwk), ~ scale(.x)))
 ```
 
-Check distribution.
+#### Check distribution.
 ```{r}
-downstream_s_long <- pivot_longer(downstream_scaled, cols = c(inund_days,diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
+downstream_s_long <- pivot_longer(downstream_scaled, cols = c(inund_days,total_inund_last_year, days_since_last_inundation, diurnal_range:Sradmwk), names_to = "Parameter", values_to = "Value")
 
 ggplot(downstream_s_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
 ```
 
-Explore data.
+### Explore data.
+
 Relationship with chlorophyll
 ```{r}
 ggplot(downstream_s_long) + geom_point(aes(x = Value, y = chlorophyll, color = factor(month))) +
@@ -76,7 +268,7 @@ ggplot(downstream_s_long) + geom_point(aes(x = Value, y = chlorophyll, color = f
   facet_wrap(~Parameter, scales = "free") 
 ```
 
-Break up inundation = 0/1
+#### Break up inundation = 0/1
 ```{r}
 downstream_inund <- downstream_s_long %>%
   filter(inundation == 1)
@@ -92,12 +284,11 @@ ggplot(downstream_noinund) + geom_point(aes(x = Value, y = chlorophyll, color = 
   facet_wrap(~Parameter, scales = "free") 
 ```
 
-By month
+#### By month
 ```{r}
 ggplot(downstream_scaled) + geom_point(aes(x = inund_days, y = chlorophyll)) +
   geom_smooth(aes(x = inund_days, y = chlorophyll), method = "gam") + facet_wrap(~month, scales = "free") 
 ```
-
 
 
 
@@ -218,49 +409,7 @@ ggplot(model_covars, aes(daymet_tmax, Q_sday)) + geom_point(aes(color = month))+
 ggplot(model_covars, aes(daymet_tmax, height_sac_na)) + geom_point(aes(color = month)) + scale_color_viridis() 
 ```
 
-# Correlations with chlorophyll
-```{r}
-ggplot(subset(alldata, inund_days>0), aes(inund_days, chlorophyll, color = region_chla)) + geom_point() + theme_bw() + viridis::scale_color_viridis( discrete = TRUE, option = "turbo") + labs(x = "Inundation Days", color = "Region") + geom_smooth( aes(inund_days, chlorophyll))
-
-
-stations <- alldata %>% select(station_wq_chl, latitude, longitude, region_chla) %>%
-  distinct()
-
-stations_plot <- ggplot(stations, aes(longitude, latitude,  color = station_wq_chl)) + geom_point()
-
-plotly::ggplotly(stations_plot)
-```
-
-
 # Model exploration 
-
-## Create a unique date dataset, and a dataset containing only days with chla data.
-* sample, slice, mean, pick a station hierarchy?
-```{r}
-# uncomment this once we are using cleaned dataset
-
-# data_unique_date = alldata %>% group_by(doy1998) %>% sample_n(1) %>%
-#   mutate(log_chla = log(chl))
-# 
-# chla_covars = data_unique_date %>%
-#   filter(!is.na(log_chla))
-```
-
-## See span and distribution of data 
-Nice and normal!
-```{r}
-ggplot(chla_covars) + geom_point(aes(date, log_chla))
-ggplot(chla_covars) + geom_histogram(aes(log_chla))
-```
-
-## Check for correlation between all vars
-Strong correlations between all flow metrics. 
-```{r}
-# check for correlation between all predictors, and the response variable
-x = na.omit(chla_covars) %>% select(log_chla, Q_sday, Q_1day, Q_mwk, T_mwk, Srad_mwk, inund_days, doy1998)
-
-(corr_plot <- pairs.panels(x, hist.col = "white", cex.cor = 1.5, pch = 21, stars = TRUE))
-```
 
 ### Save correlation plot
 ```{r}
