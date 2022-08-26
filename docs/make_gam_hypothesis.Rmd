@@ -75,8 +75,8 @@ alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
   rename(station = station_wq_chl, tily = total_inund_last_year, 
          dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
 
-alldatalook <- select(alldata0, date, tily, tily_fac)
 str(alldata0)
+alldata0 %>% filter(region == "above") %>% summary()
 ```
 
 ```{r}
@@ -96,6 +96,26 @@ alldata <- alldata0 %>%
   filter(dowy >= inMin & dowy <= inMax)
 ```
 
+```{r}
+dataplot <- alldata0 %>%
+  mutate(date2 = paste0("2000-", month(date), "-", day(date)),
+         date2 = ymd(date2))
+
+ggplot(dataplot) + 
+  geom_point(aes(x = date2, y = inundation, color = inund_fac2)) + 
+  scale_x_date(date_breaks = "month", date_labels = "%b") + 
+  scale_color_viridis(discrete = TRUE, option = "plasma") + 
+  labs(x = "Date", color = "Inundation Duration") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, size = 13),
+        axis.text.y = element_text(size = 13),
+        legend.text = element_text(size = 13),
+        legend.title = element_text(size = 13),
+        legend.position = "top",
+        axis.title.x = element_blank(),
+        panel.grid.minor = element_blank())
+```
+
 
 ## Filter datasets to region
 ```{r}
@@ -103,7 +123,6 @@ downstream <- alldata %>% filter(region == "below")
 upstream <- alldata %>% filter(region == "above")
 yolo <- alldata %>% filter(region == "yolo")
 ```
-
 ## Scale datasets
 ```{r}
 d.idys <- downstream %>%
@@ -137,9 +156,14 @@ gamu5 <- gam(log_chla ~ te(log_qsdy, Sradmwk, by = inund_fac2), method = "REML",
 ######################
 gamu6 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.idys, family = "gaussian")
 summary(gamu6)
+
+gamu6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = upstream, family = "gaussian")
+summary(gamu6b)
+
 ######################
 
 AIC(gamu1, gamu2, gamu3, gamu4, gamu6)
+
 
 ```
 
@@ -163,6 +187,10 @@ summary(gamyo5)
 #######################
 gamyo6 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = yo.idys, family = "gaussian")
 summary(gamyo6)
+
+#######################
+gamyo6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = yolo, family = "gaussian")
+summary(gamyo6)
 ######################
 
 AIC(gamyo1, gamyo2, gamyo3, gamyo4, gamyo5, gamyo6)
@@ -185,6 +213,9 @@ summary(gamd4)
 #####################
 gamd6 <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = d.idys, family = "gaussian")
 summary(gamd6)
+
+gamd6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = downstream, family = "gaussian")
+summary(gamd6b)
 #####################
 
 AIC(gamd1, gamd2, gamd3, gamd4, gamd6)
@@ -197,7 +228,7 @@ gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.i
 ### gamd6
 ```{r}
   # validate the final model by plotting residuals and save to a tiff
-  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
+  png(filename = "figures/gamd6.tiff", width = 7, height = 9, units = "in", res = 200)
   resid = residuals(gamd6)
   op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
   # Plot 1: Residuals vs. Fitted values; should be centered around 0
@@ -218,7 +249,7 @@ gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.i
 * some minor autocorrelation at t-1
 ```{r}
   # validate the final model by plotting residuals and save to a tiff
-  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
+  png(filename = "figures/gamu6.tiff", width = 7, height = 9, units = "in", res = 200)
   resid = residuals(gamu6)
   op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
   # Plot 1: Residuals vs. Fitted values; should be centered around 0
@@ -240,7 +271,7 @@ gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.i
 ### gamyo6
 ```{r}
   # validate the final model by plotting residuals and save to a tiff
-  tiff(filename = "figures/gam_model_val_qsdy_dowy_tily_yolo.tiff", width = 6, height = 9, units = "in", res = 200)
+  png(filename = "figures/gamyo6.tiff", width = 7, height = 9, units = "in", res = 200)
   resid = residuals(gamyo6)
   op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
   # Plot 1: Residuals vs. Fitted values; should be centered around 0
@@ -259,91 +290,70 @@ gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = u.i
   pacf(resid)
 ```
 
-# Predict data
+# Predict/Visualize data
 
 * chlorophyll vs flow 5% WT, 95% WT
 * chlorophyll vs WT 5% flow, 95% flow
 
-cat trying to work on lists
-```{r}
-test <- d.idys %>%
-group_by(inund_fac2)%>%
- mutate(minQ = quantile(log_qsdy, 0.05),
-            maxQ = quantile(log_qsdy, 0.95),
-            minWT = quantile(WTmwk, 0.05),
-            maxWT = quantile(WTmwk, 0.95)) %>%
-  ungroup()
-
-d <- list(NA, NA, NA)
-d[[1]] <- test %>% filter(inund_fac2 == "none")
-d[[2]] <- test %>% filter(inund_fac2 == "short")
-d[[3]] <- test %>% filter(inund_fac2 == "long")
-library(purrr)
-View(d[[3]])
-
-predict_list <- map(d, ~ .x, predict_gam(gamd6, values = list(log_qsdy = seq(minQ, maxQ, by = 0.05))))
-
-predict_list <- map(d, ~ .x, minQ + 2)
-```
-
+## Downstream
+### PREDICT
 ```{r}
 library(tidymv)
 
 # Get values 
-d.idys %>%
+(d_table <- downstream %>%
   group_by(inund_fac2)%>%
  summarize(minQ = quantile(log_qsdy, 0.05),
             maxQ = quantile(log_qsdy, 0.95),
             minWT = quantile(WTmwk, 0.05),
             maxWT = quantile(WTmwk, 0.95)) %>%
-  ungroup()
+  ungroup() %>%
+  as.data.frame())
 
-# Prediction datasets - Downstream
-pred_gamd6_none <- predict_gam(gamd6, values = list(log_qsdy = seq(-1.47, 0.944, by = 0.05),
-                                                    WTmwk = seq(-1.53, 1.87, by = 0.1),
+
+# Prediction datasets - Downstream (unscaled)
+pred_gamd6_none <- predict_gam(gamd6b, values = list(log_qsdy = seq(d_table[2,2], d_table[2,3], by = 0.08),
+                                                    WTmwk = seq(d_table[2,4],d_table[2,5], by = 0.1),
                                                     inund_fac2 = "none"))
-pred_gamd6_short <- predict_gam(gamd6, values = list(log_qsdy = seq(-0.652, 2.22, by = 0.05),
-                                                    WTmwk = seq(-1.18, 0.890, by = 0.1),
+pred_gamd6_short <- predict_gam(gamd6b, values = list(log_qsdy = seq(d_table[3,2], d_table[3,3], by = 0.05),
+                                                    WTmwk = seq(d_table[3,4], d_table[3,5], by = 0.1),
                                                     inund_fac2 = "short"))
-pred_gamd6_long <- predict_gam(gamd6, values = list(log_qsdy = seq(1.22, 2.23, by = 0.05),
-                                                    WTmwk = seq(-0.581, 1.03, by = 0.1),
+pred_gamd6_long <- predict_gam(gamd6b, values = list(log_qsdy = seq(d_table[1,2], d_table[1,3], by = 0.05),
+                                                    WTmwk = seq(d_table[1,4], d_table[1,5], by = 0.1),
                                                     inund_fac2 = "long"))
-
-
-
     
-    
-# Other predictions
-pred_gamd6_q <- predict_gam(gamd6, values = list(log_qsdy = c(quantile(d.idys$log_qsdy, 0.05),
-                                                          quantile(d.idys$log_qsdy, 0.95), 
-                                                          median(d.idys$log_qsdy)),
-                                             WTmwk = c(quantile(d.idys$WTmwk, 0.05),
-                                                       quantile(d.idys$WTmwk, 0.95))))
-    mutate(WT_orig = (WTmwk*sd(downstream$WTmwk)+mean(downstream$WTmwk)))
-  #mutate(across(.cols = everything(), round, digits = 3))
-
-      
-pred_gamd6_q2 <- predict_gam(gamd6, values = list(log_qsdy = c(quantile(d.idys$log_qsdy, 0.05),
-                                                          quantile(d.idys$log_qsdy, 0.95), 
-                                                          median(d.idys$log_qsdy))))
-      #mutate(WTmwk = as.numeric(WTmwk))
-  #mutate(across(.cols = everything(), round, digits = 3))
-      
-      
-      
-pred_gamd6 <- predict_gam(gamd6) 
+pred_downstream <- rbind(pred_gamd6_short, pred_gamd6_long, pred_gamd6_none)
+pred_downstream$inund_fac2 <- factor(pred_downstream$inund_fac2, levels = c("none", "short", "long"))
 ```
 
-## Constrain data
-- constrain by the data we have for each inund_fac level
+###VISUALIZE
 ```{r}
-
+png(filename = "figures/downstream_predictions.png", width = 10, height = 4, units = "in", res = 300)
+(downstream_plots <- pred_downstream %>%
+  ggplot(aes(WTmwk, fit, color = log_qsdy)) +
+  geom_point(size = 0.5) +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  facet_wrap(~inund_fac2) +
+  scale_color_viridis() +
+  labs(y = "log chlorophyll", x = "Mean Weekly Water Temperature (°C)", title = "Downstream") +
+  theme_bw() +
+    theme(strip.text = element_text(size = 13)))
+dev.off()
 ```
 
-# Visualize data
 ```{r}
 # by flow and WT
 pred_gamd6_none %>%
+  ggplot(aes(log_qsdy, fit, color = WTmwk)) +
+  geom_point() +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis() +
+  labs(y = "chlorophyll", title = "no inundation downstream") +
+  theme_bw()
+
+down_none <- pred_gamd6_none %>%
   ggplot(aes(log_qsdy, fit, color = WTmwk)) +
   geom_point() +
   geom_smooth() + 
@@ -361,8 +371,30 @@ pred_gamd6_short %>%
   labs(y = "chlorophyll", title = "short inundation downstream") +
   theme_bw()
 
+down_short <- pred_gamd6_short %>%
+  ggplot(aes(WTmwk, fit, color = log_qsdy)) +
+  geom_point() +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis() +
+  labs(y = "chlorophyll", title = "short inundation downstream") +
+  theme_bw()
+
 pred_gamd6_long %>%
   ggplot(aes(log_qsdy, fit, color = WTmwk)) +
+  geom_point() +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  scale_color_viridis() +
+  labs(y = "chlorophyll", title = "long inundation downstream") +
+  theme_bw()
+
+
+
+
+
+down_long <- pred_gamd6_long %>%
+  ggplot(aes(WTmwk, fit, color = log_qsdy)) +
   geom_point() +
   geom_smooth() + 
   #geom_smooth_ci(WTmwk, size = 1.5) +
@@ -403,3 +435,90 @@ ggplot(aes(log_qsdy, fit, color = WTmwk)) +
   theme_bw()
 ```
 
+## Yolo
+### PREDICT
+```{r}
+# Get values 
+(y_table <- yolo %>%
+  group_by(inund_fac2)%>%
+ summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  ungroup() %>%
+  as.data.frame())
+
+# Prediction datasets - Yolo (unscaled)
+pred_gamyo6_none <- predict_gam(gamyo6b, values = list(log_qsdy = seq(y_table[2,2], y_table[2,3], by = 0.05),
+                                                    WTmwk = seq(y_table[2,4],y_table[2,5], by = 0.2),
+                                                    inund_fac2 = "none"))
+pred_gamyo6_short <- predict_gam(gamyo6b, values = list(log_qsdy = seq(y_table[3,2], y_table[3,3], by = 0.05),
+                                                    WTmwk = seq(y_table[3,4], y_table[3,5], by = 0.2),
+                                                    inund_fac2 = "short"))
+pred_gamyo6_long <- predict_gam(gamyo6b, values = list(log_qsdy = seq(y_table[1,2], y_table[1,3], by = 0.05),
+                                                    WTmwk = seq(y_table[1,4], y_table[1,5], by = 0.2),
+                                                    inund_fac2 = "long"))
+
+pred_yolo <- rbind(pred_gamyo6_short, pred_gamyo6_long, pred_gamyo6_none)
+pred_yolo$inund_fac2 <- factor(pred_yolo$inund_fac2, levels = c("none", "short", "long"))
+```
+
+### VISUALIZE
+```{r}
+png(filename = "figures/yolo_predictions.png", width = 9, height = 4, units = "in", res = 300)
+(yolo_plots <- pred_yolo %>%
+  ggplot(aes(WTmwk, fit, color = log_qsdy)) +
+  geom_point(size = 0.5) +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  facet_wrap(~inund_fac2) +
+  scale_color_viridis() +
+  labs(y = "log chlorophyll", x = "Mean Weekly Water Temperature (°C)", title = "Yolo") +
+  theme_bw() +
+    theme(strip.text = element_text(size = 13)))
+dev.off()
+```
+
+## Upstream
+### PREDICT
+```{r}
+# Get values 
+(u_table <- upstream %>%
+  group_by(inund_fac2)%>%
+ summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  ungroup() %>%
+  as.data.frame())
+
+# Prediction datasets - Upstream (unscaled)
+pred_gamu6_none <- predict_gam(gamu6b, values = list(log_qsdy = seq(u_table[2,2], u_table[2,3], by = 0.02),
+                                                    WTmwk = seq(u_table[2,4],u_table[2,5], by = 0.2),
+                                                    inund_fac2 = "none")) 
+pred_gamu6_short <- predict_gam(gamu6b, values = list(log_qsdy = seq(u_table[3,2], u_table[3,3], by = 0.02),
+                                                    WTmwk = seq(u_table[3,4], u_table[3,5], by = 0.2),
+                                                    inund_fac2 = "short"))
+pred_gamu6_long <- predict_gam(gamu6b, values = list(log_qsdy = seq(u_table[1,2], u_table[1,3], by = 0.005),
+                                                    WTmwk = seq(u_table[1,4], u_table[1,5], by = 0.2),
+                                                    inund_fac2 = "long"))
+
+pred_upstream <- rbind(pred_gamu6_short, pred_gamu6_long, pred_gamu6_none)
+pred_upstream$inund_fac2 <- factor(pred_upstream$inund_fac2, levels = c("none", "short", "long"))
+```
+
+### VISUALIZE
+```{r}
+png(filename = "figures/upstream_predictions.png", width = 9, height = 4, units = "in", res = 300)
+(upstream_plots <- pred_upstream %>%
+  ggplot(aes(WTmwk, fit, color = log_qsdy)) +
+  geom_point(size = 0.5) +
+  geom_smooth() + 
+  #geom_smooth_ci(WTmwk, size = 1.5) +
+  facet_wrap(~inund_fac2) +
+  scale_color_viridis() +
+ labs(y = "log chlorophyll", x = "Mean Weekly Water Temperature (°C)", title = "Upstream") +
+  theme_bw() +
+    theme(strip.text = element_text(size = 13)))
+dev.off()
+```
