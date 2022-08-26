@@ -40,14 +40,17 @@ f_load_daily_covars_models <- function() {
   LIB_flow_file <- contentid::resolve(LIB_flow_id)
 
   # water temps
-  watertemp_shr_id <- contentid::store("data_clean/SHWharbor_temp_98_20.csv")
-  watertemp_shr_file <- contentid::resolve(watertemp_shr_id)
-  watertemp_rv_id <- contentid::store("data_clean/clean_rv_temperature.csv")
-  watertemp_rv_file <- contentid::resolve(watertemp_rv_id)
-  watertemp_yolo_id <- contentid::store("data_clean/yolo_temp_98_20.csv")
-  watertemp_yolo_file <- contentid::resolve(watertemp_yolo_id)
-  watertemp_lib_id <- contentid::store("data_clean/clean_lib_temperature.csv")
-  watertemp_lib_file <- contentid::resolve(watertemp_lib_id)
+  # watertemp_shr_id <- contentid::store("data_clean/SHWharbor_temp_98_20.csv")
+  # watertemp_shr_file <- contentid::resolve(watertemp_shr_id)
+  # watertemp_rv_id <- contentid::store("data_clean/clean_rv_temperature.csv")
+  # watertemp_rv_file <- contentid::resolve(watertemp_rv_id)
+  # watertemp_yolo_id <- contentid::store("data_clean/yolo_temp_98_20.csv")
+  # watertemp_yolo_file <- contentid::resolve(watertemp_yolo_id)
+  # watertemp_lib_id <- contentid::store("data_clean/clean_lib_temperature.csv")
+  # watertemp_lib_file <- contentid::resolve(watertemp_lib_id)
+
+  watertemp_id <- contentid::store("data_clean/clean_integrated_water_temp.csv")
+  watertemp_file <- contentid::resolve(watertemp_id)
 
 # Functions for filling water temp --------------------------------------------
   FUNmax <- function(x) max(x, na.rm=TRUE)
@@ -130,64 +133,78 @@ f_load_daily_covars_models <- function() {
     mutate(diff = date-lag(date,1)) %>%
     filter(diff>1) # get 5
 
-  # water temp data
-  watertemp_RV <- read_csv(watertemp_rv_file)%>%
-    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
-           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
-    mutate(max = replace(max2, is.infinite(max2), NA),
-           min = replace(min2, is.infinite(min2), NA),
-           range = max-min) %>%
-    dplyr::select(c(mean, range, date)) %>%
-    dplyr::filter(lubridate::year(date)>=1998) %>%
-    dplyr::rename(wtemp_mean_RV = mean,
-                  wtemp_range_RV = range) %>%
-    #wtemp_sd_RV = sd,
-    #wtemp_max_RV = max
-  dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+ #  # water temp data
+ #  watertemp_RV <- read_csv(watertemp_rv_file)%>%
+ #    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
+ #           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
+ #    mutate(max = replace(max2, is.infinite(max2), NA),
+ #           min = replace(min2, is.infinite(min2), NA),
+ #           range = max-min) %>%
+ #    dplyr::select(c(mean, range, date)) %>%
+ #    dplyr::filter(lubridate::year(date)>=1998) %>%
+ #    dplyr::rename(wtemp_mean_RV = mean,
+ #                  wtemp_range_RV = range) %>%
+ #    #wtemp_sd_RV = sd,
+ #    #wtemp_max_RV = max
+ #  dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+ #
+ #
+ #  watertemp_SHR <- read_csv(watertemp_shr_file) %>%
+ #    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
+ #           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
+ #    mutate(max = replace(max2, is.infinite(max2), NA),
+ #           min = replace(min2, is.infinite(min2), NA),
+ #           range = max-min) %>%
+ #    dplyr::select(c(mean, range, date)) %>%
+ #    dplyr::filter(lubridate::year(date)>=1998) %>%
+ #    dplyr::rename(wtemp_mean_SHR = mean,
+ #                  wtemp_range_SHR = range) %>%
+ #    #wtemp_sd_SHR = sd,
+ #    #wtemp_max_SHR = max
+ #    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+ #
+ #
+ #  watertemp_yolo <- read_csv(watertemp_yolo_file) %>%
+ #    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
+ #           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
+ #    mutate(max = replace(max2, is.infinite(max2), NA),
+ #           min = replace(min2, is.infinite(min2), NA),
+ #           range = max-min) %>%
+ #    dplyr::select(c(mean, range, date)) %>%
+ #    dplyr::filter(lubridate::year(date)>=1998) %>%
+ #    dplyr::rename(wtemp_mean_yolo = mean,
+ #    wtemp_range_yolo = range) %>%
+ #    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+ #
+ #  watertemp_LIB <- read_csv(watertemp_lib_file) %>%
+ #    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
+ #           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
+ #    mutate(max = replace(max2, is.infinite(max2), NA),
+ #           min = replace(min2, is.infinite(min2), NA),
+ #           range = max-min) %>%
+ #    dplyr::select(c(mean, range, date)) %>%
+ #    dplyr::filter(lubridate::year(date)>=1998) %>%
+ #    dplyr::rename(wtemp_mean_cache = mean,
+ #                  wtemp_range_cache = range) %>%
+ #    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
+ #
+ #  # LIB starts in 2010. Check for NAs prior.
+ # LIB <-  filter(watertemp_LIB, date>"2020-12-19")
+ # summary(LIB)
 
 
-  watertemp_SHR <- read_csv(watertemp_shr_file) %>%
-    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
-           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
-    mutate(max = replace(max2, is.infinite(max2), NA),
-           min = replace(min2, is.infinite(min2), NA),
-           range = max-min) %>%
-    dplyr::select(c(mean, range, date)) %>%
-    dplyr::filter(lubridate::year(date)>=1998) %>%
-    dplyr::rename(wtemp_mean_SHR = mean,
-                  wtemp_range_SHR = range) %>%
-    #wtemp_sd_SHR = sd,
-    #wtemp_max_SHR = max
-    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
-
-
-  watertemp_yolo <- read_csv(watertemp_yolo_file) %>%
-    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
-           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
-    mutate(max = replace(max2, is.infinite(max2), NA),
-           min = replace(min2, is.infinite(min2), NA),
-           range = max-min) %>%
-    dplyr::select(c(mean, range, date)) %>%
-    dplyr::filter(lubridate::year(date)>=1998) %>%
-    dplyr::rename(wtemp_mean_yolo = mean,
-    wtemp_range_yolo = range) %>%
-    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
-
-  watertemp_LIB <- read_csv(watertemp_lib_file) %>%
-    mutate(max2 = rollapply(max, width=7, FUNmax, by=1, by.column=TRUE, partial=TRUE, fill=NA, align="right"),
-           min2 = rollapply(min, width = 7, FUN = FUNmin, partial = TRUE, by.column = TRUE, fill = NA, align = "right")) %>%
-    mutate(max = replace(max2, is.infinite(max2), NA),
-           min = replace(min2, is.infinite(min2), NA),
-           range = max-min) %>%
-    dplyr::select(c(mean, range, date)) %>%
-    dplyr::filter(lubridate::year(date)>=1998) %>%
-    dplyr::rename(wtemp_mean_cache = mean,
-                  wtemp_range_cache = range) %>%
-    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)
-
-  # LIB starts in 2010. Check for NAs prior.
- LIB <-  filter(watertemp_LIB, date>"2020-12-19")
- summary(LIB)
+  # watertemp
+ watertemp <- read_csv(watertemp_file) %>%
+   mutate(WTrgday = max-min) %>%
+   rename(WTmday = mean) %>%
+   mutate(region = case_when(region == "river_downstream" ~ "below",
+                             region == "river_upstream" ~ "above",
+                             region == "floodplain_bypass" ~ "yolo",
+                             TRUE~as.character(region))) %>%
+   dplyr::select(c(WTmday, WTrgday, date, region)) %>%
+   dplyr::filter(lubridate::year(date)>=1998) %>%
+   dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1) %>%
+   tidyr::pivot_wider(names_from = "region", values_from = c("WTmday", "WTrgday"), id_cols = c("date", "doy1998"))
 
   # join data in steps ------------------------------------------------
   print("Joining data...")
@@ -200,17 +217,18 @@ f_load_daily_covars_models <- function() {
   daymet_flow <- full_join(flow_verona, daymets3, by = c("doy1998", "date"))
   daymet_flow2 <- full_join(daymet_flow, flow_LIB, by = c("doy1998", "date"))
   daymet_flow_inun <- full_join(daymet_flow2, inun, by = c("date", "doy1998"))
-  daymet_flow_inun_wtRIV <- full_join(daymet_flow_inun, watertemp_RV, by = c("date", "doy1998")) %>%
-    filter(date<as.Date("2020-01-01")) # filter to before 2020
-  daymet_flow_inun_wtRIV_wtSHR <- full_join(daymet_flow_inun_wtRIV, watertemp_SHR,  by = c("date", "doy1998"))
-  daymet_flow_inun_wtRIV_wtSHR_wtYolo <- full_join(daymet_flow_inun_wtRIV_wtSHR, watertemp_yolo,  by = c("date", "doy1998"))
-  daymet_flow_inun_wtRIV_wtSHR_wtYolo_wtLIB <- full_join(daymet_flow_inun_wtRIV_wtSHR_wtYolo, watertemp_LIB,  by = c("date", "doy1998"))
-
-  daymet_flow_inun_wtRIV_wtSHR_wtYolo_wt_LIB_flowtide <- full_join(daymet_flow_inun_wtRIV_wtSHR_wtYolo_wtLIB, flow_tide_SRV, by = c("date", "doy1998"))
+  # daymet_flow_inun_wtRIV <- full_join(daymet_flow_inun, watertemp_RV, by = c("date", "doy1998")) %>%
+  #   filter(date<as.Date("2020-01-01")) # filter to before 2020
+  # daymet_flow_inun_wtRIV_wtSHR <- full_join(daymet_flow_inun_wtRIV, watertemp_SHR,  by = c("date", "doy1998"))
+  # daymet_flow_inun_wtRIV_wtSHR_wtYolo <- full_join(daymet_flow_inun_wtRIV_wtSHR, watertemp_yolo,  by = c("date", "doy1998"))
+  # daymet_flow_inun_wtRIV_wtSHR_wtYolo_wtLIB <- full_join(daymet_flow_inun_wtRIV_wtSHR_wtYolo, watertemp_LIB,  by = c("date", "doy1998"))
+#
+ daymet_flow_inun_wt <- full_join(daymet_flow_inun, watertemp)
+  daymet_flow_inun_wt_flowtide <- full_join(daymet_flow_inun_wt, flow_tide_SRV, by = c("date", "doy1998"))
   # Fill in missing data ------------------------
   # daymet just missing leap years
   # flow_SRV and stage_SRV have some that are more than 1 day missing (usually 5 days in a row - not sure if this is a big deal. Just happens a handful of times (31 values filled))
-  covars_fill <-daymet_flow_inun_wtRIV_wtSHR_wtYolo_wt_LIB_flowtide %>%
+  covars_fill <-daymet_flow_inun_wt_flowtide %>%
     #tidyr::fill(max_wtemp_RIV, .direction = "down") %>%
     tidyr::fill(daymet_tmax_yolo, .direction = "down") %>%
     tidyr::fill(daymet_srad_yolo, .direction = "down") %>%
@@ -278,14 +296,14 @@ f_load_daily_covars_models <- function() {
            Sradmwk_below = rollapply(daymet_srad_below, 7, mean, align='right', partial=TRUE),
            Sradmwk_above = rollapply(daymet_srad_above, 7, mean, align='right', partial=TRUE),
            Sradmwk_cache = rollapply(daymet_srad_cache, 7, mean, align='right', partial=TRUE),
-          WTmwk_below = rollapply(wtemp_mean_RV, 7, mean, align = 'right', partial = TRUE),
-           WTmwk_above = rollapply(wtemp_mean_SHR, 7, mean, align = 'right', partial = TRUE),
-           WTmwk_yolo = rollapply(wtemp_mean_yolo, 7, mean, align = 'right', partial = TRUE),
-          WTmwk_cache = rollapply(wtemp_mean_cache, 7, mean, align = 'right', partial= TRUE),
-          WTrangemwk_below = rollapply(wtemp_range_RV, 7, mean, align = 'right', partial = TRUE),
-          WTrangemwk_above = rollapply(wtemp_range_SHR, 7, mean, align = 'right', partial = TRUE),
-          WTrangemwk_cache = rollapply(wtemp_range_cache, 7, mean, align = 'right', partial = TRUE),
-          WTrangemwk_yolo = rollapply(wtemp_range_yolo, 7,
+          WTmwk_below = rollapply(WTmday_below, 7, mean, align = 'right', partial = TRUE),
+           WTmwk_above = rollapply(WTmday_above, 7, mean, align = 'right', partial = TRUE),
+           WTmwk_yolo = rollapply(WTmday_yolo, 7, mean, align = 'right', partial = TRUE),
+          WTmwk_cache = rollapply(WTmday_cache, 7, mean, align = 'right', partial= TRUE),
+          WTrangemwk_below = rollapply(WTrgday_below, 7, mean, align = 'right', partial = TRUE),
+          WTrangemwk_above = rollapply(WTrgday_above, 7, mean, align = 'right', partial = TRUE),
+          WTrangemwk_cache = rollapply(WTrgday_cache, 7, mean, align = 'right', partial = TRUE),
+          WTrangemwk_yolo = rollapply(WTrgday_yolo, 7,
                                       function(x) {
                                       if(sum(is.na(x))>3) {
                                         NA
@@ -298,9 +316,8 @@ f_load_daily_covars_models <- function() {
            precip_yolo=daymet_precip_mm_yolo,
            precip_below=daymet_precip_mm_below,
            precip_above=daymet_precip_mm_above,
-           precip_cache = daymet_precip_mm_cache) %>%
-    dplyr::select(-wtemp_mean_RV, -wtemp_mean_SHR, -wtemp_mean_yolo, -wtemp_range_yolo, -wtemp_range_SHR, -wtemp_range_RV, -wtemp_mean_cache, -wtemp_range_cache)
-
+           precip_cache = daymet_precip_mm_cache)
+   # dplyr::select(-wtemp_mean_RV, -wtemp_mean_SHR, -wtemp_mean_yolo, -wtemp_range_yolo, -wtemp_range_SHR, -wtemp_range_RV, -wtemp_mean_cache, -wtemp_range_cache)
   summary(final_covars)
   summary(final_covars$date) # should not have any NAs
 
