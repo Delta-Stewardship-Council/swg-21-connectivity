@@ -56,8 +56,15 @@ f_load_model_chla_covars_data <- function() {
 
     ## * covars ----
     covars_long <- covars %>%
-    pivot_longer(cols = c(Q_above, Q_yolo, Q_below, Q_cache, WTmwk_below, WTmwk_above, WTmwk_yolo, WTmwk_cache, WTrangemwk_below, WTrangemwk_above, WTrangemwk_yolo, WTrangemwk_cache, Sradmwk_above, Sradmwk_yolo, Sradmwk_below, Sradmwk_cache,
-                          Tmwk_above, Tmwk_yolo, Tmwk_below, Tmwk_cache, precip_yolo, precip_below, precip_above, precip_cache), names_to = c(".value","region"), names_sep =  "_") %>%
+    pivot_longer(cols = c(Q_above, Q_yolo, Q_below, Q_cache,
+                          WTmwk_below, WTmwk_above, WTmwk_yolo, WTmwk_cache,
+                          WTrangemwk_below, WTrangemwk_above, WTrangemwk_yolo, WTrangemwk_cache,
+                          WTmday_below, WTmday_above, WTmday_yolo, WTmday_cache,
+                          WTrgday_below, WTrgday_above, WTrgday_yolo, WTrgday_cache,
+                          Sradmwk_above, Sradmwk_yolo, Sradmwk_below, Sradmwk_cache,
+                          Tmwk_above, Tmwk_yolo, Tmwk_below, Tmwk_cache,
+                          precip_yolo, precip_below, precip_above, precip_cache),
+                 names_to = c(".value","region"), names_sep =  "_") %>%
       #mutate(inund_days = ifelse(region == "above", 0, inund_days),
       #       inundation = ifelse(region == "above", 0, inundation)) %>%
       select(-station_flow, -agency_cd, -stage_SRV, -height_sac, -sac, -daymet_tmax_yolo, -daymet_tmax_below, -daymet_tmax_above, -daymet_tmax_cache,
@@ -85,7 +92,6 @@ f_load_model_chla_covars_data <- function() {
 
   # Explore nutrients ------------------------------------
   summary(chla_covars_extravars)
-    # fill in or PCA axes
 
   # check missing data----------------------------------------------
   first(chla_covars$date)
@@ -96,7 +102,6 @@ f_load_model_chla_covars_data <- function() {
   # shouldn't have any NAs at this point in date
   summary(chla_covars)
   nas <- filter(chla_covars, !(complete.cases(chla_covars)))
-    # only 5 missing diurnal range. can we just fill these? Yes!
 
   summary(chla_covars_fulljoin)
 
