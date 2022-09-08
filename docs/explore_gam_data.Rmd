@@ -37,22 +37,27 @@ alldata <- read_csv("data_model/model_chla_covars_gam.csv")%>%
          year = lubridate::year(date),
          doy = lubridate::yday(date)-60,
          water_year = ifelse(month>9, year + 1, year),
-         log_chla = log(chlorophyll+1)) %>%
+         log_chla = log(chlorophyll+1),
+         log_qsdy = log(Q_sday)) %>%
   rename(station = station_wq_chl)
 
 chla_nuts <- read_csv("data_model/model_covars_chla_nuts_extravars.csv") %>%
+  filter(region!="cache") %>%
   select(-c(diss_ammonia_sign:diss_nitrate_nitrite, diss_orthophos_sign))%>%
   mutate(month = lubridate::month(date),
          year = lubridate::year(date),
          doy = lubridate::yday(date)-60,
          water_year = ifelse(month>9, year + 1, year),
-         log_chla = log(chlorophyll+1)) %>%
+         log_chla = log(chlorophyll+1),
+         log_qsdy = log(Q_sday),
+         inund_fac = factor(ifelse(inund_days == 0, "none", ifelse(inund_days > 14, "long", "short"))),
+         inund_fac2 = factor(ifelse(inund_days == 0, "none", ifelse(inund_days > 21, "long", "short")))) %>%
   rename(station = station_wq_chl)
 ```
 
 ## Full dataset
 ```{r}
-data_long <- pivot_longer(chla_nuts, cols = c(din, diss_orthophos, diss_silica, inund_days,total_inund_last_year:precip_mm), names_to = "Parameter", values_to = "Value")
+data_long <- pivot_longer(chla_nuts, cols = c(din, diss_orthophos, diss_silica, inund_days,total_inund_last_year:precip_mm, log_qsdy), names_to = "Parameter", values_to = "Value")
 
 ggplot(data_long) + geom_violin(aes(x = Parameter, y = Value)) + facet_wrap(~Parameter, scales = "free")
 ```
@@ -80,10 +85,20 @@ Covars
 ggplot(data_long) + geom_point(aes(x = date, y = Value, color = Parameter), alpha = 0.5) + facet_wrap(Parameter~., scales = "free_y")
 
 # boxplot by month
-ggplot(data_long) + geom_boxplot(aes(x = factor(month), y = Value, fill = Parameter)) + facet_wrap(Parameter~., scales = "free_y") + theme_bw()
+(boxplot_month <- ggplot(data_long) + geom_boxplot(aes(x = factor(month), y = Value, fill = Parameter)) + facet_wrap(Parameter~., scales = "free_y") + theme_bw())
 
 # boxplot by water year
 (boxplot_year <- ggplot(data_long) + geom_boxplot(aes(x = factor(water_year), y = Value, fill = Parameter)) + facet_wrap(Parameter~., scales = "free_y") + theme_bw() + theme(axis.text.x = element_text(angle = 90)) + theme(legend.position = "top"))
+```
+
+Relationships between transformed vars (flow, log_flow, chl, log_chl, also month)
+```{r}
+ggplot(chla_nuts) + geom_boxplot(aes(factor(month), log_qsdy )) + facet_wrap(~region) + theme_bw()
+ggplot(chla_nuts) + geom_boxplot(aes(factor(month), Q_sday)) + facet_wrap(~region) + theme_bw()
+ggplot(chla_nuts) + geom_boxplot(aes(factor(month), log_chla)) + facet_wrap(~region) + theme_bw()
+
+ggplot(chla_nuts) + geom_jitter(aes(log_qsdy, Q_sday, color = region, shape = region), alpha = 0.5, size = 3) + theme_bw()
+ggplot(chla_nuts) + geom_jitter(aes(log_chla, chlorophyll, color = region, shape = region), alpha = 0.5, size = 3) + theme_bw()
 ```
 
 Save
@@ -92,6 +107,13 @@ tiff(filename = "figures/boxplot_year_covars.tiff", width = 11, height = 8, unit
  # plot with R2 values on the diagnolly opposite side
 boxplot_year
  dev.off()
+ 
+ 
+png(filename = "figures/boxplot_month_covars.png", width = 11, height = 8, units = "in", res = 300)
+ # plot with R2 values on the diagnolly opposite side
+boxplot_month
+ dev.off()
+ 
 ```
 
 
@@ -134,11 +156,11 @@ nuts_corr <- nuts %>%
 ##### Covariates
 ```{r}
 covars <- chla_nuts %>%
-  select(c(date, month, water_year, region, precip_mm, Q_sday, WTmwk, WTrangemwk, Sradmwk, inund_days, days_since_last_inundation, total_inund_last_year, chlorophyll, diurnal_range))
+  select(c(date, month, water_year, region, Q_sday, log_qsdy, WTmwk, WTrangemwk, Sradmwk, inund_days, days_since_last_inundation, total_inund_last_year, chlorophyll, diurnal_range, inund_fac2))
 
 covars_corr <- covars %>%
   na.omit() %>%
-  dplyr::select(precip_mm, Q_sday, WTmwk, WTrangemwk, Sradmwk, diurnal_range, inund_days, days_since_last_inundation, total_inund_last_year, chlorophyll) %>%
+  dplyr::select(Q_sday, log_qsdy, WTmwk, WTrangemwk, Sradmwk, diurnal_range, inund_days, days_since_last_inundation, total_inund_last_year, inund_fac2, chlorophyll) %>%
   mutate(log_chl = log(chlorophyll+1))
 
 (corr_plot_covar <- pairs.panels(covars_corr, hist.col = "white", cex.cor = 1.5, pch = 21, stars = TRUE))
@@ -146,7 +168,7 @@ covars_corr <- covars %>%
 
 Save correlation plot
 ```{r}
-tiff(filename = "figures/corr_plot_gamvars.tiff", width = 10, height = 8, units = "in", res = 300)
+png(filename = "figures/corr_plot_gamvars.png", width = 10, height = 8, units = "in", res = 300)
  # plot with R2 values on the diagnolly opposite side
 corr_plot_covar
  dev.off()
