@@ -54,7 +54,7 @@ library(ggspatial)
   yolo_4269 <- st_transform(yolo_sf, crs = 4269) %>%
     dplyr::filter(FID == 1)
 
-  ## regions polygon (created from Rosie's app)
+  ## regions polygon (created from Rosie's app; edited in ArcMap)
   regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shpExport.shp"))
   regions_4269 <- st_transform(regions_sf, crs = 4269)
 
@@ -92,15 +92,15 @@ stations_all <- stations_chl %>%
   bind_rows(wt_stations_filt) %>%
   bind_rows(flow_stations) %>%
   bind_rows(dayflow) %>%
-  mutate(data_type = case_when(station == "STTD" ~ "chl & nut,wtemp,daymet",
+  mutate(data_type = case_when(station == "STTD" ~ "chl & nut,wtemp,sradiation",
                                station == "LIS" ~ "chl & nut,wtemp",
-                               station == "SHR" ~ "chl & nut,wtemp,daymet",
-                               station == "Pro" ~ "chl & nut,daymet",
+                               station == "SHR" ~ "chl & nut,wtemp,sradiation",
+                               station == "Pro" ~ "chl & nut,sradiation",
                                station == "RIV" ~ "wtemp",
                                station == "LIB" ~ "wtemp,flow",
                                station == "SRV" ~ "flow",
                                station == "USGS_11425500" ~ "flow",
-                               station == "657" ~ "daymet,flow",
+                               station == "657" ~ "sradiation,flow",
                                TRUE ~ data_type),
          station_name = case_when(station == "34" ~ "",
                                   station == "653" ~ "",
@@ -279,12 +279,13 @@ sort(unique(WW_Watershed$HNAME))
       annotation_scale(location = "bl", bar_cols = c("darkgray", "white", "darkgray", "white"), text_cex = 1.1)+
       annotate(geom = "text", x = -121.76, y = 38.8, label = "upstream", fontface = "italic") +
       annotate(geom = "text", x = -121.84, y = 38.15, label = "downstream", fontface = "italic") +
+      annotate(geom = "text", x = -121.74, y = 38.6, label = "yolo", fontface = "italic") +
       #scale_colour_viridis(discrete = TRUE, option = "plasma") +
       scale_shape_manual(values = c(8, 6, 16, 0)) +
       scale_linetype_manual(values = c(5, 1, 2, 3)) +
       #scale_colour_manual(values = c("#00AFA1", "#00AEDB", "navy","palegreen2"))+
       #scale_fill_manual(values = c("#00AFA1", "#00AEDB", "lightslateblue","palegreen2"))+
-      scale_fill_manual(values = viridis(6, option = "mako")[2:5])+
+      scale_fill_manual(values = viridis(7, option = "mako")[c(2,3,5,7)])+
       scale_colour_manual(values = viridis(5, option = "mako")[2:5])+
       #scale_fill_manual(values = c("#00AFA1", "#00AEDB", "lightslateblue","palegreen2"))+
       #scale_fill_viridis(discrete = TRUE, option = "mako", direction = -1) +
@@ -292,7 +293,8 @@ sort(unique(WW_Watershed$HNAME))
       theme_bw() +
       theme(axis.title = element_blank(),
             axis.text = element_text(size = 16),
-            axis.text.x = element_text(angle = 60, hjust = 0.5, vjust = 0.5),
+            axis.text.x = element_text(angle = 60, hjust = 0.5, vjust = 0.5, size = 10),
+            axis.text.y = element_text(size = 10),
             #legend.position = "top",
             #legend.box = "vertical",
             legend.text = element_text(size = 10),
@@ -324,7 +326,9 @@ sort(unique(WW_Watershed$HNAME))
     patchmap2
     ggsave("figures/manuscript_map2.png", width = 8, height = 10, units = "in", device = 'png', dpi = 300)
 
-
+    # Only
+    map_stations
+    ggsave("figures/manuscript_map_regions_only.png", width = 6, height = 6, units = "in", device = 'png', dpi = 300)
 
 
     patchmap
