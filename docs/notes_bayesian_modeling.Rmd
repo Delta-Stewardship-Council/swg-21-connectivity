@@ -227,7 +227,7 @@ Since this is basically a continuation of mod07 in an attempt to translate the m
 ### Notes
 Up through mod10 uses the 7-station data set within the downstream region.  Mod10 explores lags between increases in Q (or inund_days) and chl, 63-84 d lags not unusual, but may be due to all Q discharge coming from Verona while chl at downstream sites.  Note that this model is still maintaining separate Q and Qant variables, despite evidence that likely both are not needed.  Tried some wavelets (frequency analyses) to identify potential time scales of variation in but didn't see anything useful. Also contains a comparison of predicted (from the model) vs. observed chlorophyll plot, and predicted chl over time (see related plots in mod06_Srad for analogous plots for the best performing model focused on Q, Srad, and inund_days up until that point).  Note that mod10 does not apply new temporal lags explored in this script. Beta for Q was positive while beta for Qant was negative, but may be that these two covariates are correlated.  
 
-## Model 11 (JAGS)
+## Model 11 (JAGS) - Station 657 only
 
 ### Covariates included:
 * Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
@@ -237,9 +237,9 @@ Up through mod10 uses the 7-station data set within the downstream region.  Mod1
 * Wtemprange_RIV_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Rio Vista.  This variable was not deseasonalized.
 
 ### Notes
-Mod11 only uses station 657 (Rio Vista) to see if performance improved by using only 1 chlorophyll station for data.  It also deseasonalizes water temperature, incorporates water temperature range, and incorporates longer temporal lags in the antecedant flow variable.  Dsum and deviance improve to 102 and 294 respectively (compare to best model up to this point - mod06_Srad - at 392 and 925, respectively, that had Q, Srad, inund_days).  It is unclear from this model whether the gain is from deseasonalizing water temp and adding water temp range or from incorporating longer lags. Now that there is no Q in addition to Qant, Qant has a positive slope albeit a large credible interval.  Perhaps also due to extending the lags.  Credible intervals for Wtemp and Wtemprange overlap, perhaps both are not needed.  Qant lag that extends back 2-5 weeks has a greater effect on chl, while lag that extends back 2 weeks has a lesser effect.
+Mod11 only uses station 657 (Rio Vista) to see if performance improved by using only 1 chlorophyll station for data.  Needed to remove first chlorophyll observation in order to be able to calculate longest Qant temporal lag. It also deseasonalizes water temperature, incorporates water temperature range, and incorporates longer temporal lags in the antecedant flow variable.  Dsum and deviance improve to 102 and 294 respectively (compare to best model up to this point - mod06_Srad - at 392 and 925, respectively, that had Q, Srad, inund_days).  It is unclear from this model whether the gain is from deseasonalizing water temp and adding water temp range or from incorporating longer lags. Now that there is no Q in addition to Qant, Qant has a positive slope albeit a large credible interval.  Perhaps also due to extending the lags.  Credible intervals for Wtemp and Wtemprange overlap, perhaps both are not needed.  Qant lag that extends back 2-5 weeks has a greater effect on chl, while lag that extends back 2 weeks has a lesser effect.  Update:  realized that at least for deviance, shouldn't be comparing this model with the data set restricted to station 657 only to previous models with more data across multiple stations. 
 
-## Model 11b (JAGS)
+## Model 11b (JAGS) - Station 657 only
 
 ### Covariates included:
 * Antecedent flow (Qant), with lagged flow at a maximum of 1, 7, 21, 42, and 63 days prior to the day of chlorophyll observation
@@ -249,7 +249,153 @@ Mod11 only uses station 657 (Rio Vista) to see if performance improved by using 
 * Wtemprange_RIV_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Rio Vista.  This variable was not deseasonalized.
 
 ### Notes
-See notes for mod11, except that note that temporal lags for Qant are different for mod11b.  The Dsum and deviance were also basically the same as for mod11, 102 and 295, respectively.  Changing the temporal lags did not really change the beta slope for Qant versus mod11. Weights for Qant show that first week's flows near the bypass don't really affect chl as much as flows that had been near bypass 2-3 weeks prior to chl measurement at Rio Vista.  Flows at longer lags in the past (up to 8 weeks prior) may also affect chl based on higher weights of those Qant terms.  Predictions using both mod11 and mod11b are still not great.  
+See notes for mod11, except that note that temporal lags for Qant are different for mod11b.  Needed to remove first chlorophyll observation in order to be able to calculate longest Qant temporal lag.  The Dsum and deviance were also basically the same as for mod11, 102 and 295, respectively.  Changing the temporal lags did not really change the beta slope for Qant versus mod11. Weights for Qant show that first week's flows near the bypass don't really affect chl as much as flows that had been near bypass 2-3 weeks prior to chl measurement at Rio Vista.  Flows at longer lags in the past (up to 8 weeks prior) may also affect chl based on higher weights of those Qant terms.  Predictions using both mod11 and mod11b are still not great.  
+
+# Start Regional Models 
+
+## Model 12 (JAGS) - Yolo
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature at Yolo.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Yolo.  This variable was not deseasonalized.
+
+### Notes
+Trying the next regional model on Yolo only data, but otherwise comparable to Mod11 (however, Yolo data set is quite a bit shorter than below region data set, only 2009-2019).  Like Mod11, Mod12 and all models moving forward are based on the newly compiled data set for regional analysis, where there are region-specific covariates included.  Includes all of the Yolo stations without a random effect of station.  This model was not converging very well for several beta parameters, which provided impetus for exploring other models with the Yolo data, including models with shorter temporal lags for Qant.  
+
+## Model 12_redlags (JAGS) - Yolo
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature at Yolo.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Yolo.  This variable was not deseasonalized.
+
+### Notes
+Resorted to the temporal lags on Qant from Mod1.  Much better convergence and there was a reduction in Dsum and deviance versus the longer lag model.  Only slight improvement when added Wtemp and Wtemprange to the model with the other 3 covariates than without them.  Days 1 and 4 show greater weights on Qant then do the longer lags.  Qant has a negative slope here, compared to below/Rio Vista models where Qant was positive.
+
+## Model 12_redlags_dowy (JAGS) - Yolo
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Day of water year (dowy) - calculated based on a defined Water Year of Oct 1-Sep 30
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+
+### Notes
+Wanted to compare to the GAMS model by investigating whether a general seasonal signal replacement for Srad and Wtemp metrics would provide a better fitting model. Resulted in Dsum = 453.9, Deviance = 846.8 for this model with dowy, versus Dsum = 439, Deviance = 836.2 for Mod 12_redlags with Srad and Wtemp.  Thus, no improvement from replacing Sradm, Wtemp, and Wtemprange with dowy, although should try another model that has both dowy and Wtemprange! 
+
+## Model 12_inund_poss (JAGS) - Yolo
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Yolo.  This variable was not deseasonalized.
+
+### Notes
+Following the GAMS model lead, wanted to restrict the data used to the time period when inundation is possible in the system, based on all days of the year when there was at least one inundation event throughout the full all-region dataset.  See scripts/functions/f_make_bayes_mod12inundposs_dataset.R for more information. This is by far the best fitting model so far (check out the pred_vs_obs figure), although based on fewer data points.  Qant continues to be negative for Yolo, and Srad as always is important.  I didn't try with Wtemp in addition to Wtemprange.  Qant lags of 1 and 4 days still have the most weight. Dsum  = 197.7, Deviance = 404.  
+
+## Model 12_inund_poss_flag (JAGS) - Yolo
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation (is the floodplain inundated, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)).  
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Yolo.  This variable was not deseasonalized.
+
+### Notes
+Made the Inundation (Y/N) a factor that interacted with the other covariates, to replace inundation_days.  Dsum  = 195, Deviance = 402. Better than Mod12_inund_poss. Had to redo both this model and Mod12_inund_poss because at first restricted available data to only when inundation (flag) = Y  
+
+## Model 13_below (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature in the Below region.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature in the Below region.  This variable was not deseasonalized.
+* Days of inundation until now, how many days until today's date in the current water year have been inundated
+* Inundation (is the floodplain inundated, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs))
+
+### Notes
+This model is for the Below region using the new dataset developed after Mod10.  Mod13_below is similar to Mod11 but now expands to other stations beyond just Station 657 below the bypass.  Still no random effect of station.  Replaces inundation_days with days of inundation until now (which should be the same as inundation_days if there is only 1 inundation event, otherwise all days of inundation for all events during the water year are included).  This model codes inundation_season incorrectly as though it is a continuous covariate. Interpretation of Qant lags is not as clear as in Mod11.  Would generally ignore this model.  However, shows wtemprange is not very important in the Below region!
+
+## Model 13_below_inundposs (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature in the Below region.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Days of inundation until now, how many days until today's date in the current water year have been inundated
+* Inundation (is the floodplain inundated, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs))
+
+### Notes
+Like Mod12_inund_poss models, this model restricted the dataset to only the season when inundation is possible based on data from all regions.  This time, correctly made the inundation (Y/N) a factor. Model seems to be less well-fit than when isolated data to a single station (Station 657) for the Below region.  Qant peaks 5-8 weeks. Srad still very important, and Qant still positive.  
+
+## Model 13_yolo_inund_notposs (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature in the Yolo region.  This variable was not deseasonalized.
+* Days of inundation until now, how many days until today's date in the current water year have been inundated
+
+### Notes
+By comparing this model with Mod12_inund_poss, we see that when inundation is possible, Wtemp range is more important than Srad for driving chlorophyll concentrations.  When inundation is not possible, Srad has the higher slope.  Qant not very different among the two seasons.    
+
+## Model 13_above (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature in the Above region.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature in the Above region.  This variable was not deseasonalized.
+* Days of inundation until now, how many days until today's date in the current water year have been inundated
+* Inundation season, the season when inundation is possible based on data from all regions.
+
+### Notes
+This is the first model investigating the responses of chlorophyll in the region Above the bypass to various covariates.  Obviously, Days of inundation until now are not going to matter in this area that can never experience inundation, which is confirmed in the beta slope overlapping zero.  The credible interval for Wtemp also is basically overlapping zero.  Wtemprange has a small positive effect on chlorophyll concentration but nearly as much as in the Yolo region.  What season it is (the inund_season means winter/spring) matters, as we would expect.  Qant is negative, like the Yolo region. Lag of 7 days for Qant seems a bit more important but still is not too much greater than other temporal lags. Dsum = 146.5, deviance = 432.2 
+
+## Model 13_cache_inundposs (JAGS)
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 14, 35, and 56 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature in the Cache region.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature in the Cache region.  This variable was not deseasonalized.
+* Days of inundation until now, how many days until today's date in the current water year have been inundated
+* Inundation season, which is the same as Inundation (is the floodplain inundated, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs))
+
+### Notes
+Restricted again to only the season when inundation is possible.  This time focused on the Cache complex region.  Unlike Yolo, Qant slope is positive, but credible interval crosses 0 line.  The scaled data for Cache flow (Q) were basically all negative.  Slopes for posteriors of Srad and Wtemp also positive. Qant temporal lag of 2-5 weeks has the most weight, similar to the downstream region.  Not very many chlorophyll observations, might be difficult for model.  Dsum = 121.1, Deviance = 220.2 
+
+## Model 14_yolo_inund_poss_wtemp (JAGS) 
+
+### Covariates included:
+* Antecedent flow (Qant), with lagged flow at a maximum of 1, 4, 7, 14, and 21 days prior to the day of chlorophyll observation
+* Srad_mwk, the 7-day average of mean daily solar radiation (i.e., just averaged over a week's worth of Rad). 
+* Inundation days (the number of days of floodplain inundation, i.e., when river stage based on Fremont height (>=33.5 ft) and dayflow-QYolo (4,000 cfs)
+* Wtemp_mwk, the 7-day average of the daily MEAN water temperature in the Cache region.  This variable was first deseasonalized using the stl function, prior to finding the 7-day average of the daily mean. 
+* Wtemprange_mwk, the 7-day average of the daily max water temperature minus the 7-day average of the daily min water temperature at Yolo.  This variable was not deseasonalized.
+
+### Notes
+All models with #14 are yolo region.  When adding the flag as a factor in the model (see 14inundposs-wtemprange), measures of fit and deviance:  Dsum = 200, Deviance = 406.4.  no better than when had inund_days instead of flag (compare with Mod12_inund_poss). 
+
+14inundposs-wtemprange-inter: Dsum = 181, Deviance = 388; BETTER!
+
+14inundposs-wtemps: Dsum = 179.3, Deviance = 387.1. Still within 2 for deviance to include both wtemp and wtemprange. about same as previous. Still has interaction with wtemprange + inundation
+
+14inundposs-dowy:  (same as 14inundposs-wtemps but dowy instead of Srad and Wtemp) Dsum = 186.4, Deviance = 392.9. Still has interaction with wtemprange + inundation
+
+14inundposs-lastyr:  Dsum = 180.8, Deviance = 387.8.  Has both wtemp and wtemprange. Still has interaction with wtemprange + inundation.  Not helpful to add days inundated last year.
+
+14inundposs-sincelast:  Dsum = 180.7, Deviance = 387.3. Has both wtemp and wtemprange. Still has interaction with wtemprange + inundation.  Not helpful to add days since last inundated.  
+
+14inundposs-diurnal:  forked from 14inundposs-wtemps.  Not any better to add diurnal range.  Dsum = 179.3, Deviance = 387.
+
+15inundnotposs for below region:  Dsum = 213.6, deviance = 525.3.  Adj R2 = 0.13.
 
 # Stats Links
 
