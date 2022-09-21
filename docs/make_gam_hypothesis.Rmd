@@ -7,6 +7,11 @@ editor_options:
   chunk_output_type: console
 ---
 
+
+* How to change scale - predict over the whole range of values for all regions
+* How to mask out the values we don't have 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -56,6 +61,7 @@ alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
          rdoy  = lubridate::yday(date) + 92,
          week  = lubridate::week(date),
          water_year = ifelse(month > 9, year + 1, year),
+         fwater_year = factor(water_year),
          dowy = ifelse(rdoy > 366, rdoy - 366, rdoy),
          log_chla = log(chlorophyll),
          log_idys = log(inund_days + 1),
@@ -71,7 +77,7 @@ alldata0 <- read_csv("data_model/model_chla_covars_gam.csv") %>%
                               TRUE ~ "months"),
          tily_fac = as.factor(tily_fac),
          inund_fac = as.factor(inund_fac),
-         inund_fac2 = as.factor(inund_fac2)) %>%
+         inund_fac2 = factor(inund_fac2, levels = c("none", "short", "long"))) %>%
   rename(station = station_wq_chl, tily = total_inund_last_year, 
          dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
 
@@ -133,6 +139,8 @@ u.idys <- upstream %>%
   mutate(across(.cols = c(log_idys, t_qsdy, log_qsdy, tily:Sradmwk), ~ scale(.x)))
 yo.idys <- yolo %>%
   mutate(across(.cols = c(log_idys, t_qsdy, log_qsdy, tily:Sradmwk), ~ scale(.x)))
+
+
 ```
 
 # Model
@@ -174,14 +182,28 @@ gamu6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", 
 summary(gamu6b)
 
 # final model with random effect for station
-gamu6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
+gamu6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2)  + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
 summary(gamu6c)
 gam.vcomp(gamu6c)
+
+gamu6d <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) +inund_fac2 + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
+summary(gamu6d)
+gam.vcomp(gamu6d)
+
+# add year as random effect
+gamu6e <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + s(station, bs = "re", k = 3) + s(water_year, bs = "re", k = 3), method = "REML", data = upstream, family = "gaussian")
+summary(gamu6e)
+gam.vcomp(gamu6e) # what does the stddev tell us?
+
+AIC(gamu6c, gamu6d, gamu6e)
 ######################
 
 AIC(gamu1, gamu2, gamu3, gamu4, gamu6, gamu6b, gamu6c)
-```
 
+vis.gam(gamu6c, view = c("log_qsdy", "WTmwk"), color = "topo", too.far = 0.1, type = "response")
+```
+* https://gavinsimpson.github.io/gratia/
+* extract data from vis.gam?
 
 ### Yolo
 ```{r}
@@ -213,6 +235,11 @@ summary(gamyo6b)
 gamyo6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + s(station, bs = "re"), method = "REML", data = yolo, family = "gaussian")
 summary(gamyo6c)
 gam.vcomp(gamyo6c)
+
+# final model with random effect for station
+gamyo6d <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + inund_fac2 + s(station, bs = "re"), method = "REML", data = yolo, family = "gaussian")
+summary(gamyo6d)
+
 ######################
 
 AIC(gamyo1, gamyo2, gamyo3, gamyo4, gamyo5, gamyo6, gamyo6b, gamyo6c)
@@ -242,7 +269,7 @@ gamd6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", 
 summary(gamd6b)
 
 # with station random effect
-gamd6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + s(station, bs = "re"), method = "REML", data = downstream, family = "gaussian")
+gamd6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + inund_fac2 + s(station, bs = "re"), method = "REML", data = downstream, family = "gaussian")
 summary(gamd6c)
 gam.vcomp(gamd6c)
 #####################
@@ -391,12 +418,6 @@ chl.mat.none = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
 chl.mat.shrt = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
 chl.mat.long = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
 
-rownames(chl.mat.none) = seq.none.lqsdy
-colnames(chl.mat.none) = seq.none.wtmwk
-rownames(chl.mat.shrt) = seq.none.lqsdy
-colnames(chl.mat.shrt) = seq.none.wtmwk
-rownames(chl.mat.long) = seq.none.lqsdy
-colnames(chl.mat.long) = seq.none.wtmwk
 
 for (i in 1:(grid.size+1)) {
   for (j in 1:(grid.size+1)) {
@@ -408,8 +429,8 @@ for (i in 1:(grid.size+1)) {
     chl.mat.long[i, j] = pred.long$fit
   }
 }
-
-col_range = colorRampPalette(c("rosybrown4", "darkred", "tomato1", "gray85", "steelblue1", "royalblue", "royalblue3", "darkblue", "purple4"))
+# Color palette
+col_range = colorRampPalette(viridis(12, option = "turbo"))
 col_pal = col_range(10000)
 
 # this is a way to make a single palette across all 3 panels
@@ -441,7 +462,7 @@ cnvx.hull.none = c(chull(d.none$log_qsdy, d.none$WTmwk), chull(d.none$log_qsdy, 
 cnvx.hull.shrt = c(chull(d.shrt$log_qsdy, d.shrt$WTmwk), chull(d.shrt$log_qsdy, d.shrt$WTmwk)[1])
 cnvx.hull.long = c(chull(d.long$log_qsdy, d.long$WTmwk), chull(d.long$log_qsdy, d.long$WTmwk)[1])
 
-# subset to only the hull rows
+# subset to only the hull rows - constraining to 5% and 95% intervals
 d.none.hull = d.none[cnvx.hull.none,] %>% 
   mutate(log_qsdy = ifelse(log_qsdy < d_table[2,2], d_table[2,2], ifelse(log_qsdy > d_table[2,3], d_table[2,3], log_qsdy))) %>%
   mutate(WTmwk = ifelse(WTmwk < d_table[2,4], d_table[2,4], ifelse(WTmwk > d_table[2,5], d_table[2,5], WTmwk)))
@@ -652,6 +673,25 @@ pred_yolo <- rbind(pred_gamyo6_short, pred_gamyo6_long, pred_gamyo6_none)
 pred_yolo$inund_fac2 <- factor(pred_yolo$inund_fac2, levels = c("none", "short", "long"))
 ```
 
+```{r}
+# divide all covars into this many intervals in simulated dataset
+grid.size = 49
+# calculate interval size for all 3 inundation factor simulation datasets
+int.none.lqsdy = (y_table[2,3] - y_table[2,2])/(grid.size)
+int.none.wtmwk = (y_table[2,5] - y_table[2,4])/(grid.size)
+int.shrt.lqsdy = (y_table[3,3] - y_table[3,2])/(grid.size)
+int.shrt.wtmwk = (y_table[3,5] - y_table[3,4])/(grid.size)
+int.long.lqsdy = (y_table[1,3] - y_table[1,2])/(grid.size)
+int.long.wtmwk = (y_table[1,5] - y_table[1,4])/(grid.size)
+
+seq.none.lqsdy = seq(y_table[2,2], y_table[2,3], by = int.none.lqsdy)
+seq.none.wtmwk = seq(y_table[2,4], y_table[2,5], by = int.none.wtmwk)
+seq.shrt.lqsdy = seq(y_table[3,2], y_table[3,3], by = int.shrt.lqsdy)
+seq.shrt.wtmwk = seq(y_table[3,4], y_table[3,5], by = int.shrt.wtmwk)
+seq.long.lqsdy = seq(y_table[1,2], y_table[1,3], by = int.long.lqsdy)
+seq.long.wtmwk = seq(y_table[1,4], y_table[1,5], by = int.long.wtmwk)
+```
+
 ### VISUALIZE
 ```{r}
 png(filename = "figures/yolo_predictions.png", width = 9, height = 4, units = "in", res = 300)
@@ -667,6 +707,137 @@ png(filename = "figures/yolo_predictions.png", width = 9, height = 4, units = "i
     theme(strip.text = element_text(size = 13)))
 dev.off()
 ```
+
+
+```{r}
+# arrange the predictions in a grid.size x grid.size matrix ready to display as an image
+# create a matrix to hold the value
+chl.mat.none = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
+chl.mat.shrt = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
+chl.mat.long = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
+
+
+for (i in 1:(grid.size+1)) {
+  for (j in 1:(grid.size+1)) {
+    pred.none = predict_gam(gamyo6b, values = list(log_qsdy = seq.none.lqsdy[i], WTmwk = seq.none.wtmwk[j], inund_fac2 = "none"))
+    pred.shrt = predict_gam(gamyo6b, values = list(log_qsdy = seq.shrt.lqsdy[i], WTmwk = seq.shrt.wtmwk[j], inund_fac2 = "short"))
+    pred.long = predict_gam(gamyo6b, values = list(log_qsdy = seq.long.lqsdy[i], WTmwk = seq.long.wtmwk[j], inund_fac2 = "long"))
+    chl.mat.none[i, j] = pred.none$fit
+    chl.mat.shrt[i, j] = pred.shrt$fit
+    chl.mat.long[i, j] = pred.long$fit
+  }
+}
+# Color palette
+col_range = colorRampPalette(viridis(12, option = "turbo"))
+col_pal = col_range(10000)
+
+# this is a way to make a single palette across all 3 panels
+# image(x = seq.none.lqsdy, y = seq.none.wtmwk, z = chl.mat.none,
+#       col = col_pal[round(min(chl.mat.none)*length(col_pal)):round(max(chl.mat.none)*length(col_pal))],
+#       ylab = "", xlab = "", axes = F, ylim = range(seq.none.wtmwk), xlim = range(seq.none.lqsdy))
+# image(x = seq.shrt.lqsdy, y = seq.shrt.wtmwk, z = chl.mat.shrt,
+#       col = col_pal[round(min(chl.mat.shrt)*length(col_pal)):round(max(chl.mat.shrt)*length(col_pal))],
+#       ylab = "", xlab = "", axes = F, ylim = range(seq.shrt.wtmwk), xlim = range(seq.shrt.lqsdy))
+# image(x = seq.long.lqsdy, y = seq.long.wtmwk, z = chl.mat.long,
+#       col = col_pal[round(min(chl.mat.long)*length(col_pal)):round(max(chl.mat.long)*length(col_pal))],
+#       ylab = "", xlab = "", axes = F, ylim = range(seq.long.wtmwk), xlim = range(seq.long.lqsdy))
+
+# calculating axes labels
+lbl.none.lqsdy = round(seq(y_table[2,2], y_table[2,3], by = (y_table[2,3] - y_table[2,2])/5), digits = 2)
+lbl.none.wtmwk = round(seq(y_table[2,4], y_table[2,5], by = (y_table[2,5] - y_table[2,4])/5), digits = 2)
+lbl.shrt.lqsdy = round(seq(y_table[3,2], y_table[3,3], by = (y_table[3,3] - y_table[3,2])/5), digits = 2)
+lbl.shrt.wtmwk = round(seq(y_table[3,4], y_table[3,5], by = (y_table[3,5] - y_table[3,4])/5), digits = 2)
+lbl.long.lqsdy = round(seq(y_table[1,2], y_table[1,3], by = (y_table[1,3] - y_table[1,2])/5), digits = 2)
+lbl.long.wtmwk = round(seq(y_table[1,4], y_table[1,5], by = (y_table[1,5] - y_table[1,4])/5), digits = 2)
+
+# subset the yolo data frame each inundation factor
+y.none = yolo %>% filter(inund_fac2 == "none")
+y.shrt = yolo %>% filter(inund_fac2 == "short")
+y.long = yolo %>% filter(inund_fac2 == "long")
+
+# calculate the outer hull coordinates for log_qsdy and WTmwk - gives the relevant row numbers
+cnvx.hull.none = c(chull(y.none$log_qsdy, y.none$WTmwk), chull(y.none$log_qsdy, y.none$WTmwk)[1])
+cnvx.hull.shrt = c(chull(y.shrt$log_qsdy, y.shrt$WTmwk), chull(y.shrt$log_qsdy, y.shrt$WTmwk)[1])
+cnvx.hull.long = c(chull(y.long$log_qsdy, y.long$WTmwk), chull(y.long$log_qsdy, y.long$WTmwk)[1])
+
+# subset to only the hull rows - constraining to 5% and 95% intervals
+y.none.hull = y.none[cnvx.hull.none,] %>% 
+  mutate(log_qsdy = ifelse(log_qsdy < y_table[2,2], y_table[2,2], ifelse(log_qsdy > y_table[2,3], y_table[2,3], log_qsdy))) %>%
+  mutate(WTmwk = ifelse(WTmwk < y_table[2,4], y_table[2,4], ifelse(WTmwk > y_table[2,5], y_table[2,5], WTmwk)))
+y.shrt.hull = y.none[cnvx.hull.shrt,] %>% 
+  mutate(log_qsdy = ifelse(log_qsdy < y_table[3,2], y_table[3,2], ifelse(log_qsdy > y_table[3,3], y_table[3,3], log_qsdy))) %>%
+  mutate(WTmwk = ifelse(WTmwk < y_table[3,4], y_table[3,4], ifelse(WTmwk > y_table[3,5], y_table[3,5], WTmwk)))
+y.long.hull = y.none[cnvx.hull.long,] %>% 
+  mutate(log_qsdy = ifelse(log_qsdy < y_table[1,2], y_table[1,2], ifelse(log_qsdy > y_table[1,3], y_table[1,3], log_qsdy))) %>%
+  mutate(WTmwk = ifelse(WTmwk < y_table[1,4], y_table[1,4], ifelse(WTmwk > y_table[1,5], y_table[1,5], WTmwk)))
+
+# this way maximizes contrast within each panel hence the scale within category is stretched
+# par(mfrow = c(1,3), mar = c(4,2.75,1,2.5) + 0.1, oma = c(0,2.25,2,8), las = 1)
+
+###-------------- Yolo: No inundation --------------###
+png(filename = "figures/d_none_2dfigure.png", width = 8, height = 6, units = "in", res = 300)
+
+image(x = seq.none.lqsdy, y = seq.none.wtmwk, z = chl.mat.none, col = col_pal,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.none.wtmwk), xlim = range(seq.none.lqsdy))
+
+# create breaks and labels for x and y axes
+axis(side = 1, at = lbl.none.lqsdy, labels = lbl.none.lqsdy)
+axis(side = 2, at = lbl.none.wtmwk, labels = lbl.none.wtmwk)
+
+# draw the simple polygon where data exists
+#polygon(x = d.none.hull$log_qsdy, y = d.none.hull$WTmwk, col = gray(1, 0.2), border = NA)
+
+mtext(text = "Log of same day flow", side = 1,
+      line = 2.5, adj=0.5, las=0)
+mtext(text = "Weekly mean water temperature", side = 2,
+      line = 3, adj=0.5, las=0)
+mtext(text = "Yolo: No inundation", side = 3,
+      line = 0.75, adj=0.5, las=0, font=2)
+
+dev.off()
+
+###--------- Yolo: short inundation (< 3 weeks) ---------###
+png(filename = "figures/d_shrt_2dfigure.png", width = 8, height = 6, units = "in", res = 300)
+
+image(x = seq.shrt.lqsdy, y = seq.shrt.wtmwk, z = chl.mat.shrt, col = col_pal,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.shrt.wtmwk), xlim = range(seq.shrt.lqsdy))
+
+# create breaks and labels for x and y axes
+axis(side = 1, at = lbl.shrt.lqsdy, labels = lbl.shrt.lqsdy)
+axis(side = 2, at = lbl.shrt.wtmwk, labels = lbl.shrt.wtmwk)
+
+mtext(text = "Log of same day flow", side = 1,
+      line = 2.5, adj=0.5, las=0)
+mtext(text = "Weekly mean water temperature", side = 2,
+      line = 3, adj=0.5, las=0)
+mtext(text = "Yolo: short inundation", side = 3,
+      line = 0.75, adj=0.5, las=0, font=2)
+
+dev.off()
+
+# draw the simple polygon where data exists
+polygon(x = d.shrt.hull$log_qsdy, y = d.shrt.hull$WTmwk, col = gray(1, 0.2), border = NA)
+
+###--------- Yolo: long inundation (> 3 weeks) ---------###
+png(filename = "figures/d_long_2dfigure.png", width = 8, height = 6, units = "in", res = 300)
+
+image(x = seq.long.lqsdy, y = seq.long.wtmwk, z = chl.mat.long, col = col_pal,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.long.wtmwk), xlim = range(seq.long.lqsdy))
+
+# create breaks and labels for x and y axes
+axis(side = 1, at = lbl.long.lqsdy, labels = lbl.long.lqsdy)
+axis(side = 2, at = lbl.long.wtmwk, labels = lbl.long.wtmwk)
+
+mtext(text = "Log of same day flow", side = 1,
+      line = 2.5, adj=0.5, las=0)
+mtext(text = "Weekly mean water temperature", side = 2,
+      line = 3, adj=0.5, las=0)
+mtext(text = "Yolo: long inundation", side = 3,
+      line = 0.75, adj=0.5, las=0, font=2)
+dev.off()
+
+```
+
 
 ## Upstream
 ### PREDICT
