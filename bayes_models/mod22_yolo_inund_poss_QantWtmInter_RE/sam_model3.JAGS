@@ -4,36 +4,36 @@ model{
     chl[i] ~ dnorm(mu[i], tau)
     chl.rep[i] ~ dnorm(mu[i], tau)
   # regression
-    mu[i] <- B[1] +
-             B[2] * Qant[i] +
-             B[3] * Srad_mwk[doy1999[i]] +
-             B[4] * Wtemp_mwk[doy1999[i]] +
-             B[5] * Wtemprange_mwk[doy1999[i]] +
-             Inun[inundation[doy1999[i]]] +
-             Inun2[inundation[doy1999[i]]] * Wtemprange_mwk[doy1999[i]] +
-             eps[water_year[doy1999[i]]]]
+    mu[i] <- B[1, inundation[doy1999[i]]] +
+             B[2, inundation[doy1999[i]]] * Qant[i, inundation[doy1999[i]]] +
+             B[3, inundation[doy1999[i]]] * Wtmday[doy1999[i]] +
+             B[4, inundation[doy1999[i]]] * Qant[i, inundation[doy1999[i]]] * Wtmday[doy1999[i]]
+             #+ eps[station_id[i]]
 
   # Sum antecedent components across all timesteps
-   Qant[i] <- sum(qTemp[i,])
-
+  for(j in 1:2){
+   Qant[i, j] <- sum(qTemp[i,,j])
+}
   # Create temporary antecedent variable
   # here we create index (of Q or temp or radians) multiply weight by
   # index based on days since 1999, average of next day period, etc
 
     # use lag of
-    #for(k in 1:1){ # current day's Q
-      #qTemp[i,k] <- Q[(doy1999[i])]*wA[1]
-      #} if using this statement, change to k=2 in for(k in 1:nlagA)
     for(k in 1:nlagA){ # flow from lags
-      qTemp[i,k] <-  mean(Q[(doy1999[i]-sum(pA[1:k])):(doy1999[i]-sum(pA[1:k])+pA[k] - 1)])*wA[k]
+      for(j in 1:2){
+      qTemp[i,k,j] <-  mean(Q[(doy1999[i]-sum(pA[1:k])):(doy1999[i]-sum(pA[1:k])+pA[k] - 1)])*wA[k,j]
     }
+  }
+
 
   # part of dsum
   dsum[i] <- pow(chl[i] - chl.rep[i], 2)
   }
 
   # Sum of the deltas for each covariate
-  sumA <- sum(deltaA[])
+  for(j in 1:2){ # 2 inundation periods
+  sumA[j] <- sum(deltaA[,j])
+  }
 
   # a way to avoid using ddirich distrib function in JAGS
   # use a variable drawn from gamma distrib
@@ -43,32 +43,28 @@ model{
   # set Priors for weights using the delta trick
   #daily variable weights
   for(k in 1:nlagA){
-    wA[k] <- deltaA[k]/sumA
-    deltaA[k] ~ dgamma(alphaA[k],1)
+  for(j in 1:2){ # 2 inundation periods
+    wA[k,j] <- deltaA[k,j]/sumA[j]
+    deltaA[k,j] ~ dgamma(alphaA[k,j],1)
+    }
   }
 
-
-  # Priors for random effects
-  for(r in 1:Nwy){
+ # Priors for random effects
+  #for(r in 1:Nstation){
   # non-identifiable random effects
-    eps[r] ~ dnorm(0, tau.eps)
+  #  eps[r] ~ dnorm(0, tau.eps)
   # identifable random effects
-    Estar[r] <- eps[r] - mean(eps[])
-  }
+   # Estar[r] <- eps[r] - mean(eps[])
+  #}
 
   # Diffuse normal priors for regression coefficients
-  for(k in 1:5){
-    B[k] ~ dnorm(0, 0.001)
+  for(k in 1:4){
+    for(j in 1:2){
+    B[k,j] ~ dnorm(0, 0.001)
     # Identifiable parameter vector
-    Bstar[k] <- B[k] + equals(k, 1)*mean(eps[])
+    Bstar[k,j] <- B[k,j] #+ equals(k,1)*mean(eps[])
+    }
   }
-
-# Priors for inundation flag effects
-    Inun[1] <- 0
-    Inun[2] ~ dnorm(0, 0.001)
-
-    Inun2[1] <- 0
-    Inun2[2] ~ dnorm(0, 0.001)
 
   # Diffuse gamma prior for observation-level precisions
   tau ~ dgamma(0.01, 0.01)
@@ -76,8 +72,8 @@ model{
 
   # Diffuse folded-t prior for random-effect standard deviation
   # Most effective for smaller number of groups
-  sig.eps ~ dt(0, 10, 2)T(0,)
-  tau.eps <- pow(sig.eps, -2)
+  #sig.eps ~ dt(0, 10, 2)
+  #tau.eps <- pow(abs(sig.eps), -2)
 
   # posterior predictive loss
   Dsum <- sum(dsum[])
