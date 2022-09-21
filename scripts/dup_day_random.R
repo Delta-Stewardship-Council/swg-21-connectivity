@@ -1,8 +1,9 @@
 # remake chl data that has multiple stations and duplicate dates within region, but selects a random measurement if multiple sampling at one station in one day
-# first lines taken from dup_day_check.R
+# first 28 lines taken from dup_day_check.R
 
 # libraries
 library(dplyr)
+library(data.table)
 
 # data
 chla_covars <- read.csv("data_model/model_chla_nuts_combined.csv")
@@ -26,3 +27,30 @@ head(regions_chla_covars)
 sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #659
 
 regions_chla_covars <- regions_chla_covars[!is.na(regions_chla_covars$chlorophyll),]
+
+# now find duplicates by day and station
+regions_chla_covars$date <- as.Date(regions_chla_covars$date)
+
+duplicate_chl <- regions_chla_covars %>%
+  group_by(station_wq_chl, date) %>%
+  mutate(num_dups = n()) %>%
+  ungroup() %>%
+  mutate(is_duplicated = num_dups > 1)
+
+length(duplicate_chl$is_duplicated == TRUE) #2134
+
+# select one measurement at random
+#chl_daily_station <- regions_chla_covars %>%
+#  group_by(station_wq_chl, date) %>%
+#  slice_sample(n = 1) # nope, doesn't work correctly
+
+chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station_wq_chl, date)] # winner!
+
+# check
+check_chl <- chl_daily_station %>%
+  group_by(station_wq_chl, date) %>%
+  mutate(num_dups = n()) %>%
+  ungroup() %>%
+  mutate(is_duplicated = num_dups > 1)
+
+write.csv(chl_daily_station, "data_model/chlorophyll_fin_updated.csv")
