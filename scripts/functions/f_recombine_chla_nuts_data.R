@@ -11,7 +11,7 @@ f_recombine_chla_nuts_data <- function() {
     filter(!(doy1998 == 7932 & station_wq_chl == "USGS-11447650" & is.na(diss_orthophos)))
 
   # Pascale's prioritized chla
-  chla_new <- read_csv("data_model/chlorophyll_fin.csv") %>%
+  chla_new <- read_csv("data_model/chlorophyll_fin_updated.csv") %>%
     select(-1) %>%
     distinct()
 
@@ -31,6 +31,6 @@ f_recombine_chla_nuts_data <- function() {
     filter(n>1)
 
   # Write data to data_model
-  readr::write_csv(chla_join, "data_model/model_chla_nuts_prioritized.csv")
+  readr::write_csv(chla_join, "data_model/model_chla_nuts_random.csv")
 
 }

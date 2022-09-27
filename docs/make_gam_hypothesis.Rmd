@@ -182,11 +182,11 @@ gamu6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", 
 summary(gamu6b)
 
 # final model with random effect for station
-gamu6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2)  + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
+gamu6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
 summary(gamu6c)
 gam.vcomp(gamu6c)
 
-gamu6d <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) +inund_fac2 + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
+gamu6d <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + inund_fac2 + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
 summary(gamu6d)
 gam.vcomp(gamu6d)
 
@@ -200,7 +200,7 @@ AIC(gamu6c, gamu6d, gamu6e)
 
 AIC(gamu1, gamu2, gamu3, gamu4, gamu6, gamu6b, gamu6c)
 
-vis.gam(gamu6c, view = c("log_qsdy", "WTmwk"), color = "topo", too.far = 0.1, type = "response")
+vis.gam(gamu6d, view = c("log_qsdy", "WTmwk"), color = "topo", too.far = 0.1, type = "response")
 ```
 * https://gavinsimpson.github.io/gratia/
 * extract data from vis.gam?
@@ -272,6 +272,11 @@ summary(gamd6b)
 gamd6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + inund_fac2 + s(station, bs = "re"), method = "REML", data = downstream, family = "gaussian")
 summary(gamd6c)
 gam.vcomp(gamd6c)
+# with station random effect
+
+gamd6d <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + inund_fac2 + s(station, bs = "re"), method = "REML", data = downstream, family = "gaussian")
+summary(gamd6d)
+gam.vcomp(gamd6d)
 #####################
 
 AIC(gamd1, gamd2, gamd3, gamd4, gamd6, gamd6b, gamd6c)
