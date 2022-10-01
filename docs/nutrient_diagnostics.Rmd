@@ -30,16 +30,15 @@ inun <- read.csv("data_model/inundation_with_doy1998.csv")
 
 dat_na <- data.frame(sapply(X = explore, FUN = function(x) sum(is.na(x))))
 ```
-#remove forms of N if not paired with chlorophyll ##break stations up by region 
+#remove nutrients if not paired with chlorophyll 
+#add Yolo, Cache, Rio Vista, and Sac R regions to df 
 ```{r}
 
-new_dat <- explore[,c(2:5, 7,10,12,14,15)]
+new_dat <- explore[,c(2:5, 7,10,12,14,15,18)]
 
 new_dat_chl <- new_dat[!is.na(new_dat$chlorophyll),]
 
 sum(is.na(new_dat_chl$diss_nitrate_nitrite == TRUE))
-
-plot(new_dat_chl$latitude, new_dat_chl$diss_nitrate_nitrite)
 
 new_dat_chl$date <- as.POSIXct(new_dat_chl$date, format = "%Y-%m-%d")
 
@@ -56,19 +55,14 @@ regions <- new_dat_chl %>%
 
 regions <- regions %>% 
   drop_na(region)
-
-ggplot(regions, aes(date, diss_nitrate_nitrite)) + 
-  geom_point(color="dark blue") +
-  facet_wrap(~region, scales = "fixed")+
-  labs(x = 'Date', y = 'NO3 + NO2 (mg/L)') +
-  ggtitle('NO3 + NO2')
 ```
 #subset data >= WY 2009  
 ```{r}
 regions_WY09 <- subset(regions, date>="2008-10-01")
 ```
 
-#add inundation to regions df to explore concentrations during inundated and non-inundated periods
+#add inundation to regions df to explore nut. #concentrations during inundated and non-inundated periods
+#nutrients lowest during Yolo Bypass inundation except in the Sac. R.
 
 ```{r}
 regions_WY09$date <- as.Date(regions_WY09$date)
@@ -88,15 +82,122 @@ ggplot(inun_nuts, aes(date, diss_nitrate_nitrite)) +
   xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
   facet_wrap(~region, scales = "fixed") +
   labs(x = 'Date', y = 'NO3 + NO2 (mg/L)') +
-  ggtitle("NO3 + NO2")
+  ggtitle("diss. NO3 + NO2")
 
 #NH4
 
+ggplot(inun_nuts, aes(date, diss_ammonia)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle("diss. NH4 + NH3")
+
 #ortho-p
 
+ggplot(inun_nuts, aes(date, diss_orthophos)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'orthophos. (mg/L)') +
+  ggtitle("diss. orthophos.")
+
 #DIN
+ggplot(inun_nuts, aes(date, din)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'DIN (mg/L)') +
+  ggtitle("diss. inorganic nitrogen")
 ```
+#explore nutrient - chlorophyll relationship, relationship is not strong
 ```{r}
-#add more diagnostics, include relationship with flow and other covars, include relationship with chl-a and
+#NO3 + NO2
+ggplot(inun_nuts, aes(diss_nitrate_nitrite, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'NO3 + NO2 (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("diss. NO3 + NO2 - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+#NH4+NH3
+ggplot(inun_nuts, aes(diss_ammonia, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'NH4 + NH3 (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("diss. NH4 + NH3 - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+#DIN
+ggplot(inun_nuts, aes(din, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'DIN (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("DIN - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+#orthophos.
+ggplot(inun_nuts, aes(diss_orthophos, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'orthophos. (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("diss. orthophos. - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+```
+#nutrient relationship across with Sac R and Yolo flows across regions; 
+```{r}
+#NH4 + NO3
+ggplot(inun_nuts, aes(x=flow_yolo, y=diss_ammonia, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle('Yolo flow - diss. NH4 + NH3')
+
+ggplot(inun_nuts, aes(x=SAC, y=diss_ammonia, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle('Sac R flow - diss. NH4 + NH3')
+
+#N03 + N02
+ggplot(inun_nuts, aes(x=flow_yolo, y=diss_nitrate_nitrite, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Yolo flow - diss. NO3 + NO2')
+
+ggplot(inun_nuts, aes(x=SAC, y=diss_nitrate_nitrite, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Sac R flow - diss. NO3 + NO2')
+
+#DIN
+ggplot(inun_nuts, aes(x=flow_yolo, y=din, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'DIN (mg/L)') +
+  ggtitle('Yolo flow - DIN')
+
+ggplot(inun_nuts, aes(x=SAC, y=din, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'DIN (mg/L)') +
+  ggtitle('Sac R flow - DIN')
+
+#orthophos
+ggplot(inun_nuts, aes(x=flow_yolo, y=diss_orthophos, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'orthophos (mg/L)') +
+  ggtitle('Yolo flow - diss. orthophos.')
+
+ggplot(inun_nuts, aes(x=SAC, y=diss_orthophos, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'orthophos (mg/L)') +
+  ggtitle('Sac R flow - diss. orthophos')
+
 ```
 
