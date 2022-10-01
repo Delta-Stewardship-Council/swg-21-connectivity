@@ -138,16 +138,27 @@ RV_2009 <- subset(RV, date>="2008-10-01")
 ```{r}
 Yolo_2009$date <- as.Date(Yolo_2009$date)
 
-plot(Yolo_2009$date, Yolo_2009$diss_nitrate_nitrite,
-xlim=as.Date(c("2013-01-01", "2020-12-31")))
+ggplot(Yolo_2009, aes(date, diss_nitrate_nitrite)) + 
+  xlim(c(as.Date('2013-01-01'),as.Date('2020-12-31'))) +
+  geom_point(color="dark blue") + 
+  labs(x = 'Date', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Yolo diss. NO3 + NO2')
 
 Yolo_2009$date <- as.Date(Yolo_2009$date)
 
 Yolo_2009$month <- months(Yolo_2009$date, abbreviate = TRUE)
 
-ggplot(Yolo_2009, aes(month, diss_nitrate_nitrite))+ geom_boxplot() + scale_x_discrete(limits = month.abb) +ggtitle('Yolo')
+ggplot(Yolo_2009, aes(month, diss_nitrate_nitrite)) + 
+  geom_boxplot(color="dark blue",outlier.color="black", fill = "blue") + 
+  scale_x_discrete(limits = month.abb) +
+  labs(x = 'Month', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Yolo diss. NO3 + NO2')
 
-ggplot(Yolo_2009, aes(month, chlorophyll))+ geom_boxplot() + scale_x_discrete(limits = month.abb)+ggtitle('Yolo')
+ggplot(Yolo_2009, aes(month, chlorophyll)) + 
+  geom_boxplot(color="dark green",outlier.color="black", fill = "green") + 
+  scale_x_discrete(limits = month.abb) +
+  labs(x = 'Month', y = 'Chl-a (ug/L)') +
+  ggtitle('Yolo Chl-a')
 
 ```
 #add inundation to Yolo for plot explore - smaller range of concentratios during inundation period
@@ -156,22 +167,34 @@ inun$date <- as.Date(inun$date)
 
 Yolo_inun_nuts <- merge(Yolo_2009, inun, by="date", all.x="TRUE")
 
-plot(Yolo_inun_nuts$date, Yolo_inun_nuts$diss_nitrate_nitrite, col = ifelse (Yolo_inun_nuts$inundation>0, "red", "black"), xlim=as.Date(c("2013-01-01", "2020-12-31")))
+# identify NO3 + NO2 concentration during bypass inundation
+
+ggplot(Yolo_inun_nuts, aes(date, diss_nitrate_nitrite)) + 
+  xlim(c(as.Date('2013-01-01'),as.Date('2020-12-31'))) +
+  geom_point(color=ifelse(Yolo_inun_nuts$inundation>0, 'red', 'black')) + 
+  labs(x = 'Date', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Yolo diss. NO3 + NO2')
 
 Yolo_inun_nuts$inundation <- as.character(Yolo_inun_nuts$inundation)
 
+#Lower range of NO3 +NO2 conc. during inundated period relative to non-inundated period
+
 ggplot(Yolo_inun_nuts, aes(inundation, diss_nitrate_nitrite))+ geom_boxplot() + scale_x_discrete(breaks = c("0", "1")) +ggtitle('Yolo')
 ```
-#Yolo - explore inundation vs. non-inun
+#Yolo - explore inundation vs. non-inun with box blots
 ```{r}
 
 Yolo_non_nuts <- subset(Yolo_inun_nuts, inundation==0)
 
-ggplot(Yolo_non_nuts, aes(month, diss_nitrate_nitrite))+ geom_boxplot() + scale_x_discrete(limits = month.abb) +ggtitle('Yolo')
+ggplot(Yolo_non_nuts, aes(month, diss_nitrate_nitrite))+ geom_boxplot() + 
+scale_x_discrete(limits = month.abb) +
+ggtitle('Yolo non-inundated period')
 
 Yolo_flood_nuts <- subset(Yolo_inun_nuts, inundation==1)
 
-ggplot(Yolo_flood_nuts, aes(month, diss_nitrate_nitrite))+ geom_boxplot() + scale_x_discrete(limits = month.abb) +ggtitle('Yolo')
+ggplot(Yolo_flood_nuts, aes(month, diss_nitrate_nitrite))+ geom_boxplot() + 
+scale_x_discrete(limits = month.abb) +
+ggtitle('Yolo inundated period')
 ```
 #explore CSC diss_nitrate_nitrite
 
