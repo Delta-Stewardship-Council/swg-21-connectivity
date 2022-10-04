@@ -19,6 +19,7 @@ f_load_model_chla_covars_data <- function() {
   chla_nuts_id <- contentid::store("data_model/chlorophyll_fin_updated.csv")
   chla_nuts_file <- contentid::resolve(chla_nuts_id)
   chla_nuts0 <- readr::read_csv(chla_nuts_file) %>%
+    select(-1) %>%
     rename(region = location)%>%
     mutate(unique_id = paste0(date, "_", station_wq_chl)) %>%
     mutate(region = case_when(region == "main_above"~ "above",
@@ -86,7 +87,7 @@ f_load_model_chla_covars_data <- function() {
   # left_join for gam
   chla_covars <- left_join(chla_nuts, covars_clean) %>%
     filter(!is.na(chlorophyll)) %>%
-   dplyr::filter(date > as.Date("1999-02-22") & water_year < 2020) # this is when RIV starts
+   dplyr::filter(date > as.Date("1999-02-22") & year(date) < 2020) # this is when RIV starts
 
   # Full join for bayes
   chla_covars_fulljoin <- full_join(covars_clean, chla_nuts)
