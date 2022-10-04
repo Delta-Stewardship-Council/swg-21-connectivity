@@ -67,10 +67,6 @@ regions_4269 <- st_transform(regions_sf, crs = 4269) %>%
                             id == 4 ~ "mainstem river upstream",
                             TRUE ~ as.character("NA")))
 
-
-
-
-
 regionnames <- data.frame(region = c("mainsteam river downstream", "tidal slough complex", "floodplain bypass", "mainstem river upstream"))
 regions_final <- cbind(regions_4269, regionnames) %>%
   filter(region!="tidal slough complex") %>%
@@ -157,6 +153,7 @@ stations_all_reg <- stations_all %>%
 # Separate out each different data type
 stations_mult <- stations_all_reg %>%
   tidyr::separate_rows(data_type, sep = ",") %>%
+
   filter(data_type!="sradiation",
          region!= "tidal slough complex") %>%
   mutate(data_type = replace(data_type, data_type == "chl & nut", "chl"))
@@ -293,7 +290,6 @@ delta_map
 
 
 ### Make map --------------
-
 (map_stations <- ggplot() +
    geom_sf(data = yolo_4269, fill = "grey36", colour = "grey36", alpha = 0.3) +
    geom_sf(data = WW_Watershed_crop, fill = "lightgrey", colour = "lightgrey", alpha = 0.35, inherit.aes = FALSE) +
@@ -333,8 +329,6 @@ delta_map
          #legend.position = c(0.84, .65),
          legend.margin = margin(0, 0.1, 0.1, 0.1, "cm") ))
 
-
-
 ## California inset--------------------------------------------------
 (gg_inset_map = ggdraw() +
    draw_plot(delta_map) +
@@ -342,6 +336,7 @@ delta_map
 
 
 ## Combine with patchwork -------------------------------------
+
 
 library(patchwork)
 #patchmap <- (map_stations | (inset/cacheinset)) + plot_layout(guides = 'collect')
@@ -372,13 +367,8 @@ patchmap
 ggsave("figures/manuscript_map.png", width = 8, height = 11, units = "in", device = 'png', dpi = 300)
 
 
-
-
-gg_inset_map
-ggsave("figures/manuscript_map.png", width = 5.5, height = 9, units = "in", device = 'png', dpi = 300)
-
-
 # interactive map -----
 chl <- stations_sf_4269 %>% filter(data_type =="chl & nut")
+
 mapview::mapview(chl, zcol = "region")
 
