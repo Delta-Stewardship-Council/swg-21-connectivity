@@ -923,3 +923,8 @@ alldata0 %>%
 
 ggplot(yolo) + geom_point(aes(x = date, y = chlorophyll, color = station, shape = inundation), size = 3) + theme_bw()
 ```
+
+```{r}
+save("gamd6d", "gamyo6d", "gamu6d","alldata0", "alldata", file = "data_model/gams_origdata.Rdata")
+```
+

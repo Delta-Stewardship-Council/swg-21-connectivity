@@ -1,0 +1,24 @@
+---
+title: "visualize_gam_yolo"
+author: "Catarina Pien"
+date: '2022-10-05'
+output: html_document
+---
+Shruti
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+* validation plots
+* actual data points
+* grid of flow vs water temperature, colored by chlorophyll
+* marker of the extent of data for each inundation phase
+* same scale and axis range for each factor
+* random effect plot (partial effect of each)
+```{r}
+load("data_model/gams_origdata.Rdata")
+```
+
+## Filter datasets to region
+```{r}
+yolo <- alldata %>% filter(region == "yolo")
+```
