@@ -246,7 +246,7 @@ f_load_daily_covars_models <- function() {
     tidyr::fill(stage_SRV, .direction = "down") %>%
     tidyr::fill(diurnal_range, .direction = "down") %>%
     tidyr::fill(normalized_diurnal_range, .direction = "down") %>%
-    dplyr::filter(date>as.Date("1999-02-22") & water_year<2020) # filter dates
+    dplyr::filter(date>as.Date("1999-02-22") & year(date)<2020) # filter dates
 
 
   # Check that there are data for everyday ------------------------------

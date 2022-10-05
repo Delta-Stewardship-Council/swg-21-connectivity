@@ -143,6 +143,7 @@ yo.idys <- yolo %>%
 
 ```
 
+
 # Model
 
 ## Run Models
@@ -181,11 +182,11 @@ summary(gamu6)
 gamu6b <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2), method = "REML", data = upstream, family = "gaussian")
 summary(gamu6b)
 
-# final model with random effect for station
+
 gamu6c <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
 summary(gamu6c)
 gam.vcomp(gamu6c)
-
+# final model with random effect for station
 gamu6d <- gam(log_chla ~ te(log_qsdy, WTmwk, by = inund_fac2) + inund_fac2 + s(station, bs = "re"), method = "REML", data = upstream, family = "gaussian")
 summary(gamu6d)
 gam.vcomp(gamu6d)
@@ -415,6 +416,12 @@ pred_downstream$inund_fac2 <- factor(pred_downstream$inund_fac2, levels = c("non
 ```
 
 ### VISUALIZE
+
+```{r}
+library(gratia)
+draw(gamd6d)
+```
+
 
 ```{r}
 # arrange the predictions in a grid.size x grid.size matrix ready to display as an image
@@ -698,6 +705,13 @@ seq.long.wtmwk = seq(y_table[1,4], y_table[1,5], by = int.long.wtmwk)
 ```
 
 ### VISUALIZE
+
+```{r}
+library(gratia)
+draw(gamyo6d, residuals = TRUE)
+appraise(gamyo6d)
+```
+
 ```{r}
 png(filename = "figures/yolo_predictions.png", width = 9, height = 4, units = "in", res = 300)
 (yolo_plots <- pred_yolo %>%
@@ -873,6 +887,14 @@ pred_upstream$inund_fac2 <- factor(pred_upstream$inund_fac2, levels = c("none", 
 ```
 
 ### VISUALIZE
+
+```{r}
+library(gratia)
+draw(gamu6d, residuals = TRUE)
+appraise(gamu6d)
+```
+
+
 ```{r}
 png(filename = "figures/upstream_predictions.png", width = 9, height = 4, units = "in", res = 300)
 (upstream_plots <- pred_upstream %>%
@@ -886,4 +908,18 @@ png(filename = "figures/upstream_predictions.png", width = 9, height = 4, units 
   theme_bw() +
     theme(strip.text = element_text(size = 13)))
 dev.off()
+```
+
+LIS/STTD relationship plot - unrelated to above
+```{r}
+ggplot(yolo) + geom_point(aes(x = date, y = chlorophyll, color = station, shape = inundation), size = 3) + theme_bw()
+
+alldata0 %>%
+  filter(region == "yolo") %>%
+  select(station, chlorophyll, date, dowy, inundation)  %>%
+  mutate(inunpd = ifelse(dowy >= inMin & dowy <= inMax, "Y", "N")) %>%
+  pivot_wider(names_from = "station", values_from = "chlorophyll" ) %>%
+  ggplot() + geom_point(aes(STTD, LIS, color = inundation)) + geom_smooth(method = "lm", (aes(LIS, STTD))) + facet_wrap(~inunpd) + theme_bw()
+
+ggplot(yolo) + geom_point(aes(x = date, y = chlorophyll, color = station, shape = inundation), size = 3) + theme_bw()
 ```
