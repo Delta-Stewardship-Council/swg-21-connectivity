@@ -27,7 +27,7 @@ min(chl$date) #1998-01-06
 
 # 1 & 2
 # cut inundation data by chl-a dates
-inun_metrics <- subset(inun, date > as.Date("1998-01-05") & date < as.Date("2019-12-28"))
+inun_metrics <- subset(inun, date > as.Date("1998-01-05") & date <= as.Date("2019-12-31"))
 
 # get annual data summarized from inundation package
 summary <- calc_summary()
@@ -102,7 +102,7 @@ inun_metrics_with_new <- rbind(inun_metrics_with_ind, inun_metrics_with_dry)
 inun_metrics_with_new <- inun_metrics_with_new[order(inun_metrics_with_new$date),]
 
 head(inun_metrics_with_new)
-view(inun_metrics_with_new)
+View(inun_metrics_with_new)
 
 # years with 0 or 1 events is the same as inund_days
 inun_metrics_without <- subset(inun_metrics, number_overtopping_events < 2)
