@@ -1,0 +1,302 @@
+---
+title: "nutrient_diagnostics"
+output: html_document
+date: "2022-09-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#load libraries 
+```{r}
+library(readr)
+library(dplyr)
+library(stats)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+library(lubridate)
+library(signal)
+library(dataRetrieval)
+#remotes::install_github("USGS-R/dataRetrieval")
+```
+
+#read in data
+```{r}
+explore <- read.csv("data_model/model_chla_nuts_combined.csv")
+
+inun <- read.csv("data_model/inundation_with_doy1998.csv")
+
+dat_na <- data.frame(sapply(X = explore, FUN = function(x) sum(is.na(x))))
+```
+#remove nutrients if not paired with chlorophyll 
+#add Yolo, Cache, Rio Vista, and Sac R regions to df 
+```{r}
+
+new_dat <- explore[,c(2:5, 7,10,12,14,15,18)]
+
+new_dat_chl <- new_dat[!is.na(new_dat$chlorophyll),]
+
+sum(is.na(new_dat_chl$diss_nitrate_nitrite == TRUE))
+
+new_dat_chl$date <- as.POSIXct(new_dat_chl$date, format = "%Y-%m-%d")
+
+unique(new_dat_chl$station_wq_chl)
+
+#add regions to df
+
+regions <- new_dat_chl %>%
+  mutate(region = case_when(
+        latitude>=38.13&latitude<= 38.22 ~ 'RV',
+        latitude>=38.221&latitude<= 38.35 ~ 'CSC',
+        latitude>=38.3501&longitude<=-121.568291 ~ 'Yolo',
+        longitude>=-121.5727 ~ 'Sac'))
+
+regions <- regions %>% 
+  drop_na(region)
+```
+#subset data >= WY 2009  
+```{r}
+regions_WY09 <- subset(regions, date>="2008-10-01")
+```
+
+#add inundation to regions df to explore nutrient  concentrations during inundated and non-inundated periods; nutrients are lowest during Yolo Bypass inundation except in the Sac. R. that is likely a result of atmospheric depostion (of N) and overland flows introducing nutrients to the channel upstream of the model domain 
+
+```{r}
+regions_WY09$date <- as.Date(regions_WY09$date)
+
+inun$date <- as.Date(inun$date)
+
+inun_nuts <- merge(regions_WY09, inun, by="date", all.x="TRUE")
+
+# identify NO3 + NO2 concentration during bypass inundation 
+#red is inun., black is non-inun.
+
+inun_nuts$inundation <- as.character(inun_nuts$inundation)
+
+#NO3+NO2
+ggplot(inun_nuts, aes(date, diss_nitrate_nitrite)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle("diss. NO3 + NO2")
+
+#NH4
+
+ggplot(inun_nuts, aes(date, diss_ammonia)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle("diss. NH4 + NH3")
+
+#orthophos
+
+ggplot(inun_nuts, aes(date, diss_orthophos)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'orthophos. (mg/L)') +
+  ggtitle("diss. orthophos.")
+
+#DIN
+ggplot(inun_nuts, aes(date, din)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  xlim(c(as.Date('2013-01-01'), as.Date('2020-12-31'))) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Date', y = 'DIN (mg/L)') +
+  ggtitle("diss. inorganic nitrogen")
+```
+#explore nutrient - chlorophyll relationship; relationship is not strong; red = inundation, black = non-inun.
+```{r}
+#NO3 + NO2
+ggplot(inun_nuts, aes(diss_nitrate_nitrite, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'NO3 + NO2 (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("diss. NO3 + NO2 - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+#NH4+NH3
+ggplot(inun_nuts, aes(diss_ammonia, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'NH4 + NH3 (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("diss. NH4 + NH3 - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+#DIN
+ggplot(inun_nuts, aes(din, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'DIN (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("DIN - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+#orthophos.
+ggplot(inun_nuts, aes(diss_orthophos, chlorophyll)) + 
+  geom_point(color=ifelse(inun_nuts$inundation>0, 'red', 'black')) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'orthophos. (mg/L)', y = 'Chl-a (ug/L') +
+  ggtitle("diss. orthophos. - Chl-a") +
+  geom_smooth(method='lm', se = FALSE)
+
+```
+#nutrient relationship across with Sac R and Yolo flows across regions
+#no strong relationships with nutrients and flows
+#general decrease in nutrients in yolo with higher flows
+```{r}
+#N03 + N02
+ggplot(inun_nuts, aes(x=flow_yolo, y=diss_nitrate_nitrite, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Yolo flow - diss. NO3 + NO2')
+
+ggplot(inun_nuts, aes(x=SAC, y=diss_nitrate_nitrite, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('Sac R flow - diss. NO3 + NO2')
+
+#NH4 + NO3
+ggplot(inun_nuts, aes(x=flow_yolo, y=diss_ammonia, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle('Yolo flow - diss. NH4 + NH3')
+
+ggplot(inun_nuts, aes(x=SAC, y=diss_ammonia, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle('Sac R flow - diss. NH4 + NH3')
+
+#DIN
+ggplot(inun_nuts, aes(x=flow_yolo, y=din, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'DIN (mg/L)') +
+  ggtitle('Yolo flow - DIN')
+
+ggplot(inun_nuts, aes(x=SAC, y=din, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'DIN (mg/L)') +
+  ggtitle('Sac R flow - DIN')
+
+#orthophos
+ggplot(inun_nuts, aes(x=flow_yolo, y=diss_orthophos, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+  labs(x = 'Yolo dayflow (cfs)', y = 'orthophos (mg/L)') +
+  ggtitle('Yolo flow - diss. orthophos.')
+
+ggplot(inun_nuts, aes(x=SAC, y=diss_orthophos, color=region, shape=region)) +
+  geom_point() + 
+  geom_smooth(method=lm, se = FALSE, aes(fill=region)) +
+   labs(x = 'Sac R a Verona (cfs)', y = 'orthophos (mg/L)') +
+  ggtitle('Sac R flow - diss. orthophos')
+
+```
+#add water year & WY day to df 
+```{r}
+#add wateryear to daily data frame
+
+wtr_yr <- function(Date, start_month=10) {
+  # Convert dates into POSIXlt
+  dates.posix = as.POSIXlt(Date)
+  # Year offset
+  offset = ifelse(dates.posix$mon >= start_month - 1, 1, 0)
+  # Water year
+  adj.year = dates.posix$year + 1900 + offset
+  # Return the water year
+  adj.year
+}
+
+inun_nuts_WY <- inun_nuts %>%
+  mutate(wtr_yr = wtr_yr(date))
+
+inun_nuts_WY <- inun_nuts_WY %>%
+  group_by(wtr_yr) %>%
+  mutate(wtr_day = (as.integer(difftime(date,ymd(paste0(wtr_yr - 1 ,'-09-30')), units = "days"))))
+```
+#explore nutrient to WY relationship
+```{r}
+#NO3 + NO2.
+ggplot(inun_nuts_WY, aes(wtr_day, diss_nitrate_nitrite, color = as.factor(wtr_yr))) + 
+  geom_point() +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'WY day', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle("diss. NO3 + NO2") 
+
+#NH4 + NH3
+ggplot(inun_nuts_WY, aes(wtr_day, diss_ammonia, color = as.factor(wtr_yr))) + 
+  geom_point() +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'WY day', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle("diss. NH4 + NH3")
+
+#DIN
+ggplot(inun_nuts_WY, aes(wtr_day, din, color = as.factor(wtr_yr))) + 
+  geom_point() +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'WY day', y = 'DIN (mg/L)') +
+  ggtitle("DIN (mg/L)")
+
+#orthophos
+ggplot(inun_nuts_WY, aes(wtr_day, diss_orthophos, color = as.factor(wtr_yr))) + 
+  geom_point() +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'WY day', y = 'orthophos (mg/L)') +
+  ggtitle("diss. orthophos. (mg/L)")
+
+  
+```
+#nutrients by month across each region
+```{r}
+inun_nuts_WY$month <- months(inun_nuts_WY$date, abbreviate = TRUE)
+
+#NO3 + NO2
+#higher range in Yolo
+#lower concentrations in dry period 
+ggplot(inun_nuts_WY, aes(month, diss_nitrate_nitrite)) + 
+  geom_boxplot(color="dark blue",outlier.color="black", fill = "blue") + 
+  scale_x_discrete(limits = month.abb) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Month', y = 'NO3 + NO2 (mg/L)') +
+  ggtitle('diss. NO3 + NO2')
+
+#NH4 + NH3
+#higher range in Cache and RV consistent with transport of RegionalSan effluent
+ggplot(inun_nuts_WY, aes(month, diss_ammonia)) + 
+  geom_boxplot(color="dark blue",outlier.color="black", fill = "blue") + 
+  scale_x_discrete(limits = month.abb) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Month', y = 'NH4 + NH3 (mg/L)') +
+  ggtitle('diss. NH4 + NH3')
+
+#DIN
+#higher range in Yolo
+#highest concentrations in RV consistent with nitrification of RegionalSan effluent
+#lowest concentrations in dry period
+ggplot(inun_nuts_WY, aes(month, din)) + 
+  geom_boxplot(color="dark blue",outlier.color="black", fill = "blue") + 
+  scale_x_discrete(limits = month.abb) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Month', y = 'DIN (mg/L)') +
+  ggtitle('DIN')
+
+#orthophos
+#higher range in Yolo, then CSC
+#low concentrations in Sac and RV
+ggplot(inun_nuts_WY, aes(month, diss_orthophos)) + 
+  geom_boxplot(color="dark blue",outlier.color="black", fill = "blue") + 
+  scale_x_discrete(limits = month.abb) +
+  facet_wrap(~region, scales = "fixed") +
+  labs(x = 'Month', y = 'orthophos. (mg/L)') +
+  ggtitle('diss. orthophos.')
+```
+
