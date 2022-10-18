@@ -29,6 +29,19 @@ covars_yolo <- mod_df$covars_yolo
 
 # Visualize Data ----------------------------------------------------------
 
+# chlorophyll over time
+chla_obs <- chla_yolo %>% ggplot(aes(doy1999, chlorophyll, color = station_wq_chl)) +
+  geom_point()
+
+chla_obs_log <- chla_yolo %>% ggplot(aes(doy1999, log(chlorophyll), color = station_wq_chl)) +
+  geom_point()
+
+q_obs <- covars_yolo %>% filter(doy1999 > 3500) %>% ggplot(aes(doy1999, Q)) +
+  geom_point()
+
+# Merge chl and q
+chla_obs
+
 # check histogram of logged chlorophyll
 hist(log(chla_yolo$chlorophyll))
 
