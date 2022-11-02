@@ -14,6 +14,15 @@ knitr::opts_chunk$set(echo = TRUE)
 * marker of the extent of data for each inundation phase
 * same scale and axis range for each factor
 * random effect plot (partial effect of each)
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(tidymv)
+library(gratia)
+library(mgcv)
+library(patchwork)
+```
 
 ```{r}
 load("data_model/gams_origdata.Rdata")
@@ -22,4 +31,409 @@ load("data_model/gams_origdata.Rdata")
 ## Filter datasets to region
 ```{r}
 downstream <- alldata %>% filter(region == "below")
+```
+
+# Model validation
+```{r}
+  # validate the final model by plotting residuals and save to a png to save space
+  png(filename = "../figures/gamd6d.png", width = 7, height = 9, units = "in", res = 300)
+  resid = residuals(gamd6d)
+  op = par(mfrow = c(3, 2), mar = c(5, 4, 1, 2), cex = 1.2)
+  # Plot 1: Residuals vs. Fitted values; should be centered around 0
+  plot(fitted(gamd6d), resid, xlab = "Fitted values", ylab = "Residuals")
+  # Plot 2: histogram of the residuals; should be centered around 0
+  hist(resid, xlab = 'Residuals', main = "")
+  # Plot 3: is there autocorrelation in the residuals?
+  acf(resid)
+  # Plots 4,5,6: the Residuals vs. all the predictors; should be centered around 0
+  # none of these seem to work, and I dont see where the connection between the data values and residuals are being made...
+  plot(downstream$log_qsdy, resid, xlab = "Flow", ylab = "Residuals")
+  plot(downstream$WTmwk, resid, xlab = "WTmwk", ylab = "Residuals")
+  plot(downstream$inund_fac2, resid, xlab = "inundation factor",   ylab = "Residuals")
+  par(op)
+  dev.off()
+  
+  #the plots produced are (from left-to-right, top-to-bottom)
+  appraise(gamd6d)
+
+#a quantile-quantile (QQ) plot of deviance residuals,
+#a scatterplot of deviance residuals against the linear predictor,
+#a histogram of deviance residuals, and
+#a scatterplot of observed vs fitted values
+  
+  draw(gamd6d, residuals = TRUE)
+  
+```
+
+
+### PREDICT MODEL OUTPUTS FOR SIMULATED DATASET
+
+## Visualize the Upstream Final Model as a 2x2 grid ignoring random effect of station
+
+```{r}
+# subset the downstream data frame each inundation factor
+d.none = downstream %>% filter(inund_fac2 == "none")
+d.shrt = downstream %>% filter(inund_fac2 == "short")
+d.long = downstream %>% filter(inund_fac2 == "long")
+
+# Get values 
+d_table <- downstream %>% 
+  summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  as.data.frame() %>% unlist()
+
+# divide all covars into this many intervals in simulated dataset
+grid.size = 49
+
+# calculate interval size for all 3 inundation factor simulation datasets
+int.lqsdy = (d_table[2] - d_table[1])/(grid.size)
+int.wtmwk = (d_table[4] - d_table[3])/(grid.size)
+
+# create sequences of values for model inputs
+seq.lqsdy = seq(d_table[1], d_table[2], by = int.lqsdy)
+seq.wtmwk = seq(d_table[3], d_table[4], by = int.wtmwk)
+
+# arrange the predictions in a grid.size x grid.size matrix ready to display as an image
+# create a matrix to hold the value
+chl.mat.none = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
+chl.mat.shrt = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
+chl.mat.long = matrix(data = NA, nrow = grid.size+1, ncol = grid.size+1)
+
+# use i as subscript for log_qsdy
+for (i in 1:(grid.size+1)) {
+  # use j as subscript for WTmwk
+  pred.none = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy[i], WTmwk = seq.wtmwk, inund_fac2 = "none", station = NULL), 
+                          exclude_terms = "s(station)")
+  pred.shrt = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy[i], WTmwk = seq.wtmwk, inund_fac2 = "short", station = NULL), 
+                          exclude_terms = "s(station)")
+  pred.long = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy[i], WTmwk = seq.wtmwk, inund_fac2 = "long", station = NULL), 
+                          exclude_terms = "s(station)")
+  chl.mat.none[i,] = pred.none$fit
+  chl.mat.shrt[i,] = pred.shrt$fit
+  chl.mat.long[i,] = pred.long$fit
+}
+
+# Color palette
+# col_range = colorRampPalette(viridis(25, option = "turbo"))
+# col_pal = col_range(1000)
+col_range1 = colorRampPalette(c("darkorchid4","blueviolet","blue4","blue","deepskyblue2","deepskyblue","yellow2"))
+col_range2 = colorRampPalette(c("yellow2","darkorange1","chocolate1","chocolate4","cornsilk2"))
+col_range3 = colorRampPalette(c("cornsilk2","gray","lightgray","white"))
+col_pal1 = col_range1(40)
+col_pal2 = col_range2(240)
+col_pal3 = col_range3(720)
+col_pal = c(col_pal1, col_pal2, col_pal3)
+
+# decide breaks for the color palette
+# adjust to actual chlorophyll values existing in the dataset
+# more than max is just one color; less than max is another
+temp = cbind(chl.mat.none, chl.mat.shrt, chl.mat.long)
+chl.ymin = min(downstream$chlorophyll)
+chl.ymax = max(downstream$chlorophyll)
+chla.min = min(min(temp), chl.ymin)
+chla.max = max(max(temp), chl.ymax)
+chla.int = (chl.ymax - chl.ymin)/998
+breaks = c(chla.min, seq(chl.ymin, chl.ymax, chla.int), chla.max)
+
+# calculating axes labels
+lbl.lqsdy = round(seq(d_table[1], d_table[2], by = (d_table[2] - d_table[1])/5), digits = 2)
+lbl.wtmwk = round(seq(d_table[3], d_table[4], by = (d_table[4] - d_table[3])/5), digits = 2)
+
+# calculate the outer hull coordinates for log_qsdy and WTmwk - gives the relevant row numbers
+cnvx.hull.none = c(chull(d.none$log_qsdy, d.none$WTmwk), chull(d.none$log_qsdy, d.none$WTmwk)[1])
+cnvx.hull.shrt = c(chull(d.shrt$log_qsdy, d.shrt$WTmwk), chull(d.shrt$log_qsdy, d.shrt$WTmwk)[1])
+cnvx.hull.long = c(chull(d.long$log_qsdy, d.long$WTmwk), chull(d.long$log_qsdy, d.long$WTmwk)[1])
+# get x,y coordinates of the hull
+d.none.hull = cbind(d.none[cnvx.hull.none, 31], d.none[cnvx.hull.none, 17])
+d.shrt.hull = cbind(d.shrt[cnvx.hull.shrt, 31], d.shrt[cnvx.hull.shrt, 17])
+d.long.hull = cbind(d.long[cnvx.hull.long, 31], d.long[cnvx.hull.long, 17])
+
+# constrain to 5-95 percentile values
+d.none.hull = d.none.hull %>% 
+  mutate(log_qsdy = ifelse(log_qsdy < d_table[1], d_table[1], ifelse(log_qsdy > d_table[2], d_table[2], log_qsdy))) %>% 
+  mutate(WTmwk    = ifelse(WTmwk    < d_table[3], d_table[3], ifelse(WTmwk    > d_table[4], d_table[4], WTmwk))) %>%
+  mutate(inund_fac2 = "none")
+
+d.shrt.hull = d.shrt.hull %>% 
+  mutate(log_qsdy = ifelse(log_qsdy < d_table[1], d_table[1], ifelse(log_qsdy > d_table[2], d_table[2], log_qsdy))) %>% 
+  mutate(WTmwk    = ifelse(WTmwk    < d_table[3], d_table[3], ifelse(WTmwk    > d_table[4], d_table[4], WTmwk)))%>%
+  mutate(inund_fac2 = "short")
+
+d.long.hull = d.long.hull %>% 
+  mutate(log_qsdy = ifelse(log_qsdy < d_table[1], d_table[1], ifelse(log_qsdy > d_table[2], d_table[2], log_qsdy))) %>% 
+  mutate(WTmwk    = ifelse(WTmwk    < d_table[3], d_table[3], ifelse(WTmwk    > d_table[4], d_table[4], WTmwk)))%>%
+  mutate(inund_fac2 = "long")
+
+```
+
+
+## MAKE THE ACTUAL FIGURE
+
+```{r}
+png(filename = "../figures/downstream_2dfigure.png", width = 12, height = 4, units = "in", res = 300)
+
+par(mfrow = c(1, 3), mar = c(4, 2.75, 1, 2.5) + 0.1, oma = c(0, 2.25, 2, 2), las = 1, cex = 1)
+
+###-------------- downstream: No inundation --------------###
+
+#png(filename = "../figures/yo_none_2dfigure.png", width = 4, height = 4, units = "in", res = 300)
+
+image(x = seq.lqsdy, y = seq.wtmwk, z = chl.mat.none, col = col_pal, breaks = breaks,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.wtmwk), xlim = range(seq.lqsdy))
+
+# create breaks and labels for x and y axes
+axis(side = 1, at = lbl.lqsdy, labels = lbl.lqsdy)
+axis(side = 2, at = lbl.wtmwk, labels = lbl.wtmwk)
+
+# dull the outside polygon where data does not exist
+polygon(x = c(d.none.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.none.hull[1, 1]), 
+        y = c(d.none.hull[[2]], d.none.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.none.hull[1, 2], d.none.hull[1, 2]), 
+        col = gray(1, 0.7), border = NA)
+points(x = d.none$log_qsdy, y = d.none$WTmwk, col = "white")
+
+mtext(text = "Log of same day flow", side = 1,
+      line = 2.5, adj = 0.5, las = 0)
+mtext(text = "Weekly mean water temperature", side = 2,
+      line = 3, adj = 0.5, las = 0)
+mtext(text = "downstream: No inundation", side = 3,
+      line = 0.75, adj = 0.5, las = 0, font = 1.5)
+
+#dev.off()
+
+###--------- downstream: short inundation (< 3 weeks) ---------###
+#png(filename = "../figures/yo_shrt_2dfigure.png", width = 4, height = 4, units = "in", res = 300)
+
+image(x = seq.lqsdy, y = seq.wtmwk, z = chl.mat.shrt, col = col_pal, breaks = breaks,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.wtmwk), xlim = range(seq.lqsdy))
+
+# create breaks and labels for x and y axes
+axis(side = 1, at = lbl.lqsdy, labels = lbl.lqsdy)
+axis(side = 2, at = lbl.wtmwk, labels = lbl.wtmwk)
+
+# dull the outside polygon where data does not exist
+polygon(x = c(d.shrt.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.shrt.hull[1, 1]), 
+        y = c(d.shrt.hull[[2]], d.shrt.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.shrt.hull[1, 2], d.shrt.hull[1, 2]), 
+        col = gray(1, 0.7), border = NA)
+points(x = d.shrt$log_qsdy, y = d.shrt$WTmwk, col = "white")
+
+mtext(text = "Log of same day flow", side = 1,
+      line = 2.5, adj=0.5, las=0)
+mtext(text = "Weekly mean water temperature", side = 2,
+      line = 3, adj=0.5, las=0)
+mtext(text = "downstream: short inundation (< 3 weeks)", side = 3,
+      line = 0.75, adj=0.5, las=0, font=2)
+
+#dev.off()
+
+
+###--------- downstream: long inundation (> 3 weeks) ---------###
+#png(filename = "../figures/yo_long_2dfigure.png", width = 4, height = 4, units = "in", res = 300)
+
+image(x = seq.lqsdy, y = seq.wtmwk, z = chl.mat.long, col = col_pal, breaks = breaks,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.wtmwk), xlim = range(seq.lqsdy))
+
+# create breaks and labels for x and y axes
+axis(side = 1, at = lbl.lqsdy, labels = lbl.lqsdy)
+axis(side = 2, at = lbl.wtmwk, labels = lbl.wtmwk)
+
+# dull the outside polygon where data does not exist
+polygon(x = c(d.long.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.long.hull[1, 1]), 
+        y = c(d.long.hull[[2]], d.long.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.long.hull[1, 2], d.long.hull[1, 2]), 
+        col = gray(1, 0.7), border = NA)
+points(x = d.long$log_qsdy, y = d.long$WTmwk, col = "white")
+
+mtext(text = "Log of same day flow", side = 1,
+      line = 2.5, adj=0.5, las=0)
+mtext(text = "Weekly mean water temperature", side = 2,
+      line = 3, adj=0.5, las=0)
+mtext(text = "downstream: long inundation", side = 3,
+      line = 0.75, adj=0.5, las=0, font=2)
+
+dev.off()
+```
+Make hulls
+```{r}
+d.shrt.hull2 <- data.frame(log_qsdy = c(d.shrt.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.shrt.hull[1, 1]), 
+        WTmwk = c(d.shrt.hull[[2]], d.shrt.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.shrt.hull[1, 2], d.shrt.hull[1, 2])) %>%
+  mutate(inund_fac2 = "short")
+
+
+d.none.hull2 <- data.frame(log_qsdy = c(d.none.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.none.hull[1, 1]), 
+        WTmwk = c(d.none.hull[[2]], d.none.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.none.hull[1, 2], d.none.hull[1, 2])) %>%
+  mutate(inund_fac2 = "none")
+
+d.long.hull2 <- data.frame(log_qsdy = c(d.long.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.long.hull[1, 1]), 
+        WTmwk = c(d.long.hull[[2]], d.long.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.long.hull[1, 2], d.long.hull[1, 2]))%>%
+  mutate(inund_fac2 = "long")
+```
+
+Predictions
+```{r}
+pred.none = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "none", station = NULL, by = int.lqsdy), 
+                          exclude_terms = "s(station)") %>%
+  mutate(inund_fac2 = "none")
+
+pred.shrt = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "short", station = NULL, by = int.lqsdy), 
+                          exclude_terms = "s(station)") %>%
+  mutate(inund_fac2 = "short")
+
+pred.long = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "long", station = NULL, by = int.lqsdy), 
+                          exclude_terms = "s(station)") %>%
+  mutate(inund_fac2 = "long")
+ 
+pred_downstream <- rbind(pred.none, pred.shrt, pred.long)
+hull_downstream <- rbind(d.shrt.hull2, d.none.hull2, d.long.hull2)
+
+downstream_f <- downstream %>% 
+  filter(log_qsdy < d_table[2] & log_qsdy > d_table[1],
+         WTmwk < d_table[4] & WTmwk > d_table[3])
+```
+
+Plot code
+```{r}
+pred_downstream$inund_fac2 <- factor(pred_downstream$inund_fac2, levels = c("none", "short", "long"))
+hull_downstream$inund_fac2 <- factor(hull_downstream$inund_fac2, levels = c("none", "short", "long"))
+
+library(viridis)
+
+ggplot() + 
+  geom_tile(data = pred_downstream, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = hull_downstream, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(data = downstream_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
+  #scale_fill_steps2(midpoint=2, n.breaks=12, low = "green", mid = "blue", high = "yellow")+
+  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
+  #viridis::scale_fill_viridis(option = "turbo") +
+ scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "thistle2", "brown"),
+     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5,8, 12))+
+  facet_wrap(~inund_fac2) + 
+  theme_classic()
+```
+
+
+
+
+```{r}
+ggplot() + 
+  geom_tile(data = pred.shrt, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = d.shrt.hull2, aes(x = log_qsdy, y = WTmwk), fill = "grey", alpha = 0.3)+
+  geom_point(data = d.shrt, aes(log_qsdy, WTmwk), color = "gray4", shape = 1) +
+  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
+  #viridis::scale_fill_viridis(option = "turbo") +
+ scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "brown"),
+     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5, 12))+
+  theme_classic()
+
+
+ggplot() + 
+  geom_tile(data = pred.long, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = d.long.hull2, aes(x = log_qsdy, y = WTmwk), fill = "grey", alpha = 0.3)+
+  geom_point(data = d.long, aes(log_qsdy, WTmwk), color = "gray4", shape = 1) +
+  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
+   scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "brown"),
+     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5, 12))+
+  theme_classic()
+```
+
+# Customizing plots in gratia
+```{r}
+draw(gamd6d) & theme_bw()
+
+p1 <- draw(gamd6d, select = "te(log_qsdy,WTmwk):inund_fac2long")
+p2 <- draw(gamd6d, select = "te(log_qsdy,WTmwk):inund_fac2short")
+p3 <- draw(gamd6d, select = "te(log_qsdy,WTmwk):inund_fac2none")
+
+p1 + p2 + p3 + plot_layout(ncol = 3)
+
+# evaluate the smooths
+sm <- smooth_estimates(gamd6d) %>%
+  add_confint()
+
+# add partial residuals to data
+downstream <- downstream %>%
+  add_partial_residuals(gamd6d)
+
+# one smoother at a time, plotted by covar
+sm %>%
+  filter(smooth == "te(log_qsdy,WTmwk):inund_fac2long") %>%
+  ggplot() +
+  geom_rug(aes(x = log_qsdy),
+           data = downstream,
+           sides = "b", length = grid::unit(0.02, "npc")) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = log_qsdy),
+              alpha = 0.2) +
+  geom_point(aes(x = log_qsdy, y = `te(log_qsdy,WTmwk):inund_fac2long`),
+             data = downstream, cex = 1.5, colour = "steelblue3") +
+  geom_line(aes(x = log_qsdy, y = est), lwd = 1.2) +
+  labs(y = "Partial effect", title = "Long Inundation")
+
+# add color and size for station and temp
+
+plt <- sm %>%
+  filter(smooth == "te(log_qsdy,WTmwk):inund_fac2long") %>%
+  ggplot() +
+  geom_rug(aes(x = log_qsdy),
+           data = downstream,
+           sides = "b", length = grid::unit(0.02, "npc")) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = log_qsdy),
+              alpha = 0.2) +
+  geom_line(aes(x = log_qsdy, y = est), lwd = 1.2) +
+  labs(y = "Partial effect", title = "s(x2)")
+
+plt +
+  geom_point(aes(x = log_qsdy, y = `te(log_qsdy,WTmwk):inund_fac2long`,
+                 colour = station), # <-- map fac to colour aesthetic
+             data = downstream, cex = 1.5)
+
+plt +
+  geom_point(aes(x = log_qsdy, y = `te(log_qsdy,WTmwk):inund_fac2long`,
+                 colour = WTmwk, size = WTmwk), # <-- map fac to colour aesthetic
+             data = downstream, alpha = 0.3) +   # <-- deleted cex
+  scale_colour_viridis_c(option = "plasma")
+
+# seems to work better if subset ahead instead of filter
+
+none_sm <- subset(sm, inund_fac2 == "none")
+none_dat <- subset(downstream, inund_fac2 == "none")
+colnames(none_dat)[5] <- "est"
+
+short_sm <- subset(sm, inund_fac2 == "short")
+short_dat <- subset(downstream, inund_fac2 == "short")
+colnames(short_dat)[5] <- "est"
+
+long_sm <- subset(sm, inund_fac2 == "long")
+long_dat <- subset(downstream, inund_fac2 == "long")
+colnames(long_dat)[5] <- "est"
+
+plot_long <- ggplot() +
+  geom_rug(aes(x = log_qsdy),
+           data = long_sm,
+           sides = "b", length = grid::unit(0.02, "npc")) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = log_qsdy),
+              alpha = 0.2, data = long_sm) +
+  geom_line(aes(x = log_qsdy, y = est), lwd = 1.2, data = long_sm) +
+  labs(y = "Partial effect", title = "Long Inundation") +
+  xlab("Sacramento River outflow") +
+  theme_bw()
+
+plot_long + geom_point(aes(x = log_qsdy, y = est,
+                 colour = WTmwk, size = WTmwk), data = long_dat, alpha = 0.3) +   
+  scale_colour_viridis_c(option = "plasma")
+
+plot_long + geom_point(aes(x = log_qsdy, y = est,
+                 colour = station), data = long_dat, alpha = 0.3) 
+# OR
+plot_long <- ggplot() +
+  geom_rug(aes(x = WTmwk),
+           data = long_sm,
+           sides = "b", length = grid::unit(0.02, "npc")) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = WTmwk),
+              alpha = 0.2, data = long_sm) +
+  geom_line(aes(x = WTmwk, y = est), lwd = 1.2, data = long_sm) +
+  labs(y = "Partial effect", title = "Long Inundation") +
+  xlab("Sacramento River temperature") +
+  theme_bw()
+
+
 ```
