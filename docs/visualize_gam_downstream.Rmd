@@ -392,7 +392,48 @@ plt +
              data = downstream, alpha = 0.3) +   # <-- deleted cex
   scale_colour_viridis_c(option = "plasma")
 
-# seems to work better if subset ahead instead of filter (inund_fac2 not named the same in data and model)
+# seems to work better if subset ahead instead of filter
+
+none_sm <- subset(sm, inund_fac2 == "none")
+none_dat <- subset(downstream, inund_fac2 == "none")
+colnames(none_dat)[5] <- "est"
+
+short_sm <- subset(sm, inund_fac2 == "short")
+short_dat <- subset(downstream, inund_fac2 == "short")
+colnames(short_dat)[5] <- "est"
+
+long_sm <- subset(sm, inund_fac2 == "long")
+long_dat <- subset(downstream, inund_fac2 == "long")
+colnames(long_dat)[5] <- "est"
+
+plot_long <- ggplot() +
+  geom_rug(aes(x = log_qsdy),
+           data = long_sm,
+           sides = "b", length = grid::unit(0.02, "npc")) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = log_qsdy),
+              alpha = 0.2, data = long_sm) +
+  geom_line(aes(x = log_qsdy, y = est), lwd = 1.2, data = long_sm) +
+  labs(y = "Partial effect", title = "Long Inundation") +
+  xlab("Sacramento River outflow") +
+  theme_bw()
+
+plot_long + geom_point(aes(x = log_qsdy, y = est,
+                 colour = WTmwk, size = WTmwk), data = long_dat, alpha = 0.3) +   
+  scale_colour_viridis_c(option = "plasma")
+
+plot_long + geom_point(aes(x = log_qsdy, y = est,
+                 colour = station), data = long_dat, alpha = 0.3) 
+# OR
+plot_long <- ggplot() +
+  geom_rug(aes(x = WTmwk),
+           data = long_sm,
+           sides = "b", length = grid::unit(0.02, "npc")) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = WTmwk),
+              alpha = 0.2, data = long_sm) +
+  geom_line(aes(x = WTmwk, y = est), lwd = 1.2, data = long_sm) +
+  labs(y = "Partial effect", title = "Long Inundation") +
+  xlab("Sacramento River temperature") +
+  theme_bw()
 
 
 ```
