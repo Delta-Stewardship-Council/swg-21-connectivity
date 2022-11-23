@@ -56,9 +56,11 @@ upstream <- alldata %>% filter(region == "above")
   #pacf(resid)
 ```
 
-### PREDICT MODEL OUTPUTS FOR SIMULATED DATASET
+# Predict Model outputs
 
-## Visualize the Upstream Final Model as a 2x2 grid ignoring random effect of station
+## Shruti's code
+
+### Visualize the Upstream Final Model as a 2x2 grid ignoring random effect of station
 
 ```{r}
 # subset the upstream data frame each inundation factor
@@ -159,7 +161,7 @@ u.long.hull = u.long.hull %>%
 ```
 
 
-## MAKE THE ACTUAL FIGURE
+### Make figure
 
 ```{r}
 png(filename = "../figures/upstream_2dfigure.png", width = 12, height = 4, units = "in", res = 300)
@@ -244,23 +246,32 @@ mtext(text = "upstream: long inundation", side = 3,
 dev.off()
 ```
 
-Make hulls
+## Cat's code: same axes
+
+### Make inverse hulls from Shruti's hulls
 ```{r}
-u.shrt.hull2 <- data.frame(log_qsdy = c(u.shrt.hull[[1]], u_table[2],         u_table[2], u_table[1], u_table[1], u_table[2], u_table[2],         u.shrt.hull[1, 1]), 
-        WTmwk = c(u.shrt.hull[[2]], u.shrt.hull[1, 2], u_table[4], u_table[4], u_table[3], u_table[3], u.shrt.hull[1, 2], u.shrt.hull[1, 2])) %>%
+# short
+u.shrt.hull2 <- data.frame(
+  log_qsdy = c(u.shrt.hull$log_qsdy, u_table["maxQ"], u_table["maxQ"], u_table["minQ"], u_table["minQ"],
+               u_table["maxQ"], u_table["maxQ"], u.shrt.hull$log_qsdy[1]), 
+       
+  WTmwk = c(u.shrt.hull$WTmwk, u.shrt.hull$WTmwk[1], u_table["maxWT"], u_table["maxWT"], u_table["minWT"],
+            u_table["minWT"], u.shrt.hull$WTmwk[1], u.shrt.hull$WTmwk[1])) %>%
+  
   mutate(inund_fac2 = "short")
 
-
-u.none.hull2 <- data.frame(log_qsdy = c(u.none.hull[[1]], u_table[2],         u_table[2], u_table[1], u_table[1], u_table[2], u_table[2],         u.none.hull[1, 1]), 
-        WTmwk = c(u.none.hull[[2]], u.none.hull[1, 2], u_table[4], u_table[4], u_table[3], u_table[3], u.none.hull[1, 2], u.none.hull[1, 2])) %>%
+# none
+u.none.hull2 <- data.frame(log_qsdy = c(u.none.hull[[1]], u_table["maxQ"],         u_table["maxQ"], u_table["minQ"], u_table["minQ"], u_table["maxQ"], u_table["maxQ"],         u.none.hull$log_qsdy[1]), 
+        WTmwk = c(u.none.hull$WTmwk, u.none.hull$WTmwk[1], u_table["maxWT"], u_table["maxWT"], u_table["minWT"], u_table["minWT"], u.none.hull$WTmwk[1], u.none.hull$WTmwk[1])) %>%
   mutate(inund_fac2 = "none")
 
-u.long.hull2 <- data.frame(log_qsdy = c(u.long.hull[[1]], u_table[2],         u_table[2], u_table[1], u_table[1], u_table[2], u_table[2],         u.long.hull[1, 1]), 
-        WTmwk = c(u.long.hull[[2]], u.long.hull[1, 2], u_table[4], u_table[4], u_table[3], u_table[3], u.long.hull[1, 2], u.long.hull[1, 2]))%>%
+#long
+u.long.hull2 <- data.frame(log_qsdy = c(u.long.hull[[1]], u_table["maxQ"],         u_table["maxQ"], u_table["minQ"], u_table["minQ"], u_table["maxQ"], u_table["maxQ"],         u.long.hull$log_qsdy[1]), 
+        WTmwk = c(u.long.hull$WTmwk, u.long.hull$WTmwk[1], u_table["maxWT"], u_table["maxWT"], u_table["minWT"], u_table["minWT"], u.long.hull$WTmwk[1], u.long.hull$WTmwk[1]))%>%
   mutate(inund_fac2 = "long")
 ```
 
-Predictions
+### Predictions
 ```{r}
 pred.none = predict_gam(gamu6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "none", station = NULL, by = int.lqsdy), 
                           exclude_terms = "s(station)") %>%
@@ -282,14 +293,14 @@ upstream_f <- upstream %>%
          WTmwk < u_table[4] & WTmwk > u_table[3])
 ```
 
-Plot code
+### Plot 
 ```{r}
 pred_upstream$inund_fac2 <- factor(pred_upstream$inund_fac2, levels = c("none", "short", "long"))
 hull_upstream$inund_fac2 <- factor(hull_upstream$inund_fac2, levels = c("none", "short", "long"))
 
 library(viridis)
 
-ggplot() + 
+(upstream_same <- ggplot() + 
   geom_tile(data = pred_upstream, aes(log_qsdy, WTmwk, fill = fit)) +
   geom_polygon(data = hull_upstream, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
   geom_point(data = upstream_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
@@ -299,31 +310,116 @@ ggplot() +
  scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "thistle2", "brown"),
      breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5,8, 12))+
   facet_wrap(~inund_fac2) + 
-  theme_classic()
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chlorophyll a (ug/L)", title = "Upstream") +
+  theme_classic() +
+  theme(legend.position = "top"))
 ```
 
 
+Write plot
+```{r}
+png(here::here("figures","upstream_gam_samescales.png"), width = 7, height = 4, units = "in", res = 300)
+upstream_same
+dev.off()
+```
 
+
+## Cat's code: different axes
+
+### Make new hulls based on new mins and maxes customized to inundation factor
+
+* Short: log_qsdy = 10-11/WTmwk: 7.5-13
+* Long: log_qsdy = 10.25-11/WTmwk: 7.5-15
+```{r}
+u_table2 <- upstream %>% 
+  group_by(inund_fac2) %>%
+  summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  as.data.frame() 
+
+maxQshort = 11.05
+minQshort = 10.1
+minWTshort = 8
+maxWTshort = 13.5
+
+maxQlong = 11.05
+minQlong = 10.8
+minWTlong = 9
+maxWTlong = 13.5
+
+maxQnone = 11
+minQnone = u_table2$minQ[u_table2$inund_fac2== "none"]
+minWTnone = u_table2$minWT[u_table2$inund_fac2== "none"]
+maxWTnone = u_table2$maxWT[u_table2$inund_fac2== "none"]
+
+f_createpolygon <- function(df_hull, maxQ, minQ, maxWT, minWT, inundationfactor) {
+  hull <- data.frame(
+    log_qsdy = c(df_hull$log_qsdy, maxQ,          maxQ, minQ, minQ, maxQ, maxQ),
+    
+    WTmwk = c(df_hull$WTmwk,    df_hull$WTmwk[1], maxWT, maxWT, minWT, minWT, df_hull$WTmwk[1]),
+    inund_fac2 = inundationfactor) 
+  
+  return(hull)
+  }
+
+u.shrt.hullnew <- f_createpolygon(u.shrt.hull, maxQshort, minQshort, maxWTshort, minWTshort, "short")
+u.long.hullnew <- f_createpolygon(u.long.hull, maxQlong, minQlong, maxWTlong, minWTlong, "long")
+u.none.hullnew <- f_createpolygon(u.none.hull, maxQnone, minQnone, maxWTnone, minWTnone, "none")
+
+hull_upstreamnew <- rbind(u.shrt.hullnew, u.none.hullnew, u.long.hullnew) 
+```
 
 ```{r}
-ggplot() + 
-  geom_tile(data = pred.shrt, aes(log_qsdy, WTmwk, fill = fit)) +
-  geom_polygon(data = u.shrt.hull2, aes(x = log_qsdy, y = WTmwk), fill = "grey", alpha = 0.3)+
-  geom_point(data = u.shrt, aes(log_qsdy, WTmwk), color = "gray4", shape = 1) +
-  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
-  #viridis::scale_fill_viridis(option = "turbo") +
- scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "brown"),
-     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5, 12))+
-  theme_classic()
+ggplot(u.long.hullnew) + geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+ggplot(u.shrt.hullnew) + geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+ggplot(u.none.hullnew) + 
+  geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
 
+```
 
-ggplot() + 
-  geom_tile(data = pred.long, aes(log_qsdy, WTmwk, fill = fit)) +
-  geom_polygon(data = u.long.hull2, aes(x = log_qsdy, y = WTmwk), fill = "grey", alpha = 0.3)+
-  geom_point(data = u.long, aes(log_qsdy, WTmwk), color = "gray4", shape = 1) +
-  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
-   scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "brown"),
-     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5, 12))+
-  theme_classic()
+### Filter predictions
+```{r}
+pred_upstreamnew <- pred_upstream %>%
+  filter(case_when(inund_fac2 == "none" ~ log_qsdy >= minQnone & log_qsdy <= maxQnone,
+                   inund_fac2 == "short" ~ log_qsdy >= minQshort & log_qsdy <= maxQshort,
+                   inund_fac2 == "long" ~ log_qsdy >= minQlong & log_qsdy <= maxQlong)) %>%
+  filter(case_when(inund_fac2 == "none" ~ WTmwk >= minWTnone & WTmwk <= maxWTnone,
+                   inund_fac2 == "short" ~ WTmwk >= minWTshort & WTmwk <= maxWTshort,
+                   inund_fac2 == "long" ~ WTmwk >= minWTlong & WTmwk <= maxWTlong)) %>%
+  mutate(chl = 10^fit)
+
+max(pred_upstreamnew$log_qsdy)
+```
+
+### Plot
+```{r}
+pred_upstreamnew$inund_fac2 <- factor(pred_upstreamnew$inund_fac2, levels = c("none", "short", "long"))
+hull_upstreamnew$inund_fac2 <- factor(hull_upstreamnew$inund_fac2, levels = c("none", "short", "long"))
+
+(upstream_diff <- ggplot() + 
+  geom_tile(data = pred_upstreamnew, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = hull_upstreamnew, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(data = upstream_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
+  viridis::scale_fill_viridis(option = "turbo") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0)) +
+  facet_wrap(~inund_fac2, scales = "free") + 
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chlorophyll a (ug/L)", title = "Upstream") +
+  theme_classic() +
+  theme(legend.position = "top"))
+```
+
+Write plot
+```{r}
+png(here::here("figures","upstream_gam_diffscales.png"), width = 7, height = 4, units = "in", res = 300)
+upstream_diff
+dev.off()
+
+save(upstream_diff, upstream_same, file = here::here("data_model", "upstream_gam_plots.RData"))
 ```
 
