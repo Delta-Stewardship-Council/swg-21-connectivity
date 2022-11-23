@@ -3,6 +3,8 @@ title: "visualize_gam_downstream"
 author: "Catarina Pien"
 date: '2022-10-05'
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 Pascale
 ```{r setup, include=FALSE}
@@ -33,7 +35,7 @@ load("data_model/gams_origdata.Rdata")
 downstream <- alldata %>% filter(region == "below")
 ```
 
-# Model validation
+## Model validation
 ```{r}
   # validate the final model by plotting residuals and save to a png to save space
   png(filename = "../figures/gamd6d.png", width = 7, height = 9, units = "in", res = 300)
@@ -68,7 +70,7 @@ downstream <- alldata %>% filter(region == "below")
 
 ### PREDICT MODEL OUTPUTS FOR SIMULATED DATASET
 
-## Visualize the Upstream Final Model as a 2x2 grid ignoring random effect of station
+#### Visualize the Upstream Final Model as a 2x2 grid ignoring random effect of station
 
 ```{r}
 # subset the downstream data frame each inundation factor
@@ -169,7 +171,7 @@ d.long.hull = d.long.hull %>%
 ```
 
 
-## MAKE THE ACTUAL FIGURE
+#### MAKE THE ACTUAL FIGURE
 
 ```{r}
 png(filename = "../figures/downstream_2dfigure.png", width = 12, height = 4, units = "in", res = 300)
@@ -253,7 +255,8 @@ mtext(text = "downstream: long inundation", side = 3,
 
 dev.off()
 ```
-Make hulls
+
+Make inverse hulls
 ```{r}
 d.shrt.hull2 <- data.frame(log_qsdy = c(d.shrt.hull[[1]], d_table[2],         d_table[2], d_table[1], d_table[1], d_table[2], d_table[2],         d.shrt.hull[1, 1]), 
         WTmwk = c(d.shrt.hull[[2]], d.shrt.hull[1, 2], d_table[4], d_table[4], d_table[3], d_table[3], d.shrt.hull[1, 2], d.shrt.hull[1, 2])) %>%
@@ -269,7 +272,8 @@ d.long.hull2 <- data.frame(log_qsdy = c(d.long.hull[[1]], d_table[2],         d_
   mutate(inund_fac2 = "long")
 ```
 
-Predictions
+## Cat's code - same axes
+### Predictions
 ```{r}
 pred.none = predict_gam(gamd6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "none", station = NULL, by = int.lqsdy), 
                           exclude_terms = "s(station)") %>%
@@ -291,52 +295,137 @@ downstream_f <- downstream %>%
          WTmwk < d_table[4] & WTmwk > d_table[3])
 ```
 
-Plot code
+### Plot code: same 
 ```{r}
 pred_downstream$inund_fac2 <- factor(pred_downstream$inund_fac2, levels = c("none", "short", "long"))
 hull_downstream$inund_fac2 <- factor(hull_downstream$inund_fac2, levels = c("none", "short", "long"))
 
 library(viridis)
 
-ggplot() + 
+(downstream_same <- ggplot() + 
   geom_tile(data = pred_downstream, aes(log_qsdy, WTmwk, fill = fit)) +
   geom_polygon(data = hull_downstream, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
   geom_point(data = downstream_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
   #scale_fill_steps2(midpoint=2, n.breaks=12, low = "green", mid = "blue", high = "yellow")+
   #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
-  #viridis::scale_fill_viridis(option = "turbo") +
- scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "thistle2", "brown"),
-     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5,8, 12))+
+  # viridis::scale_fill_viridis(option = "turbo") +
+  scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "thistle2", "brown"),
+                       breaks = c(-5, -1, 0, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5,8, 12))+
+     # guide = guide_legend(keywidth = 2))+
   facet_wrap(~inund_fac2) + 
-  theme_classic()
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chlorophyll a (ug/L)", title = "Downstream") +
+  theme_classic() +
+  theme(legend.position = "top"))
+```
+
+Write plot
+```{r}
+png(here::here("figures","downstream_gam_samescales.png"), width = 7, height = 4, units = "in", res = 300)
+downstream_same
+dev.off()
 ```
 
 
 
+## Cat's code - Different axes
+```{r}
+d_table2 <- downstream %>% 
+  group_by(inund_fac2) %>%
+  summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  as.data.frame() 
+
+maxQshort = 11.5
+minQshort = 10
+minWTshort = 8
+maxWTshort = 15
+
+maxQlong = 11.5
+minQlong = 10.9
+minWTlong = 9
+maxWTlong = 16
+
+maxQnone = 11.5
+minQnone = 8.5
+minWTnone = 7.9
+maxWTnone = 16.6
+
+f_createpolygon <- function(df_hull, maxQ, minQ, maxWT, minWT, inundationfactor) {
+  hull <- data.frame(
+    log_qsdy = c(df_hull$log_qsdy, maxQ,          maxQ, minQ, minQ, maxQ, maxQ),
+    
+    WTmwk = c(df_hull$WTmwk,    df_hull$WTmwk[1], maxWT, maxWT, minWT, minWT, df_hull$WTmwk[1]),
+    inund_fac2 = inundationfactor) 
+  
+  return(hull)
+  }
+
+d.shrt.hullnew <- f_createpolygon(d.shrt.hull, maxQshort, minQshort, maxWTshort, minWTshort, "short")
+d.long.hullnew <- f_createpolygon(d.long.hull, maxQlong, minQlong, maxWTlong, minWTlong, "long")
+d.none.hullnew <- f_createpolygon(d.none.hull, maxQnone, minQnone, maxWTnone, minWTnone, "none")
+
+hull_downstreamnew <- rbind(d.shrt.hullnew, d.none.hullnew, d.long.hullnew) 
+```
 
 ```{r}
-ggplot() + 
-  geom_tile(data = pred.shrt, aes(log_qsdy, WTmwk, fill = fit)) +
-  geom_polygon(data = d.shrt.hull2, aes(x = log_qsdy, y = WTmwk), fill = "grey", alpha = 0.3)+
-  geom_point(data = d.shrt, aes(log_qsdy, WTmwk), color = "gray4", shape = 1) +
-  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
-  #viridis::scale_fill_viridis(option = "turbo") +
- scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "brown"),
-     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5, 12))+
-  theme_classic()
+ggplot(d.long.hullnew) + geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+ggplot(d.shrt.hullnew) + geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+ggplot(d.none.hullnew) + 
+  geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
 
-
-ggplot() + 
-  geom_tile(data = pred.long, aes(log_qsdy, WTmwk, fill = fit)) +
-  geom_polygon(data = d.long.hull2, aes(x = log_qsdy, y = WTmwk), fill = "grey", alpha = 0.3)+
-  geom_point(data = d.long, aes(log_qsdy, WTmwk), color = "gray4", shape = 1) +
-  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
-   scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "brown"),
-     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5, 12))+
-  theme_classic()
 ```
 
-# Customizing plots in gratia
+### Filter predictions
+```{r}
+pred_downstreamnew <- pred_downstream %>%
+  filter(case_when(inund_fac2 == "none" ~ log_qsdy >= minQnone & log_qsdy <= maxQnone,
+                   inund_fac2 == "short" ~ log_qsdy >= minQshort & log_qsdy <= maxQshort,
+                   inund_fac2 == "long" ~ log_qsdy >= minQlong & log_qsdy <= maxQlong)) %>%
+  filter(case_when(inund_fac2 == "none" ~ WTmwk >= minWTnone & WTmwk <= maxWTnone,
+                   inund_fac2 == "short" ~ WTmwk >= minWTshort & WTmwk <= maxWTshort,
+                   inund_fac2 == "long" ~ WTmwk >= minWTlong & WTmwk <= maxWTlong)) %>%
+  mutate(chl = 10^fit)
+
+max(pred_downstreamnew$log_qsdy)
+```
+
+### Plot
+```{r}
+pred_downstreamnew$inund_fac2 <- factor(pred_downstreamnew$inund_fac2, levels = c("none", "short", "long"))
+hull_downstreamnew$inund_fac2 <- factor(hull_downstreamnew$inund_fac2, levels = c("none", "short", "long"))
+
+(downstream_diff <- ggplot() + 
+  geom_tile(data = pred_downstreamnew, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = hull_downstreamnew, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(data = downstream_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
+  viridis::scale_fill_viridis(option = "turbo") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0)) +
+  facet_wrap(~inund_fac2, scales = "free") + 
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chlorophyll a (ug/L)", title = "Downstream") +
+  theme_classic() +
+  theme(legend.position = "top"))
+```
+
+Write plot
+```{r}
+png(here::here("figures","downstream_gam_diffscales.png"), width = 7, height = 4, units = "in", res = 300)
+downstream_diff
+dev.off()
+
+save(downstream_diff, downstream_same, file = here::here("data_model", "downstream_gam_plots.RData"))
+```
+
+
+
+## Pascale's code
+
+### Customizing plots in gratia
 ```{r}
 draw(gamd6d) & theme_bw()
 
