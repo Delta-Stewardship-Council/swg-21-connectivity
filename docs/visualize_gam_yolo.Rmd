@@ -3,6 +3,8 @@ title: "visualize_gam_yolo"
 author: "Catarina Pien"
 date: '2022-10-05'
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 Shruti
@@ -44,7 +46,7 @@ library(mgcv)
 ## Read in datasets and final models
 
 ```{r}
-load("../data_model/gams_origdata.Rdata")
+load("data_model/gams_origdata.Rdata")
 
 ```
 
@@ -185,7 +187,7 @@ yo.long.hull = yo.long.hull %>%
 ## MAKE THE ACTUAL FIGURE
 
 ```{r}
-png(filename = "../figures/yo_2dfigure.png", width = 12, height = 4, units = "in", res = 300)
+#png(filename = "../figures/yo_2dfigure.png", width = 12, height = 4, units = "in", res = 300)
 
 par(mfrow = c(1, 3), mar = c(4, 2.75, 1, 2.5) + 0.1, oma = c(0, 2.25, 2, 2), las = 1, cex = 1)
 
@@ -217,10 +219,6 @@ mtext(text = "Yolo: No inundation", side = 3,
 
 ###--------- Yolo: short inundation (< 3 weeks) ---------###
 #png(filename = "../figures/yo_shrt_2dfigure.png", width = 4, height = 4, units = "in", res = 300)
-
-image(x = seq.lqsdy, y = seq.wtmwk, z = chl.mat.shrt, col = col_pal, breaks = breaks,
-      ylab = "", xlab = "", axes = F, ylim = range(seq.wtmwk), xlim = range(seq.lqsdy))
-
 # create breaks and labels for x and y axes
 axis(side = 1, at = lbl.lqsdy, labels = lbl.lqsdy)
 axis(side = 2, at = lbl.wtmwk, labels = lbl.wtmwk)
@@ -263,11 +261,187 @@ mtext(text = "Weekly mean water temperature", side = 2,
       line = 3, adj=0.5, las=0)
 mtext(text = "Yolo: long inundation", side = 3,
       line = 0.75, adj=0.5, las=0, font=2)
+image(x = seq.lqsdy, y = seq.wtmwk, z = chl.mat.shrt, col = col_pal, breaks = breaks,
+      ylab = "", xlab = "", axes = F, ylim = range(seq.wtmwk), xlim = range(seq.lqsdy))
+
+
 
 #dev.off()
 ```
 
+## Cat's code: same axes
+### Make inverse hulls from Shruti's hulls
+```{r}
+# short
+yo.shrt.hull2 <- data.frame(
+  log_qsdy = c(yo.shrt.hull$log_qsdy, y_table["maxQ"], y_table["maxQ"], y_table["minQ"], y_table["minQ"],
+               y_table["maxQ"], y_table["maxQ"], yo.shrt.hull$log_qsdy[1]), 
+       
+  WTmwk = c(yo.shrt.hull$WTmwk, yo.shrt.hull$WTmwk[1], y_table["maxWT"], y_table["maxWT"], y_table["minWT"],
+            y_table["minWT"], yo.shrt.hull$WTmwk[1], yo.shrt.hull$WTmwk[1])) %>%
+  
+  mutate(inund_fac2 = "short")
+
+# none
+yo.none.hull2 <- data.frame(log_qsdy = c(yo.none.hull[[1]], y_table["maxQ"],         y_table["maxQ"], y_table["minQ"], y_table["minQ"], y_table["maxQ"], y_table["maxQ"],         yo.none.hull$log_qsdy[1]), 
+        WTmwk = c(yo.none.hull$WTmwk, yo.none.hull$WTmwk[1], y_table["maxWT"], y_table["maxWT"], y_table["minWT"], y_table["minWT"], yo.none.hull$WTmwk[1], yo.none.hull$WTmwk[1])) %>%
+  mutate(inund_fac2 = "none")
+
+#long
+yo.long.hull2 <- data.frame(log_qsdy = c(yo.long.hull[[1]], y_table["maxQ"],         y_table["maxQ"], y_table["minQ"], y_table["minQ"], y_table["maxQ"], y_table["maxQ"],         yo.long.hull$log_qsdy[1]), 
+        WTmwk = c(yo.long.hull$WTmwk, yo.long.hull$WTmwk[1], y_table["maxWT"], y_table["maxWT"], y_table["minWT"], y_table["minWT"], yo.long.hull$WTmwk[1], yo.long.hull$WTmwk[1]))%>%
+  mutate(inund_fac2 = "long")
+```
+
+### Predictions
+```{r}
+pred.none = predict_gam(gamyo6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "none", station = NULL, by = int.lqsdy), 
+                          exclude_terms = "s(station)") %>%
+  mutate(inund_fac2 = "none")
+
+pred.shrt = predict_gam(gamyo6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "short", station = NULL, by = int.lqsdy), 
+                          exclude_terms = "s(station)") %>%
+  mutate(inund_fac2 = "short")
+
+pred.long = predict_gam(gamyo6d, values = list(log_qsdy = seq.lqsdy, WTmwk = seq.wtmwk, inund_fac2 = "long", station = NULL, by = int.lqsdy), 
+                          exclude_terms = "s(station)") %>%
+  mutate(inund_fac2 = "long")
+ 
+pred_yolo <- rbind(pred.none, pred.shrt, pred.long)
+hull_yolo <- rbind(yo.shrt.hull2, yo.none.hull2, yo.long.hull2)
+
+yolo_f <- yolo %>% 
+  filter(log_qsdy < y_table[2] & log_qsdy > y_table[1],
+         WTmwk < y_table[4] & WTmwk > y_table[3])
+```
+
+### Plot 
+```{r}
+pred_yolo$inund_fac2 <- factor(pred_yolo$inund_fac2, levels = c("none", "short", "long"))
+hull_yolo$inund_fac2 <- factor(hull_yolo$inund_fac2, levels = c("none", "short", "long"))
+
+library(viridis)
+
+(yolo_same <- ggplot() + 
+  geom_tile(data = pred_yolo, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = hull_yolo, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(data = yolo_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
+  #scale_fill_steps2(midpoint=2, n.breaks=12, low = "green", mid = "blue", high = "yellow")+
+  #scale_fill_steps2(n.breaks=13, breaks = c(0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 12),low = viridis::viridis(13)[1], mid = viridis::viridis(13)[8], high = viridis::viridis(13)[13])+
+  #viridis::scale_fill_viridis(option = "turbo") +
+ scale_fill_gradientn(colours = c("mediumpurple", "ghostwhite", "cyan","indianred1", "springgreen4", "bisque1", "mediumorchid4","palegreen", "magenta", "aquamarine", "yellow", "orange1","white", "thistle2", "brown"),
+     breaks = c(0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8,0.9, 1, 1.5, 2,5,8, 12))+
+  facet_wrap(~inund_fac2) +
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chlorophyll a (ug/L)", title = "Yolo") +
+  theme_classic() +
+  theme(legend.position = "top"))
+```
 
 
+Write plot
+```{r}
+png(here::here("figures","yolo_gam_samescales.png"), width = 7, height = 4, units = "in", res = 300)
+yolo_same
+dev.off()
+```
 
 
+## Cat's code: different axes
+
+### Make new hulls based on new mins and maxes customized to inundation factor
+
+* Short: log_qsdy = 10-11/WTmwk: 7.5-13
+* Long: log_qsdy = 10.25-11/WTmwk: 7.5-15
+```{r}
+y_table2 <- yolo %>% 
+  group_by(inund_fac2) %>%
+  summarize(minQ = quantile(log_qsdy, 0.05),
+            maxQ = quantile(log_qsdy, 0.95),
+            minWT = quantile(WTmwk, 0.05),
+            maxWT = quantile(WTmwk, 0.95)) %>%
+  as.data.frame() 
+
+maxQshort = 11.1
+minQshort = 7.6
+minWTshort = 7.5
+maxWTshort = 18.2
+
+maxQlong = 11.5
+minQlong = 8
+minWTlong = 8.9
+maxWTlong = 18
+
+maxQnone = 8.5
+minQnone = 4.4
+minWTnone = 7.4
+maxWTnone = 19.5
+
+f_createpolygon <- function(df_hull, maxQ, minQ, maxWT, minWT, inundationfactor) {
+  hull <- data.frame(
+    log_qsdy = c(df_hull$log_qsdy, maxQ,          maxQ, minQ, minQ, maxQ, maxQ),
+    
+    WTmwk = c(df_hull$WTmwk,    df_hull$WTmwk[1], maxWT, maxWT, minWT, minWT, df_hull$WTmwk[1]),
+    inund_fac2 = inundationfactor) 
+  
+  return(hull)
+  }
+
+yo.shrt.hullnew <- f_createpolygon(yo.shrt.hull, maxQshort, minQshort, maxWTshort, minWTshort, "short")
+yo.long.hullnew <- f_createpolygon(yo.long.hull, maxQlong, minQlong, maxWTlong, minWTlong, "long")
+yo.none.hullnew <- f_createpolygon(yo.none.hull, maxQnone, minQnone, maxWTnone, minWTnone, "none")
+
+hull_yolonew <- rbind(yo.shrt.hullnew, yo.none.hullnew, yo.long.hullnew) 
+```
+
+```{r}
+ggplot(yo.long.hullnew) + geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+ggplot(yo.shrt.hullnew) + geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+ggplot(yo.none.hullnew) + 
+  geom_polygon(aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(aes(x = log_qsdy, y = WTmwk))
+
+```
+
+### Filter predictions
+```{r}
+pred_yolonew <- pred_yolo %>%
+  filter(case_when(inund_fac2 == "none" ~ log_qsdy >= minQnone & log_qsdy <= maxQnone,
+                   inund_fac2 == "short" ~ log_qsdy >= minQshort & log_qsdy <= maxQshort,
+                   inund_fac2 == "long" ~ log_qsdy >= minQlong & log_qsdy <= maxQlong)) %>%
+  filter(case_when(inund_fac2 == "none" ~ WTmwk >= minWTnone & WTmwk <= maxWTnone,
+                   inund_fac2 == "short" ~ WTmwk >= minWTshort & WTmwk <= maxWTshort,
+                   inund_fac2 == "long" ~ WTmwk >= minWTlong & WTmwk <= maxWTlong)) %>%
+  filter(fit<5) %>%
+  mutate(chl = 10^fit)
+
+max(pred_yolonew$log_qsdy)
+```
+
+### Plot
+```{r}
+pred_yolonew$inund_fac2 <- factor(pred_yolonew$inund_fac2, levels = c("none", "short", "long"))
+hull_yolonew$inund_fac2 <- factor(hull_yolonew$inund_fac2, levels = c("none", "short", "long"))
+
+(yolo_diff <- ggplot() + 
+  geom_tile(data = pred_yolonew, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = hull_yolonew, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(data = yolo_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
+  viridis::scale_fill_viridis(option = "turbo") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0)) +
+  facet_wrap(~inund_fac2, scales = "free") + 
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chlorophyll a (ug/L)", title = "Yolo") +
+  theme_classic() +
+  theme(legend.position = "top"))
+```
+
+Write plot
+```{r}
+png(here::here("figures","yolo_gam_diffscales.png"), width = 7, height = 4, units = "in", res = 300)
+yolo_diff
+dev.off()
+
+save(yolo_diff, yolo_same, file = here::here("data_model", "yolo_gam_plots.RData"))
+```
