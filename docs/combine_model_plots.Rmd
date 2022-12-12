@@ -1,0 +1,122 @@
+---
+title: "Combine_plots"
+author: "Catarina Pien"
+date: '2022-11-22'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load(here::here("data_model", "upstream_gam_plots.RData"))
+load(here::here("data_model", "downstream_gam_plots.RData"))
+load(here::here("data_model", "yolo_gam_plots.RData"))
+```
+
+```{r}
+dd <- downstream_diff + theme(axis.title.y = element_blank())
+ud <- upstream_diff + theme(axis.title = element_blank())
+yd <- yolo_diff + theme(axis.title = element_blank())
+
+
+ds <- downstream_same + theme(axis.title.y = element_blank())
+us <- upstream_same + theme(axis.title.y = element_blank())
+ys <- yolo_same + theme(axis.title = element_blank())
+
+dy <- downstream_diffsamey + labs(title = "Downstream") + theme(axis.title.y = element_blank())
+uy <- upstream_diffsamey + theme(axis.title = element_blank())
+yy <- yolo_diffsamey + labs(title = "Yolo") + theme(axis.title = element_blank())
+
+# working on this ----------------------------------------------------------------------
+mylabels = seq(1, 100, 10)
+values = c(0,0.5, 1, 1.5, 2)
+labels = c()
+your_function <- function(x){sprintf("%.1f", 10^as.numeric(x))}
+mybreaks = 
+dy <- downstream_diffsamey + 
+  scale_fill_viridis(breaks = c(0, 0.6931472,1.386294, 1.791759, 2.079442), labels = c(1, 2, 4, 6, 8), option = "turbo",
+                     guide = guide_legend(keyheight = 2))+
+  labs(title = "Downstream") + 
+  theme(axis.title.y = element_blank())
+```
+
+```{r}
+library(patchwork)
+p4 <- ggplot(data.frame(l = dd$labels$y, x = 1, y = 1)) +
+      geom_text(aes(x, y, label = l), angle = 90) + 
+      theme_void() +
+      coord_cartesian(clip = "off")
+(plots_diff <- p4 + (ud / yd / dd) + plot_layout(widths = c(1, 25)))
+(plots_same <- p4 + (us/ys/ds) + plot_layout(widths = c(1, 25)))
+(plots_samey <- p4 + (uy / yy / dy)+ plot_layout(widths = c(1, 25)))
+```
+
+# boxplots
+```{r}
+load("data_model/gams_origdata.Rdata")
+data_bp <- alldata %>%
+  filter(region!= "cache") %>%
+  mutate(region = case_when(region == "above" ~ "Upstream",
+                            region == "below" ~ "Downstream",
+                            region == "yolo" ~ "Yolo"),
+         region = factor(region, levels = c("Upstream", "Yolo", "Downstream")))
+```
+
+```{r}
+flow_t <- ggplot(data_bp) + geom_jitter(aes(x = region, y = log_qsdy, color = inund_fac2)) +
+  geom_boxplot(aes(x = region, y = log_qsdy), alpha = 0) + 
+  scale_color_viridis(discrete = TRUE, option = "turbo") +
+  labs(y = "Log Daily\nMean Flow (cfs)", color = "Inundation Duration") +
+  theme_bw() +
+  theme(axis.title.x = element_blank())
+
+flow <- ggplot(data_bp) + geom_jitter(aes(x = region, y = Q_sday, color = inund_fac2)) +
+  geom_boxplot(aes(x = region, y = Q_sday), alpha = 0) + 
+  scale_color_viridis(discrete = TRUE, option = "turbo") +
+  labs(y = "Daily Mean Flow (cfs)", color = "Inundation Duration") +
+  theme_bw() +
+  theme(axis.title.x = element_blank())
+
+(boxplots_flow <- flow_t /flow + plot_layout(guides = "collect") & theme(legend.position = "top"))
+
+(wt_t <- ggplot(data_bp) + geom_jitter(aes(x = region, y = WTmwk, color = inund_fac2)) +
+  geom_boxplot(aes(x = region, y = log_qsdy), alpha = 0) + 
+  scale_color_viridis(discrete = TRUE, option = "turbo") +
+  labs(y = "Mean Weekly\nWater Temperature (°C)", color = "Inundation Duration") +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        legend.position = "top"))
+
+(boxplots <- wt_t / flow_t /flow + plot_layout(guides = "collect") & theme(legend.position = "top"))
+```
+
+
+Export
+```{r}
+png(here::here("figures","gam_diffscales.png"), width = 7, height = 8, units = "in", res = 300)
+plots_diff
+dev.off()
+
+png(here::here("figures","gam_samescales.png"), width = 7, height = 8, units = "in", res = 300)
+plots_same
+dev.off()
+
+png(here::here("figures","gam_samescalesy.png"), width = 8, height = 8, units = "in", res = 300)
+plots_samey
+dev.off()
+
+png(here::here("figures","boxplots_flow.png"), width = 8, height = 8, units = "in", res = 300)
+boxplots_flow
+dev.off()
+
+png(here::here("figures","boxplots_data.png"), width = 6, height = 8, units = "in", res = 300)
+boxplots
+dev.off()
+
+
+```
+

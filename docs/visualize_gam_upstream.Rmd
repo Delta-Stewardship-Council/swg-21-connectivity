@@ -391,7 +391,7 @@ pred_upstreamnew <- pred_upstream %>%
   filter(case_when(inund_fac2 == "none" ~ WTmwk >= minWTnone & WTmwk <= maxWTnone,
                    inund_fac2 == "short" ~ WTmwk >= minWTshort & WTmwk <= maxWTshort,
                    inund_fac2 == "long" ~ WTmwk >= minWTlong & WTmwk <= maxWTlong)) %>%
-  mutate(chl = 10^fit)
+  mutate(chl = exp^fit)
 
 max(pred_upstreamnew$log_qsdy)
 ```
@@ -419,7 +419,60 @@ Write plot
 png(here::here("figures","upstream_gam_diffscales.png"), width = 7, height = 4, units = "in", res = 300)
 upstream_diff
 dev.off()
-
-save(upstream_diff, upstream_same, file = here::here("data_model", "upstream_gam_plots.RData"))
 ```
 
+
+
+
+
+
+
+
+## Cat's code: same y axis 
+```{r}
+maxWTall = 17.5
+minWTall = 7.5
+
+u.shrt.hullsamey <- f_createpolygon(u.shrt.hull, maxQshort, minQshort, maxWTall, minWTall, "short")
+u.long.hullsamey <- f_createpolygon(u.long.hull, maxQlong, minQlong, maxWTall, minWTall, "long")
+u.none.hullsamey <- f_createpolygon(u.none.hull, maxQnone, minQnone, maxWTall, minWTall, "none")
+
+hull_upstreamsamey<- rbind(u.shrt.hullsamey, u.none.hullsamey, u.long.hullsamey) 
+```
+
+```{r}
+pred_upstreamsamey <- pred_upstreamnew <- pred_upstream %>%
+  filter(case_when(inund_fac2 == "none" ~ log_qsdy >= minQnone & log_qsdy <= maxQnone,
+                   inund_fac2 == "short" ~ log_qsdy >= minQshort & log_qsdy <= maxQshort,
+                   inund_fac2 == "long" ~ log_qsdy >= minQlong & log_qsdy <= maxQlong)) %>%
+  filter(case_when(inund_fac2 == "none" ~ WTmwk >= minWTall & WTmwk <= maxWTall,
+                   inund_fac2 == "short" ~ WTmwk >= minWTall & WTmwk <= maxWTall,
+                   inund_fac2 == "long" ~ WTmwk >= minWTall & WTmwk <= maxWTall)) %>%
+  mutate(chl = exp^fit)
+```
+
+
+```{r}
+pred_upstreamsamey$inund_fac2 <- factor(pred_upstreamsamey$inund_fac2, levels = c("none", "short", "long"))
+hull_upstreamsamey$inund_fac2 <- factor(hull_upstreamsamey$inund_fac2, levels = c("none", "short", "long"))
+
+(upstream_diffsamey <- ggplot() + 
+  geom_tile(data = pred_upstreamsamey, aes(log_qsdy, WTmwk, fill = fit)) +
+  geom_polygon(data = hull_upstreamsamey, aes(x = log_qsdy, y = WTmwk), fill = "white", alpha = 0.7)+
+  geom_point(data = upstream_f, aes(log_qsdy, WTmwk), color = "gray6", shape = 1) +
+  viridis::scale_fill_viridis(option = "turbo") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_continuous(expand = c(0,0)) +
+  facet_wrap(~inund_fac2, scales = "free_x") + 
+  labs(x = "log Daily Flow (cfs)", y = "Mean weekly water temperature (°C)", fill = "log chl a\n(ug/L)", title = "Upstream") +
+  theme_classic() +
+  theme(legend.position = "right"))
+```
+
+```{r}
+png(here::here("figures","upstream_gam_sameyscales.png"), width = 7.5, height = 4, units = "in", res = 300)
+upstream_diffsamey
+dev.off()
+
+save(upstream_diff, upstream_same, upstream_diffsamey, file = here::here("data_model", "upstream_gam_plots.RData"))
+```
