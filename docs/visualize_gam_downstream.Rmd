@@ -436,4 +436,31 @@ plot_long <- ggplot() +
   theme_bw()
 
 
+
+png("hgam_results_temp.png", bg = "transparent", width = 11, height = 20, units = "in", pointsize = 12, res = 350)
+
+plot_1 + plot_2 + plot_3 + plot_4 + plot_layout(nrow = 4)
+
+dev.off()
+```
+
+# station
+```{r}
+ggplot() +
+  geom_point(aes(x = chlorophyll, y = `s(station)`, color = station),data = downstream)
+
+sm_657 <- subset(sm, station == "657")
+dat_657 <- subset(downstream, station == "657")
+colnames(dat_657)[5] <- "est"
+
+
+sm %>%
+  filter (smooth == "s(station)") %>%
+  ggplot()+
+  geom_point(aes(x = station, y = est)) +
+  geom_errorbar(aes(x = station, ymin = est-se, ymax = est+se))+
+  theme_bw()
+
+ggplot()+
+  geom_boxplot(aes(x = station, y = chlorophyll), downstream)
 ```
