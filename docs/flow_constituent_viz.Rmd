@@ -1,0 +1,176 @@
+---
+title: "flow_constituent_viz"
+author: "Elizabeth Stumpner"
+date: "2023-01-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+```{r}
+library(dplyr)
+library(readr)
+library(lubridate)
+library(glue)
+library(tidyr)
+library(zoo)
+library(car)
+library(mgcv)
+library(ggplot2)
+library(viridis)
+library(nlme)
+library(kader)
+library(ggbeeswarm)
+```
+### Borrowed from a script I now can't find
+```{r}
+alldata <- read_csv("data_model/model_chla_covars_gam.csv") %>%
+  mutate(month = lubridate::month(date),
+         year  = lubridate::year(date),
+         rdoy  = lubridate::yday(date) + 92,
+         week  = lubridate::week(date),
+         water_year = ifelse(month > 9, year + 1, year),
+         fwater_year = factor(water_year),
+         dowy = ifelse(rdoy > 366, rdoy - 366, rdoy),
+         log_chla = log(chlorophyll),
+         log_idys = log(inund_days + 1),
+         t_qsdy = kader:::cuberoot(Q_sday), 
+         log_qsdy = log(Q_sday),
+         inund_fac = ifelse(inund_days == 0, "none", ifelse(inund_days > 14, "long", "short")),
+         inund_fac2 = ifelse(inund_days == 0, "none", ifelse(inund_days > 21, "long", "short")),
+         inundation = as.factor(inundation),
+         station_wq_chl = as.factor(station_wq_chl),
+         tily_fac = case_when(total_inund_last_year == 0 ~ "none",
+                              total_inund_last_year>0 & total_inund_last_year < 16 ~ "2wk",
+                              total_inund_last_year>16 & total_inund_last_year < 41 ~ "month",
+                              TRUE ~ "months"),
+         tily_fac = as.factor(tily_fac),
+         inund_fac = as.factor(inund_fac),
+         inund_fac2 = factor(inund_fac2, levels = c("none", "short", "long"))) %>%
+  rename(station = station_wq_chl, tily = total_inund_last_year, 
+         dsli = days_since_last_inundation, idysun = days_of_inundation_until_now)
+```
+## Set 1
+
+### First, does it matter whether I use mwk or mdy (mean of week and mean of day, right?)
+
+### As suggested in group meeting, viewing WY temp by boxplot is not an apples-to-apple comparison - details like the timing and water temperature of inundation is glossed over with this view.
+
+### Lastly, breaking down by region or inundation period is not especially useful.
+```{r}
+#incase use later
+decade <- subset(alldata, water_year == c(2011:2021))
+
+#compare two means
+alldata %>% 
+ggplot(aes(x=dowy, y=WTmwk, color = "mwk")) +
+  geom_smooth() +
+  geom_smooth(aes(dowy, WTmday, color = "mday"))
+  
+
+alldata %>% 
+ggplot(aes(x=fwater_year, y=WTmday))+
+  geom_boxplot()+
+  theme(axis.text.x = element_text(angle = 90)) 
+
+alldata %>% 
+ggplot(aes(x=fwater_year, y=WTmday))+
+  geom_boxplot()+
+  facet_grid(~region)+
+  theme(axis.text.x = element_text(angle = 90)) 
+
+alldata %>% 
+ggplot(aes(x=fwater_year, y=WTmday))+
+  geom_boxplot()+
+  facet_grid(~inund_fac2)+
+  theme(axis.text.x = element_text(angle = 90)) 
+```
+
+## Set 2 
+
+### Explore temperature and chlorophyll and split into region. Plot A shows all water years in the last decade (probably should choose a different color scheme) and Plot B includes length of inundation - but not all shapes seem to be included. Plot C is all data over wtr_dy 50 - 225 and Plot D is limited to short and long periods of inundation - again i'm doing something wrong bc not all water years are assigned a shape. Plot E is another variation.
+```{r}
+
+ggplot(decade, aes(x=dowy, y=WTmwk, color = as.factor(water_year), size = chlorophyll))+
+  #geom_smooth(method="gam", formula=y~s(x, bs="cs", k=25))+
+  geom_point()+
+  facet_grid(region~., scales="free_y")+
+  ggtitle('A')+
+  #coord_cartesian(ylim=c(0, NA), expand = FALSE)+
+  theme_bw()
+
+#looks like not all water years are assigned a shape?
+
+ggplot(decade, aes(x=dowy, y=WTmwk, color = inund_fac, size = chlorophyll, shape = as.factor(water_year)))+
+  #geom_smooth(method="gam", formula=y~s(x, bs="cs", k=25))+
+  geom_point()+
+  facet_grid(region~., scales="fixed")+
+  ggtitle('B')+
+  #coord_cartesian(ylim=c(0, NA), expand = FALSE)+
+  theme_bw()
+
+ggplot(alldata, aes(x=dowy, y=WTmwk, color = inund_fac, size = chlorophyll))+
+  #geom_smooth(method="gam", formula=y~s(x, bs="cs", k=25))+
+  geom_point()+
+  xlim(c(50, 225))+
+  facet_grid(region~., scales="fixed")+
+  ggtitle('C')+
+  #coord_cartesian(ylim=c(0, NA), expand = FALSE)+
+  theme_bw()
+
+#remove 'no inundation'
+alldata_inun <- subset(alldata, inund_fac == c("short", "long"))
+
+#looks like not all water years are assigned a shape?
+ggplot(alldata_inun, aes(x=dowy, y=WTmwk, color = inund_fac, size = chlorophyll, shape = as.factor(water_year)))+
+  #geom_smooth(method="gam", formula=y~s(x, bs="cs", k=25))+
+  geom_point()+
+  facet_grid(region~., scales="fixed")+
+  ggtitle('D')+
+  #coord_cartesian(ylim=c(0, NA), expand = FALSE)+
+  theme_bw()
+
+inund <- subset(alldata, inund_fac == c("short", "long"))
+#change color scheme
+ggplot(inund, aes(x=dowy, y=WTmday, color = fwater_year, shape = inund_fac))+
+  #geom_smooth(method="gam", formula=y~s(x, bs="cs", k=25))+
+  geom_point()+
+  facet_grid(region~., scales="fixed")+
+  ggtitle('E')+
+  #coord_cartesian(ylim=c(0, NA), expand = FALSE)+
+  theme_bw()
+
+```
+
+## Set 3 
+
+### Beeswarms! Stopped here but can continue if anyone likes them. Probably need a better color/shape scheme. I seem to have trouble with assigning shapes.
+```{r}
+ggplot(alldata, aes(x=region, y=WTmday, color = chlorophyll))+
+  facet_wrap(~inund_fac2, scales="fixed")+
+  theme_bw() +
+  geom_quasirandom(             
+    size=2,                      
+    alpha=0.75    
+  )+ 
+
+  theme_classic(base_size=20) +
+  theme(text = element_text (size = 15), axis.text.x = element_text(angle = 90)) +
+  scale_shape_manual(values = c(1, 3))
+
+ggplot(alldata, aes(x=inund_fac, y=WTmday, color = chlorophyll))+
+  facet_wrap(~region, scales="fixed")+
+  theme_bw() +
+  geom_quasirandom(             
+    size=2,                      
+    alpha=0.75    
+  )+ 
+
+  theme_classic(base_size=20) +
+  theme(text = element_text (size = 15), axis.text.x = element_text(angle = 90)) +
+  scale_shape_manual(values = c(1, 3))
+```
+
+
