@@ -90,7 +90,8 @@ bpacfdf_d <- with(bpacf_d, data.frame(lag, acf))
   geom_point(aes(x = station, y = est), size = 3) +
   geom_errorbar(aes(x = station, ymin = est-se, ymax = est+se))+
     labs(x = "Station", y = "Estimate") +
-  theme_vis)
+  theme_vis +
+    theme(axis.text.x = element_text(size = 7, angle = 14, hjust = 0.5, vjust = 0.5)))
 (d_p8 <- pacf_d)
 
 
