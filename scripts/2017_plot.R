@@ -82,124 +82,145 @@ data2017_below <- subset(data2017, region == "below")
 par(mfrow=c(3,1))
 
 # above
-plot(data2017_above $date, data2017_above $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Above Yolo")
+plot(data2017_above $date, data2017_above $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Mainstem", xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), cex = 2)
 abline(h = 10, col = "forestgreen", lty = 2)
 legend("topright", c("Chlorophyll", "Water Temperature", "Outflow"), col = c("forestgreen", "darkred", "steelblue"), pch = 19)
 par(new = TRUE)
 
-plot(data2017_above$date, data2017_above$Q_sday, xlim=range(data2017_above$date), ylim=range(data2017$Q_sday),
-     col ="steelblue", type = "b", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "")
+plot(data2017_above$date, data2017_above$Q_sday, xlim=c(as.Date("2016-12-03"), as.Date("2017-05-04")), ylim=range(data2017$Q_sday),
+     col ="steelblue", type = "p", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "", cex = 1.5)
 axis(4)
-lines(data2017_above $date[order(data2017_above $date)], data2017_above $Q_sday[order(data2017_above $date)], xlim=range(data2017$date), ylim=range(data2017$Q_sday), col ="steelblue", type = "b", lty = 3, pch=19)
+lines(data2017_above $date[order(data2017_above $date)], data2017_above $Q_sday[order(data2017_above $date)], xlim=range(data2017$date), ylim=range(data2017$Q_sday), col ="steelblue", type = "p", lty = 3, pch=19)
 mtext("Outflow", side = 4)
 par(new = TRUE)
 
-plot(data2017_above $date, data2017_above $WTmwk, col = "darkred", type = "b", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "")
+plot(data2017_above $date, data2017_above $WTmwk, col = "darkred", type = "p", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "", xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), cex = 1.5)
 par(new = TRUE)
 
 # version 2
 # short 2017-01-09, 2017-01-24
-rect(as.Date("2017-01-09"), 0, as.Date("2017-01-24"), 79, density = 0,
-     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+rect(as.Date("2017-01-09"), 0, as.Date("2017-01-29"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # long 2017-01-31, 2017-03-28
-rect(as.Date("2017-01-31"), 0, as.Date("2017-03-28"), 79, density = 0,
+rect(as.Date("2017-01-30"), 0, as.Date("2017-03-31"), 79, density = 20,
      col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # short 2017-04-11, 2017-04-27
-rect(as.Date("2017-04-11"), 0, as.Date("2017-04-27"), 79, density = 0,
-     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+rect(as.Date("2017-04-09"), 0, as.Date("2017-04-29"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # long 2017-05-02, 2017-05-03
-rect(as.Date("2017-05-01"), 0, as.Date("2017-05-03"), 79, density = 0,
+rect(as.Date("2017-04-30"), 0, as.Date("2017-05-03"), 79, density = 20,
      col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
-# add overall boarder
-rect(as.Date("2017-01-09"), 0, as.Date("2017-03-28"), 79, density = 0,
-     col = "darkgray", border = NULL, lty = par("lty"), lwd = par("lwd"))
+# short
+rect(as.Date("2016-12-17"), 0, as.Date("2016-12-21"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
-rect(as.Date("2017-04-11"), 0, as.Date("2017-05-03"), 79, density = 0,
-     col = "darkgray", border = NULL, lty = par("lty"), lwd = par("lwd"))
+# add overall boarder
+rect(as.Date("2016-12-17"), 0, as.Date("2016-12-21"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2017-01-09"), 0, as.Date("2017-03-31"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2017-04-09"), 0, as.Date("2017-05-03"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
 
 # yolo
-plot(data2017_yolo $date, data2017_yolo $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Yolo")
+plot(data2017_yolo $date, data2017_yolo $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Floodplain", xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), cex = 2)
 abline(h = 10, col = "forestgreen", lty = 2)
 par(new = TRUE)
 
 #plot(data2017$date, data2017$Q_sday, col ="steelblue", type = "b", lty = 3, pch = 19) #lines arent connecting in order
-plot(data2017_yolo$date, data2017_yolo$Q_sday, xlim=range(data2017_yolo$date), ylim=range(data2017$Q_sday),
-     col ="steelblue", type = "b", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "")
+plot(data2017_yolo$date, data2017_yolo$Q_sday, xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), ylim=range(data2017$Q_sday),
+     col ="steelblue", type = "p", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "", cex = 1.5)
 axis(4)
-lines(data2017_yolo $date[order(data2017_yolo $date)], data2017_yolo $Q_sday[order(data2017_yolo $date)], xlim=range(data2017$date), ylim=range(data2017$Q_sday), col ="steelblue", type = "b", lty = 3, pch=19)
+lines(data2017_yolo $date[order(data2017_yolo $date)], data2017_yolo $Q_sday[order(data2017_yolo $date)], xlim=range(data2017$date), ylim=range(data2017$Q_sday), col ="steelblue", type = "p", lty = 3, pch=19)
 mtext("Outflow", side = 4)
 par(new = TRUE)
 
-plot(data2017_yolo $date, data2017_yolo $WTmwk, col = "darkred", type = "b", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "")
+plot(data2017_yolo $date, data2017_yolo $WTmwk, col = "darkred", type = "p", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "", xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), cex = 1.5)
 par(new = TRUE)
 
 # version 2
 # short 2017-01-09, 2017-01-24
-rect(as.Date("2017-01-09"), 0, as.Date("2017-01-24"), 79, density = 0,
-     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+rect(as.Date("2017-01-09"), 0, as.Date("2017-01-29"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # long 2017-01-31, 2017-03-28
-rect(as.Date("2017-01-31"), 0, as.Date("2017-03-28"), 79, density = 0,
+rect(as.Date("2017-01-30"), 0, as.Date("2017-03-31"), 79, density = 20,
      col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # short 2017-04-11, 2017-04-27
-rect(as.Date("2017-04-11"), 0, as.Date("2017-04-27"), 79, density = 0,
-     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+rect(as.Date("2017-04-09"), 0, as.Date("2017-04-29"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # long 2017-05-02, 2017-05-03
-rect(as.Date("2017-05-01"), 0, as.Date("2017-05-03"), 79, density = 0,
+rect(as.Date("2017-04-30"), 0, as.Date("2017-05-03"), 79, density = 20,
      col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
-# add overall boarder
-rect(as.Date("2017-01-09"), 0, as.Date("2017-03-28"), 79, density = 0,
-     col = "darkgray", border = NULL, lty = par("lty"), lwd = par("lwd"))
+# short
+rect(as.Date("2016-12-17"), 0, as.Date("2016-12-21"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
-rect(as.Date("2017-04-11"), 0, as.Date("2017-05-03"), 79, density = 0,
-     col = "darkgray", border = NULL, lty = par("lty"), lwd = par("lwd"))
+# add overall boarder
+rect(as.Date("2016-12-17"), 0, as.Date("2016-12-21"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2017-01-09"), 0, as.Date("2017-03-31"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2017-04-09"), 0, as.Date("2017-05-03"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
 
 
 # below
-plot(data2017_below $date, data2017_below $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Below Yolo")
+plot(data2017_below $date, data2017_below $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Downstream", xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), cex = 2)
 abline(h = 10, col = "forestgreen", lty = 2)
 par(new = TRUE)
 
-plot(data2017_below$date, data2017_below$Q_sday, xlim=range(data2017_below$date), ylim=range(data2017$Q_sday),
-     col ="steelblue", type = "b", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "")
+plot(data2017_below$date, data2017_below$Q_sday, xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), ylim=range(data2017$Q_sday),
+     col ="steelblue", type = "p", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "", cex = 1.5)
 axis(4)
-lines(data2017_below $date[order(data2017_below $date)], data2017_below $Q_sday[order(data2017_below $date)], xlim=range(data2017$date), ylim=range(data2017$Q_sday), col ="steelblue", type = "b", lty = 3, pch=19)
+lines(data2017_below $date[order(data2017_below $date)], data2017_below $Q_sday[order(data2017_below $date)], xlim=range(data2017$date), ylim=range(data2017$Q_sday), col ="steelblue", type = "p", lty = 3, pch=19)
 mtext("Outflow", side = 4)
 par(new = TRUE)
 
-plot(data2017_below $date, data2017_below $WTmwk, col = "darkred", type = "b", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "")
+plot(data2017_below $date, data2017_below $WTmwk, col = "darkred", type = "p", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "", xlim = c(as.Date("2016-12-03"), as.Date("2017-05-04")), cex = 1.5)
 par(new = TRUE)
 
 # version 2
 # short 2017-01-09, 2017-01-24
-rect(as.Date("2017-01-09"), 0, as.Date("2017-01-24"), 79, density = 0,
-     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+rect(as.Date("2017-01-09"), 0, as.Date("2017-01-29"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # long 2017-01-31, 2017-03-28
-rect(as.Date("2017-01-31"), 0, as.Date("2017-03-28"), 79, density = 0,
+rect(as.Date("2017-01-30"), 0, as.Date("2017-03-31"), 79, density = 20,
      col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # short 2017-04-11, 2017-04-27
-rect(as.Date("2017-04-11"), 0, as.Date("2017-04-27"), 79, density = 0,
-     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+rect(as.Date("2017-04-09"), 0, as.Date("2017-04-29"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
 # long 2017-05-02, 2017-05-03
-rect(as.Date("2017-05-01"), 0, as.Date("2017-05-03"), 79, density = 0,
+rect(as.Date("2017-04-30"), 0, as.Date("2017-05-03"), 79, density = 20,
      col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
-# add overall boarder
-rect(as.Date("2017-01-09"), 0, as.Date("2017-03-28"), 79, density = 0,
-     col = "darkgray", border = NULL, lty = par("lty"), lwd = par("lwd"))
+# short
+rect(as.Date("2016-12-17"), 0, as.Date("2016-12-21"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
 
-rect(as.Date("2017-04-11"), 0, as.Date("2017-05-03"), 79, density = 0,
-     col = "darkgray", border = NULL, lty = par("lty"), lwd = par("lwd"))
+# add overall boarder
+rect(as.Date("2016-12-17"), 0, as.Date("2016-12-21"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2017-01-09"), 0, as.Date("2017-03-31"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2017-04-09"), 0, as.Date("2017-05-03"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
 
 
 # inundation exploration for methods
@@ -230,7 +251,7 @@ chl_col$pch <- ifelse(chl_col$inund_days == 0, NA,
                              ifelse(chl_col$inund_days >21, 17, NA)))
 
 par(mfrow=c(1,1))
-plot(chl_col$wy_day, chl_col$inund_days, col = chl_col$color, pch = chl_col$pch, xlim = c(50,259), cex = 2)
+plot(chl_col$wy_day, chl_col$inund_days, col = chl_col$color, pch = chl_col$pch, xlim = c(50,259), cex = 2, xlab = "Day of Water Year", ylab = "Inundation Days")
 abline(h = 22.62368, col = "black", lty = 2)
 abline(h = 17, col = "black", lty = 4)
 
@@ -239,4 +260,127 @@ mean(chl_inud$inund_days) # 22.62368
 median(chl_inud$inund_days) # 17
 
 legend("topleft", c("1999", "2000", "2002", "2003", "2004", "2005", "2006", "2010", "2011", "2013", "2016", "2017", "2018", "2019", "mean", "median"), col = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928", "#666666", "black", "black", "black"), pch = c(16,16,16,16,16,16,16,16,16,16,16,16,16,16,NA,NA), lty = c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,4))
+
+# 2019
+
+data2019_above <- subset(data2019, region == "above")
+data2019_yolo <- subset(data2019, region == "yolo")
+data2019_below <- subset(data2019, region == "below")
+
+# plot
+par(mfrow=c(3,1))
+
+# above
+plot(data2019_above $date, data2019_above $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Mainstem", xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), cex = 2)
+abline(h = 10, col = "forestgreen", lty = 2)
+legend("topright", c("Chlorophyll", "Water Temperature", "Outflow"), col = c("forestgreen", "darkred", "steelblue"), pch = 19)
+par(new = TRUE)
+
+plot(data2019_above$date, data2019_above$Q_sday, xlim=c(as.Date("2018-12-03"), as.Date("2019-05-04")), ylim=range(data2019$Q_sday),
+     col ="steelblue", type = "p", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "", cex = 1.5)
+axis(4)
+lines(data2019_above $date[order(data2019_above $date)], data2019_above $Q_sday[order(data2019_above $date)], xlim=range(data2019$date), ylim=range(data2019$Q_sday), col ="steelblue", type = "p", lty = 3, pch=19)
+mtext("Outflow", side = 4)
+par(new = TRUE)
+
+plot(data2019_above $date, data2019_above $WTmwk, col = "darkred", type = "p", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "", xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), cex = 1.5)
+par(new = TRUE)
+
+# version 2
+# short
+rect(as.Date("2019-02-15"), 0, as.Date("2019-03-07"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+# long
+rect(as.Date("2019-03-08"), 0, as.Date("2019-04-20"), 79, density = 20,
+     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+
+# short
+rect(as.Date("2019-01-20"), 0, as.Date("2019-01-25"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+# add overall boarder
+rect(as.Date("2019-01-20"), 0, as.Date("2019-01-25"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2019-02-15"), 0, as.Date("2019-04-20"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+
+
+# yolo
+plot(data2019_yolo $date, data2019_yolo $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Floodplain", xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), cex = 2)
+abline(h = 10, col = "forestgreen", lty = 2)
+par(new = TRUE)
+
+#plot(data2019$date, data2019$Q_sday, col ="steelblue", type = "b", lty = 3, pch = 19) #lines arent connecting in order
+plot(data2019_yolo$date, data2019_yolo$Q_sday, xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), ylim=range(data2019$Q_sday),
+     col ="steelblue", type = "p", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "", cex = 1.5)
+axis(4)
+lines(data2019_yolo $date[order(data2019_yolo $date)], data2019_yolo $Q_sday[order(data2019_yolo $date)], xlim=range(data2019$date), ylim=range(data2019$Q_sday), col ="steelblue", type = "p", lty = 3, pch=19)
+mtext("Outflow", side = 4)
+par(new = TRUE)
+
+plot(data2019_yolo $date, data2019_yolo $WTmwk, col = "darkred", type = "p", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "", xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), cex = 1.5)
+par(new = TRUE)
+
+# version 2
+# short
+rect(as.Date("2019-02-15"), 0, as.Date("2019-03-07"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+# long
+rect(as.Date("2019-03-08"), 0, as.Date("2019-04-20"), 79, density = 20,
+     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+
+# short
+rect(as.Date("2019-01-20"), 0, as.Date("2019-01-25"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+# add overall boarder
+rect(as.Date("2019-01-20"), 0, as.Date("2019-01-25"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2019-02-15"), 0, as.Date("2019-04-20"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+
+
+# below
+plot(data2019_below $date, data2019_below $chlorophyll, col = "forestgreen", type = "p", lty = 1, pch = 19, ylim = c(-0.3, 79), xlab = "Date", ylab = "Chlorophyll, Temperature", main = "Downstream", xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), cex = 2)
+abline(h = 10, col = "forestgreen", lty = 2)
+par(new = TRUE)
+
+plot(data2019_below$date, data2019_below$Q_sday, xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), ylim=range(data2019$Q_sday),
+     col ="steelblue", type = "p", lty = 3, pch=19, yaxt = "n", xaxt = "n", ylab = "", xlab = "", cex = 1.5)
+axis(4)
+lines(data2019_below $date[order(data2019_below $date)], data2019_below $Q_sday[order(data2019_below $date)], xlim=range(data2019$date), ylim=range(data2019$Q_sday), col ="steelblue", type = "p", lty = 3, pch=19)
+mtext("Outflow", side = 4)
+par(new = TRUE)
+
+plot(data2019_below $date, data2019_below $WTmwk, col = "darkred", type = "p", lty = 5, pch = 19, ylim = c(-0.3, 79), yaxt = "n", xaxt = "n", ylab = "", xlab = "", xlim = c(as.Date("2018-12-03"), as.Date("2019-05-04")), cex = 1.5)
+par(new = TRUE)
+
+# version 2
+# short
+rect(as.Date("2019-02-15"), 0, as.Date("2019-03-07"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+# long
+rect(as.Date("2019-03-08"), 0, as.Date("2019-04-20"), 79, density = 20,
+     col = "darkgray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+
+# short
+rect(as.Date("2019-01-20"), 0, as.Date("2019-01-25"), 79, density = 10,
+     col = "gray", border = NA, lty = par("lty"), lwd = par("lwd"))
+
+# add overall boarder
+rect(as.Date("2019-01-20"), 0, as.Date("2019-01-25"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
+
+rect(as.Date("2019-02-15"), 0, as.Date("2019-04-20"), 79, density = 0,
+     col = "black", border = NULL, lty = par("lty"), lwd = par("lwd"))
 
