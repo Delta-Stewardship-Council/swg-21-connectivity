@@ -54,3 +54,12 @@ check_chl <- chl_daily_station %>%
   mutate(is_duplicated = num_dups > 1)
 
 write.csv(chl_daily_station, "data_model/chlorophyll_fin_updated.csv")
+
+# summary for methods
+chl_daily_station <- read.csv("data_model/chlorophyll_fin_updated.csv")
+
+chl_daily_station %>%
+  group_by(location) %>%
+  summarize(total = n())
+
+range(chl_daily_station$date)
