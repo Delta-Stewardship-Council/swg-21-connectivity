@@ -1,0 +1,15 @@
+# This folder contains all necessary scripts and data to create the integrated data, run final models and produce figures 
+
+## Data
+
+### Chlorophyll
+### Flow
+### Data Integration
+1. Inundation: [inundation R package](https://github.com/goertler/inundation)
+2. Temperature: [daily mean water temperature data publication](https://portal.edirepository.org/nis/mapbrowse?packageid=edi.1178.2)
+3. Flow
+4. Chlorophyll
+
+## Models
+
+## Figures and Tables
