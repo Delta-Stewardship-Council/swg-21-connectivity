@@ -23,6 +23,9 @@ unique(downstream$station)
 
 model_p_station <- predict_gam(gamd6d, values = c(list(WTmwk = c(8, 12, 16)), list(station = c("D22", "NZ068", "16", "34", "653", "657", "USGS-11455478"))))
 
+#alternate
+model_p_station <- predict_gam(gamd6d, values = c(WTmwk = 12, list(station = c("D22", "NZ068", "16", "34", "653", "657", "USGS-11455478"))))
+
 model_p_station$lower <- model_p_station$fit - model_p_station$se.fit
 model_p_station$upper <- model_p_station$fit + model_p_station$se.fit
 
@@ -41,14 +44,14 @@ model_p_station_sub <- subset(model_p_station, corr == "yes")
 #model_p_station_sub <- !duplicated(model_p_station_sub)
 # plot
 downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
-  geom_line(size=1.25) +
+  geom_point(size=1.25) +
   geom_ribbon(data = model_p_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
   scale_x_continuous(name ="log(daily flow (cfs))") +
   ylab("Predicted Chlorophyll") +
-  facet_grid(.~ WTmwk, scales="free", space="free") +
+  #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   theme(legend.position = "none") +
-  ggtitle("Downstream Sacramento River")
+  ggtitle("Downstream")
 
 # found this online (https://cran.r-project.org/web/packages/tidymv/vignettes/predict-gam.html) slight different looking
 predict_gam(gamd6d, values = list (WTmwk = c(8, 12, 16)), exclude_terms = "station") %>%
@@ -62,7 +65,10 @@ unique(upstream$station)
 
 #model_p_upstream <- predict_gam(gamu6d, exclude_terms = "s(station)", values = list (WTmwk = c(8, 12, 16)), station = NULL)
 
-model_p_upstream <- predict_gam(gamu6d, values = c(list (WTmwk = c(8, 12, 16)), list (station = "USGS-11447650", "SHR")))
+model_p_upstream <- predict_gam(gamu6d, values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11447650", "SHR"))))
+
+#alternate
+model_p_upstream <- predict_gam(gamu6d, values = c(WTmwk = 12, list (station = c("USGS-11447650", "SHR"))))
 
 model_p_upstream$lower <- model_p_upstream$fit - model_p_upstream$se.fit
 model_p_upstream$upper <- model_p_upstream$fit + model_p_upstream$se.fit
@@ -82,14 +88,14 @@ model_p_upstream_sub <- subset(model_p_upstream, corr == "yes")
 
 # plot
 upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
-  geom_line(size=1.25) +
+  geom_point(size=1.25) +
   geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
   scale_x_continuous(name ="log(daily flow (cfs))") +
   ylab("Predicted Chlorophyll") +
-  facet_grid(.~ WTmwk, scales="free", space="free") +
+  #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
-  ggtitle("Upstream Sacramento River")
+  ggtitle("Mainstem")
 
 # gamyo6d
 yolo <- alldata %>% filter(region == "yolo")
@@ -98,6 +104,9 @@ unique(yolo$station)
 #model_p_yolo <- predict_gam(gamyo6d, exclude_terms = 's(station)', values = list (WTmwk = c(8, 12, 16)))
 
 model_p_yolo_station <- predict_gam(gamyo6d, exclude_terms = 's(station)', values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11455139", "LIS", "STTD"))))
+
+#alternate
+model_p_yolo_station <- predict_gam(gamyo6d, values = c(WTmwk = 12, list (station = c("USGS-11455139", "LIS", "STTD"))))
 
 model_p_yolo_station$lower <- model_p_yolo_station$fit - model_p_yolo_station$se.fit
 model_p_yolo_station$upper <- model_p_yolo_station$fit + model_p_yolo_station$se.fit
@@ -118,14 +127,14 @@ model_p_yolo_station_sub <- subset(model_p_yolo_station, corr == "yes")
 # plot
 
 yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
-  geom_line(size=1.25) +
+  geom_point(size=1.25) +
   geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
   scale_x_continuous(name ="log(daily flow (cfs))") +
   ylab("Predicted Chlorophyll") +
-  facet_grid(.~ WTmwk, scales="free", space="free") +
+  #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   theme(legend.position = "none") +
-  ggtitle("Yolo Bypass")
+  ggtitle("Floodplain")
 
 # stack plots
 upstream_plot + yolo_plot + downstream_plot +
