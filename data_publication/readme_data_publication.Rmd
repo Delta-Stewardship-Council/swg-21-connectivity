@@ -3,13 +3,20 @@
 ## Data
 
 ### Chlorophyll
+1. discretewq: [discrete water quality R package](https://portal.edirepository.org/nis/dataviewer?packageid=edi.731.5&entityid=6c5f35b1d316e39c8de0bfadfb3c9692)
+2. ybfmp: []()
 ### Flow
+1. Sacramento River at Verona CA (https://nwis.waterdata.usgs.gov/usa/nwis)
+2. Sacramento River at Rio Vista CA (https://nwis.waterdata.usgs.gov/usa/nwis)
+3. Yolo dayflow [inundation R package](https://github.com/goertler/inundation)
 ### Data Integration
 1. Inundation: [inundation R package](https://github.com/goertler/inundation)
 2. Temperature: [daily mean water temperature data publication](https://portal.edirepository.org/nis/mapbrowse?packageid=edi.1178.2)
-3. Flow
-4. Chlorophyll
+3. Flow [f_load_flow_verona, f_load_flow_riovista, inundation R package](https://github.com/goertler/inundation)
+4. Chlorophyll [f_load_chla]
 
 ## Models
 
 ## Figures and Tables
+
+## Supplemental 
