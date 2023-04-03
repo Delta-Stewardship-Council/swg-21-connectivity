@@ -12,8 +12,8 @@
 ### Data Integration
 1. Inundation: [inundation R package](https://github.com/goertler/inundation)
 2. Temperature: [daily mean water temperature data publication](https://portal.edirepository.org/nis/mapbrowse?packageid=edi.1178.2)
-3. Flow [f_load_flow_verona, f_load_flow_riovista, inundation R package](https://github.com/goertler/inundation)
-4. Chlorophyll [f_load_chla](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_load_chla.R)
+3. Flow: [f_load_flow_verona, f_load_flow_riovista, inundation R package](https://github.com/goertler/inundation)
+4. Chlorophyll: [f_load_chla](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_load_chla.R)
 
 ## Models
 
