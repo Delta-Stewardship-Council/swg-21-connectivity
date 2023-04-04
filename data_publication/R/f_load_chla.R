@@ -4,6 +4,7 @@ library(dplyr)
 library(readr)
 library(contentid)
 library(lubridate)
+library(data.table)
 
 f_load_chla <- function() {
   # Get contentids ---------------------------------------------------------
@@ -38,6 +39,21 @@ f_load_chla <- function() {
 
   # check
   sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #46 (had been 659 in previous script)
+  # remove NAs
+  regions_chla_covars <- regions_chla_covars[!is.na(regions_chla_covars$chlorophyll),]
+
+  # now find duplicates by day and station
+
+  duplicate_chl <- regions_chla_covars %>%
+    group_by(station, date) %>%
+    mutate(num_dups = n()) %>%
+    ungroup() %>%
+    mutate(is_duplicated = num_dups > 1)
+
+  sum(duplicate_chl$is_duplicated == TRUE) #79
+
+  # select one measurement at random
+  chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station, date)]
 
   # export data ----------------------------------------
   print("Writing to 'data_publication/data_clean/model_chla.csv'")
