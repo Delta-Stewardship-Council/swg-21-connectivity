@@ -55,9 +55,24 @@ f_load_chla <- function() {
   # select one measurement at random
   chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station, date)]
 
+  # check
+  check_chl <- chl_daily_station %>%
+    group_by(station, date) %>%
+    mutate(num_dups = n()) %>%
+    ungroup() %>%
+    mutate(is_duplicated = num_dups > 1)
+
+  sum(check_chl$is_duplicated == TRUE) #0 (looks good!)
+
+  chl_daily_station %>%
+    group_by(location) %>%
+    summarize(total = n()) # more data than in supplemental table, may still need to be subset by date
+
+  range(chl_daily_station$date)
+
   # export data ----------------------------------------
   print("Writing to 'data_publication/data_clean/model_chla.csv'")
-  readr::write_csv(join, "data_model/data_clean/model_chla.csv")
+  readr::write_csv(chl_daily_station, "data_publication/data_clean/model_chla.csv")
   }
 
-#f_load_chla()
+
