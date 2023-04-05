@@ -28,10 +28,14 @@
     b) [f_clean_flow_riovista](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_load_flow_riovista.R)
 
 ## Data Integration Scripts
-1. Data integration: [f_load_daily_covars]()
+1. Data integration: [f_integrate_model_data.R](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_integrate_model_data.R)
 
 ## Model Scripts
+1. Model:
 
-## Figures and Tables
+## Figure and Table Scripts
+1. Map: 
+2. Visualize Raw Data: 
+3. Visualize Model: 
 
 ## Supplemental 
