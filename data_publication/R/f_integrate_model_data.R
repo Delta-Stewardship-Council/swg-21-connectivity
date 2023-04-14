@@ -1,19 +1,22 @@
 # Install inundation package if necessary
-library(devtools)
+# library(devtools)
 # devtools::install_github("goertler/inundation")
 
-# Packages
-library(inundation)
-library(dplyr)
-library(lubridate)
-library(readr)
-library(zoo)
-library(tidyr)
-library(ggplot2)
-library(zoo)
-
+##########################################################
+# This script integrates covariate and chlorophyll data,
+# creating the final dataset used for our model.
+#########################################################
 
 f_integrate_model_data<- function(){
+  # Packages
+  library(inundation)
+  library(dplyr)
+  library(lubridate)
+  library(readr)
+  library(zoo)
+  library(tidyr)
+  library(ggplot2)
+  library(zoo)
 
   print("Downloading data...")
 
@@ -38,6 +41,8 @@ f_integrate_model_data<- function(){
 
 
   # Read data -------------------------------------
+
+  print("Reading data...")
 
   # inundation and yolo dayflow data
   inun <- inun_file %>%
@@ -133,13 +138,28 @@ f_integrate_model_data<- function(){
   chla_covars <- left_join(covars_long, chla, by = c("region", "doy1998", "date")) %>%
     dplyr::filter(!is.na(chlorophyll)) %>%
     dplyr::mutate(log_chla = log(chlorophyll),
-           log_qsdy = log(Q_sday)) %>%
-    dplyr::rename(station_chl = station) %>%
-    dplyr::select(c(date, doy1998, inundation, inund_days, inund_factor, region,
-             Q_sday, log_qsdy, WTmwk, chlorophyll, log_chla, station_chl))
+           log_qsdy = log(Q_sday),
+           month = lubridate::month(date),
+           year = lubridate::year(date),
+           water_year = ifelse(month > 9, year + 1, year),
+           rdoy  = lubridate::yday(date) + 92,
+           dowy = ifelse(rdoy > 366, rdoy - 366, rdoy)) %>%
+    dplyr::select(c(date, doy1998, dowy, month, water_year, inundation, inund_days, inund_factor, region,
+             Q_sday, log_qsdy, WTmwk, chlorophyll, log_chla, station))
 
+  # Filter to inundation period --------------------------------------------
+  inundPd <- chla_covars %>% filter(inundation == 1)
+  inMin <- min(inundPd$dowy)
+  inMax <- max(inundPd$dowy) + 14
+
+  filtdata <- chla_covars %>%
+    filter(dowy >= inMin & dowy <= inMax)
 
   # Write data -------------------------------------------------------
-  readr::write_csv(chla_covars, "data_publication/data_clean/model_chla_covars.csv")
+
+  print("Writing data...")
+  readr::write_csv(filtdata, "data_publication/data_clean/model_chla_covars.csv")
+
+  print("Data saved!")
 
 }
