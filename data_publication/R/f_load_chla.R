@@ -25,7 +25,7 @@ f_load_chla <- function() {
 
   # export data ----------------------------------------
   print("Writing to 'data_publication/data_clean/model_chla.csv'")
-  readr::write_csv(join, "data_model/data_clean/model_chla.csv")
+  readr::write_csv(join, "data_publication/data_clean/model_chla.csv")
   }
 
-#f_load_chla()
+f_load_chla()

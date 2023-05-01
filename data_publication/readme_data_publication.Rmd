@@ -1,17 +1,41 @@
 # This folder contains all necessary scripts and data to create the integrated data, run final models and produce figures 
 
-## Data
+## Data Sources
 
 ### Chlorophyll
+1. discretewq: [discrete water quality R package](https://portal.edirepository.org/nis/dataviewer?packageid=edi.731.5&entityid=6c5f35b1d316e39c8de0bfadfb3c9692)
+2. ybfmp: [yolo bypass fish monitoring program chlorophyll](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/data_raw/raw_ybfmp.csv)
+
+### Flow and Inundation
+1. Sacramento River at Verona CA (https://nwis.waterdata.usgs.gov/usa/nwis) - may turn into raw data file if contentID does not apply to github
+2. Sacramento River at Rio Vista CA (https://nwis.waterdata.usgs.gov/usa/nwis) - may turn into raw data file if contentID does not apply to github
+3. Yolo dayflow and inundation duration [inundation R package](https://github.com/goertler/inundation)
+
+### Water Temperature
+1. Water temperature: [daily mean water temperature in the yolo bypass and sacramento river](https://portal.edirepository.org/nis/mapbrowse?packageid=edi.1178.2)
+
+## Data Scripts
+
+### Chlorophyll
+1. Chlorophyll: [f_load_chla](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_load_chla.R)
+
 ### Flow
-### Data Integration
-1. Inundation: [inundation R package](https://github.com/goertler/inundation)
-2. Temperature: [daily mean water temperature data publication](https://portal.edirepository.org/nis/mapbrowse?packageid=edi.1178.2)
-3. Flow
-4. Chlorophyll
+1. Sacramento River at Verona: 
+    a) [f_get_flow_verona]()
+    b) [f_clean_flow_verona](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_load_flow_verona.R)
+2. Sacramento River at Rio Vista: 
+    a) [f_get_flow_riovista]()
+    b) [f_clean_flow_riovista](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_load_flow_riovista.R)
 
-## Models
+## Data Integration Scripts
+1. Data integration: [f_integrate_model_data.R](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/blob/main/data_publication/R/f_integrate_model_data.R)
 
-## Figures and Tables
+## Model Scripts
+1. Model:
+
+## Figure and Table Scripts
+1. Map: 
+2. Visualize Raw Data: 
+3. Visualize Model: 
 
 ## Supplemental 
