@@ -61,8 +61,6 @@ f_clean_discretewq <- function(){
                           'USGS_CAWSC USGS-11455143',
                           'USGS_CAWSC USGS-382010121402301')) ##Subset for stations of interest based on review
 
-  write_csv(wq_raw, "data_publication/data_raw/raw_discretewq.csv")
-
   wq <- wq_raw  %>%
     mutate(Date=ymd(Date)) %>%
     mutate(Month=month(Date)) %>%  ##standardize time format
