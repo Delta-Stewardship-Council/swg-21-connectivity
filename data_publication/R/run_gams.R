@@ -1,3 +1,11 @@
+##########################################################
+# Created by: Catarina Pien (cpien@usbr.gov)
+# Last updated: 5/2/2023
+# Description: This script runs our gams based on clean integrated data
+#   and saves the gam results as an Rdata file.
+#########################################################
+
+
 library(dplyr)
 library(readr)
 library(lubridate)
