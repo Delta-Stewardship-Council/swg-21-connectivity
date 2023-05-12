@@ -1,3 +1,5 @@
+# changed x-axis per Shruti's request (5/12/23)
+
 # library
 library(ggplot2)
 library(dplyr)
@@ -42,14 +44,15 @@ model_p_station$corr <- ifelse(model_p_station$inund_fac2 == "none" & model_p_st
 
 model_p_station_sub <- subset(model_p_station, corr == "yes")
 #model_p_station_sub <- !duplicated(model_p_station_sub)
+
 # plot
 downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
   geom_ribbon(data = model_p_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(daily flow (cfs))") +
+  scale_x_continuous(name ="log(daily flow (cfs))", limits = c(8.5, 12)) +
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  theme_vis +
+  #theme_vis +
   theme(legend.position = "none") +
   ggtitle("Downstream")
 
@@ -65,7 +68,7 @@ unique(upstream$station)
 
 #model_p_upstream <- predict_gam(gamu6d, exclude_terms = "s(station)", values = list (WTmwk = c(8, 12, 16)), station = NULL)
 
-model_p_upstream <- predict_gam(gamu6d, values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11447650", "SHR"))))
+#model_p_upstream <- predict_gam(gamu6d, values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11447650", "SHR"))))
 
 #alternate
 model_p_upstream <- predict_gam(gamu6d, values = c(WTmwk = 12, list (station = c("USGS-11447650", "SHR"))))
@@ -90,10 +93,10 @@ model_p_upstream_sub <- subset(model_p_upstream, corr == "yes")
 upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
   geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(daily flow (cfs))") +
+  scale_x_continuous(name ="log(daily flow (cfs))", limits = c(9, 11)) +
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  theme_vis +
+  #theme_vis +
   labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
   ggtitle("Mainstem")
 
@@ -103,7 +106,7 @@ unique(yolo$station)
 
 #model_p_yolo <- predict_gam(gamyo6d, exclude_terms = 's(station)', values = list (WTmwk = c(8, 12, 16)))
 
-model_p_yolo_station <- predict_gam(gamyo6d, exclude_terms = 's(station)', values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11455139", "LIS", "STTD"))))
+#model_p_yolo_station <- predict_gam(gamyo6d, exclude_terms = 's(station)', values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11455139", "LIS", "STTD"))))
 
 #alternate
 model_p_yolo_station <- predict_gam(gamyo6d, values = c(WTmwk = 12, list (station = c("USGS-11455139", "LIS", "STTD"))))
@@ -129,10 +132,10 @@ model_p_yolo_station_sub <- subset(model_p_yolo_station, corr == "yes")
 yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
   geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(daily flow (cfs))") +
+  scale_x_continuous(name ="log(daily flow (cfs))", limits = c(4, 12)) +
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  theme_vis +
+  #theme_vis +
   theme(legend.position = "none") +
   ggtitle("Floodplain")
 
