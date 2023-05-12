@@ -1,11 +1,13 @@
+##########################################################
+# Created by: Catarina Pien (cpien@usbr.gov)
+# Last updated: 5/2/2023
+# Description: This script integrates covariate and chlorophyll data,
+#   creating the final dataset used for our model.
+#########################################################
+
 # Install inundation package if necessary
 # library(devtools)
 # devtools::install_github("goertler/inundation")
-
-##########################################################
-# This script integrates covariate and chlorophyll data,
-# creating the final dataset used for our model.
-#########################################################
 
 f_integrate_model_data<- function(){
   # Packages
@@ -150,7 +152,7 @@ f_integrate_model_data<- function(){
   # Filter to inundation period --------------------------------------------
   inundPd <- chla_covars %>% filter(inundation == 1)
   inMin <- min(inundPd$dowy)
-  inMax <- max(inundPd$dowy) + 14
+  inMax <- max(inundPd$dowy)
 
   filtdata <- chla_covars %>%
     filter(dowy >= inMin & dowy <= inMax)

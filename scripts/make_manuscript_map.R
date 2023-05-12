@@ -31,7 +31,9 @@ wt_stations_file <- contentid::resolve(wt_stations_id)
 wt_stations <- readr::read_csv(wt_stations_file)
 
 # flow : Verona: 38.774444 -121.597222 NAD 27 = 38.7743454,-121.5982925 WGS 1984
-flow_stations <- data.frame(latitude = 38.7743454, longitude = -121.5982925, station = "USGS_11455420", region = "above", data_type = "flow")
+flow_stations <- data.frame(latitude = c(38.16,38.7743454), longitude = c(-121.686,-121.5982925),
+                            station = c("USGS_11455420", "USGS_11425500"),
+                            region = c("Downstream", "Mainstem"), data_type = "flow")
 
 ## California polygon
 data("us_states", package = "spData")
