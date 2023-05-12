@@ -23,7 +23,7 @@ unique(downstream$station)
 
 #model_p <- predict_gam(gamd6d, exclude_terms = "s(station)", values = list(WTmwk = c(8, 12, 16))) # exclude doesn't seem to be working, can't find anything online
 
-model_p_station <- predict_gam(gamd6d, values = c(list(WTmwk = c(8, 12, 16)), list(station = c("D22", "NZ068", "16", "34", "653", "657", "USGS-11455478"))))
+#model_p_station <- predict_gam(gamd6d, values = c(list(WTmwk = c(8, 12, 16)), list(station = c("D22", "NZ068", "16", "34", "653", "657", "USGS-11455478"))))
 
 #alternate
 model_p_station <- predict_gam(gamd6d, values = c(WTmwk = 12, list(station = c("D22", "NZ068", "16", "34", "653", "657", "USGS-11455478"))))
@@ -53,6 +53,7 @@ downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   #theme_vis +
+  theme_classic() +
   theme(legend.position = "none") +
   ggtitle("Downstream")
 
@@ -97,6 +98,8 @@ upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   #theme_vis +
+  theme_classic() +
+  theme(legend.position = "top") +
   labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
   ggtitle("Mainstem")
 
@@ -136,9 +139,15 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   #theme_vis +
+  theme_classic() +
   theme(legend.position = "none") +
   ggtitle("Floodplain")
 
 # stack plots
+png("predict_plot.png", width = 8, height = 11, units = "in", pointsize = 12,
+    bg = "white", res = 350)
+
 upstream_plot + yolo_plot + downstream_plot +
   plot_layout(ncol = 1)
+
+dev.off()
