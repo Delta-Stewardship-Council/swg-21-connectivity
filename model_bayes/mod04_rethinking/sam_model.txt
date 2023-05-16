@@ -1,0 +1,31 @@
+
+  # likelihood
+    chl ~ dnorm(mu, tau)
+  # regression
+    mu <- Bi +
+          Bj * Q[doy1998] +
+          eps[station_id]
+
+  # Priors for random effects
+  # non-identifiable random effects
+    eps[station_id] ~ dnorm(0, tau.eps)
+  # identifable random effects
+    Estar[station_id] <- eps[station_id] - mean(eps)
+
+  # Diffuse normal priors for regression coefficients
+    B ~ dnorm(0, 0.001)
+    # Identifiable parameter vector
+    Bstar[1] <- mean(eps)
+    Bstar[2] <- B
+
+
+  # Diffuse gamma prior for observation-level precisions
+    tau ~ dgamma(0.01, 0.01)
+    sig <- 1/sqrt(tau)
+
+  # Diffuse folded-t prior for random-effect standard deviation
+  # Most effective for smaller number of groups
+  sig.eps ~ dt(0, 10, 2)T(0,)
+  tau.eps <- pow(sig.eps, -2)
+
+

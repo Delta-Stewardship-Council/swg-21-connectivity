@@ -14,16 +14,17 @@ library(spData)
 library(here)
 library(readr)
 library(janitor)
-library(deltamapr)
+library(deltamapr) # devtools::install_github("InteragencyEcologicalProgram/deltamapr")
 library(cowplot)
 library(ggspatial)
 
 # Read in data --------------------------------------
 
 ## chlorophyll, nuts stations
-data_id <- contentid::store(here("data_model", "model_chla_covars_gam.csv") )
+data_id <- contentid::store(here("model_gam", "model_chla_covars_gam.csv") )
 data_file <- contentid::resolve(data_id)
 model_data <- readr::read_csv(data_file)
+
 
 # water temp, flow stations
 wt_stations_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.591.2&entityid=a059f5eea4f8500fe1a43566451ec593")
@@ -171,15 +172,10 @@ station_labels <- stations_weirs_sf_4269 %>% select(-data_type) %>% distinct()
 # Save shapefile - used this to create regions shapefile
 #write_rds(stations_sf, file = "data_raw/stations_in_dataset.rds")
 
-
 # Mapview
-
 mapview::mapview(WW_Watershed)
 
-
-
 # Make maps -----------------------------------------------
-
 
 
 ## CA Inset -----------------

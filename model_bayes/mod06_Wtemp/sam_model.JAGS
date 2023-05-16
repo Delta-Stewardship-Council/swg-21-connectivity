@@ -1,0 +1,43 @@
+model{
+  for(i in 1:N){
+  # likelihood
+    chl[i] ~ dnorm(mu[i], tau)
+    chl.rep[i] ~ dnorm(mu[i], tau)
+  # regression
+    mu[i] <- B[1] +
+             B[2] * Q[doy1999[i]] +
+             B[3] * Wtemp_RIV_mwk[doy1999[i]] +
+             B[4] * inund_days[doy1999[i]] +
+             eps[station_id[i]]
+
+  dsum[i] <- pow(chl[i] - chl.rep[i], 2)
+  }
+  # Priors for random effects
+  for(r in 1:Nstation){
+  # non-identifiable random effects
+    eps[r] ~ dnorm(0, tau.eps)
+  # identifable random effects
+    Estar[r] <- eps[r] - mean(eps[])
+  }
+
+  # Diffuse normal priors for regression coefficients
+  for(k in 1:4){
+    B[k] ~ dnorm(0, 0.001)
+    # Identifiable parameter vector
+    Bstar[k] <- B[k] + equals(k, 1)*mean(eps[])
+  }
+
+
+  # Diffuse gamma prior for observation-level precisions
+  tau ~ dgamma(0.01, 0.01)
+  sig <- 1/sqrt(tau)
+
+  # Diffuse folded-t prior for random-effect standard deviation
+  # Most effective for smaller number of groups
+  sig.eps ~ dt(0, 10, 2)T(0,)
+  tau.eps <- pow(sig.eps, -2)
+
+  # posterior predictive loss
+  Dsum <- sum(dsum[])
+}
+
