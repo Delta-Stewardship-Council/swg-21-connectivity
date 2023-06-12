@@ -35,7 +35,7 @@ f_integrate_model_data<- function(){
 
   # chla data
   chla_id <- contentid::store("data_publication/data_clean/model_chla.csv")
-  chla_file <- contentid::resolve("hash://sha256/02f714352f36813feb323b1d7837c4d2e30d314177a6f2d67f35752ed2ff2b57")
+  chla_file <- contentid::resolve("hash://sha256/ac5b7af1961462804805cbcd51bf692793a9a5fa81e901e3a802c499db9f3136")
 
   # water temp
   watertemp_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1178.2&entityid=5055c89851653f175078378a6e8ba6eb")
