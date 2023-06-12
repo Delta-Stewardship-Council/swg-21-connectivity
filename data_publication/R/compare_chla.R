@@ -9,9 +9,11 @@ setwd("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication")
 
 #new model data
 new <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/data_clean/model_chla_covars.csv")
+new <- read_csv("data_publication/data_clean/model_chla_covars.csv")
 
 #old model data
 old <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_model/model_chla_covars_gam.csv")
+old <- read_csv("data_model/model_chla_covars_gam.csv")
 
 #filter old model data to inundation period
 
@@ -24,7 +26,8 @@ inMin <- min(inundPd$dowy)
 inMax <- max(inundPd$dowy)
 
 filtdata <- old %>%
-  filter(dowy >= inMin & dowy <= inMax)
+  filter(dowy >= inMin & dowy <= inMax,
+         region!="cache")
 
 #compare filtdata (old) to new----------------
 
@@ -51,12 +54,15 @@ filtdata <- filtdata %>%
   rename(station = station_wq_chl)
 
 old_USGS <- filtdata %>%
-  subset(station == c('USGS-11455139', 'USGS-11455478')) %>%
+  subset(station %in% c('USGS-11455139', 'USGS-11455478')) %>%
   select(c(1:2,5))
 
 new_USGS <- new %>%
-  subset(station == c('USGS-11455139','USGS-11455478')) %>%
+  subset(station %in% c('USGS-11455139','USGS-11455478')) %>%
   select(c(15, 1, 13))
+
+check <- anti_join(old_USGS, new_USGS) # this is the real number of missing values
+write_csv(check, "data_publication/data_raw/missing_chla_in_new_dataset.csv")
 
 #concat dfs
 all <- rbind(old_USGS, new_USGS)
