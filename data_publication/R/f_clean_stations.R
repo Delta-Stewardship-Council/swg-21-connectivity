@@ -10,6 +10,7 @@ library(janitor)
 library(dplyr)
 library(here)
 library(contentid)
+library(lubridate)
 
 # Flow ------------------
 # dayflow data inputs are from USGS sites:
@@ -112,6 +113,7 @@ stations_all <- stations_chl %>%
                                   station == "SRV" ~ "Sacramento River at Rio Vista",
                                   station == "USGS_11454210" ~ "Putah South CN near Winters",
                                   station == "USGS_11455420" ~ "Sacramento River at Rio Vista",
+                                  station == "16" ~ "Sacramento River at Sherman Island",
                                   TRUE ~ as.character(station_name))) %>%
   mutate(`agency-program` = case_when(station == "RIV" ~ "USBR",
                                   station == "SRV" ~ "USGS",

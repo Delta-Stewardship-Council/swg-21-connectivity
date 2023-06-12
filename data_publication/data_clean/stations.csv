@@ -4,7 +4,7 @@ latitude,longitude,station,region,data_type,station_name,agency-program,sampling
 38.47482,-121.5886,LIS,floodplain,"chlorophyll,wtemp",Yolo Bypass Toe Drain Below Lisbon Weir,"DWR-YBFMP, DWR-NCRO",2 weeks
 38.08453,-121.7391,D22,downstream,chlorophyll,Sacramento River at Emmaton/Three Mile Slough,USBR,monthly
 38.14272,-121.6895,NZ068,downstream,chlorophyll,Sacramento River below Rio Vista Bridge near United States Coast Guard station,DWR-EMP,monthly
-38.0889,-121.7425,16,downstream,chlorophyll,NA,USBR,monthly
+38.0889,-121.7425,16,downstream,chlorophyll,Sacramento River at Sherman Island,USBR,monthly
 38.1576,-121.6856,34,downstream,chlorophyll,Sacramento River at Rio Vista,USBR,monthly
 38.105,-121.72,653,downstream,chlorophyll,Mid-Decker Island,USGS,monthly
 38.151667,-121.688333,657,downstream,flow,Rio Vista,USGS,monthly
