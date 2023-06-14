@@ -5,14 +5,12 @@ library(stringr)
 library(flextable)
 library(lubridate)
 
-setwd("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication")
-
 #new model data
-new <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/data_clean/model_chla_covars.csv")
+
 new <- read_csv("data_publication/data_clean/model_chla_covars.csv")
 
 #old model data
-old <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_model/model_chla_covars_gam.csv")
+
 old <- read_csv("data_model/model_chla_covars_gam.csv")
 
 #filter old model data to inundation period
@@ -72,10 +70,33 @@ missing <- distinct(all) #produced 22, which is different from compare table (I 
 missing <- all %>%
   distinct(.keep_all = TRUE)
 
+#test direct WQP retrieval - "missing" samples are in WQP-----------------
 
+#library(dataRetrieval)
 
+#siteNumbers<-c('USGS-11455139',
+               #'USGS-11455478')
 
+#parameterCd <- "70953"
 
+#cawsc <- readWQPqw(siteNumbers, parameterCd)
 
+#remove unneeded columns
 
+#cawsc_sub <- subset(cawsc, select = c('MonitoringLocationIdentifier', 'ActivityStartDateTime', 'ResultMeasureValue'))
+
+#review discretewq package----------------------------
+#bring in discretewq > data > USGS_CAWSC.rda to environ - "missing" samples are in discretewq
+
+#filt_discretewq <- USGS_CAWSC %>%
+  #subset(Station %in% c('USGS-11455139', 'USGS-11455478')) %>%
+  #filter(!is.na(Chlorophyll)) %>%
+  #select(2,5,8)
+
+#reveiw results of NCEAS f_clean_discretewq - "missing" samples are missing---------------
+
+#NCEAS_clean_discretewq<- read_csv("data_publication/data_clean/clean_discretewq.csv")
+
+#NCEAS_clean <- NCEAS_clean_discretewq %>%
+  #subset(station %in% c('USGS-11455139', 'USGS-11455478'))
 

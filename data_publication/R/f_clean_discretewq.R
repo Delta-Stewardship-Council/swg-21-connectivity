@@ -22,7 +22,7 @@ f_clean_discretewq <- function(){
     lat_mean <- mean(wq_raw$Latitude)
     long_mean <- mean(wq_raw$Longitude)
 
-  # save raw file
+  # filter and clean
     wq_raw <- source_url  %>%
     read_csv(show_col_types = FALSE) %>%
     filter(!is.na(Chlorophyll)) %>% ##remove observations without Chla data
