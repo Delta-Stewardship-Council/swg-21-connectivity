@@ -1,12 +1,6 @@
 # make dag of repo workflow
 
 library(nomnoml)
-#E0EEEE blue
-#3A5FCD steelblue3
-#FFEBCD light orange
-#EEC591 darkorange
-#D9D9D9 gray85
-#2F4F4F darkslategrey
 
 ## Make the text:
 nom1 <-
