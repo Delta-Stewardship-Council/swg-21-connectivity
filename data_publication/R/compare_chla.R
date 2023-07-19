@@ -96,13 +96,23 @@ usgs_all <- bind_rows(USGS_new, USGS_old)
 usgs_all %>% group_by(date) %>% tally() %>%
   filter(n==1) %>% View()
 
+# figure out which station/date record is missing or added
+# to see how many were dropped from original data
 
-usgs_all %>%
-  group_by(station, date, )
+# get site/dates that have old records but not a matching new record
+# make wider for easier filtering
+usgs_all <- tidyr::pivot_wider(usgs_all, names_from = id, values_from = id)
 
-#write_csv(check, "data_publication/data_raw/missing_chla_in_new_dataset.csv")
+# now filter to rows that have only new records (added since old data)
+usgs_new_only <- usgs_all %>% filter(new == "new" & is.na(old))
+nrow(usgs_new_only) # n=183 new records
 
+# now filter to rows that only have old records (were not brought forward)
+usgs_old_only <- usgs_all %>% filter(old == "old" & is.na(new)) %>%
+nrow(usgs_old_only) # n=14 old records
 
-missing <- dplyr::distinct(all) #produced 22, which is different from compare table (I expected 14)
+# so these 14 records were filtered out at some point. We can't find where at the moment!
+usgs_old_only %>% select(-c(old, new)) %>%
+  write_csv("data_publication/data_raw/missing_chla_in_new_dataset.csv")
 
 
