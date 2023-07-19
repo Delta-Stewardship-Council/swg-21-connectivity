@@ -5,20 +5,44 @@ library(stringr)
 library(flextable)
 library(lubridate)
 
-setwd("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication")
+# Chl-a Data --------
 
-#new model data
-new <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/data_clean/model_chla_covars.csv")
-new <- read_csv("data_publication/data_clean/model_chla_covars.csv")
+new <- read_csv("data_publication/data_clean/model_chla.csv")
+length(unique(new$station))
 
-#old model data
-old <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_model/model_chla_covars_gam.csv")
-old <- read_csv("data_model/model_chla_covars_gam.csv")
+new_covar <- read_csv("data_publication/data_clean/model_chla_covars.csv")
+length(unique(new_covar$station))
+
+# in model_chla: 26 distinct stations
+distinct(new, station)
+
+# in model_chla_covars: 12 distinct stations
+distinct(new_covar, station)
+
+# Clean discreteWQ ---------
+
+discWQ <- read_csv("data_publication/data_clean/clean_discretewq.csv")
+
+distinct(discWQ, station)
+
+# 23 total distinct stations from clean_discretewq
+# and 3 from ybfmp
+
+## 12 stations in Model data (load("data_publication/data_clean/data_gam_results.Rdata"))
+
+# Old Model Data ----------------------------------------------------------
+
+# this data came from two functions in scripts/functions:
+# f_load_model_chla_covars_data.R
+# f_load_model_chla_covars_data_nonuts.R
+
+old <- read_csv("model_gam/model_chla_covars_gam.csv")
+
+length(unique(old$station_wq_chl))
 
 #filter old model data to inundation period
 
 old$rdoy <-  lubridate::yday(old$date) + 92
-
 old$dowy <- ifelse(old$rdoy > 366, old$rdoy - 366, old$rdoy)
 
 inundPd <- old %>% filter(inundation == 1)
@@ -27,55 +51,68 @@ inMax <- max(inundPd$dowy)
 
 filtdata <- old %>%
   filter(dowy >= inMin & dowy <= inMax,
-         region!="cache")
+         region!="cache") %>%
+  dplyr::rename(station = station_wq_chl)
+
+length(unique(filtdata$station))
 
 #compare filtdata (old) to new----------------
 
-new_summary <- new %>%
-  group_by(station) %>%
-  summarize(n = n())
+# look at number of records for each station from the datasets
+new_summary <- new_covar %>%
+  group_by(station) %>% tally(name = "n_12")
 
-new_summary <- new_summary %>%
-  rename(n_new = n)
+new_nocovars_summary <- new %>%
+  group_by(station) %>% tally(name = "n_26")
 
-old_summary <- filtdata %>%
-  group_by(station_wq_chl)%>%
-  summarize(n = n())
+filtold_summary <- filtdata %>%
+  group_by(station) %>% tally(name = "n_old")
 
-old_summary <- old_summary %>%
-  rename(station = station_wq_chl,
-         n_old = n)
+site_summary <- left_join(new_summary, new_nocovars_summary)
 
-compare <- full_join(new_summary, old_summary, by = "station")
+site_summary <- left_join(site_summary, filtold_summary)
+
+# so difference of 14 records between the model dataset (new), and the orig (old) dataset
+
+# sites (new vs old)
+# STTD: 135 vs. 133
+# USGS-11455139: 7 vs 11
+# USGS-11455478: 11 vs. 21
 
 # create old and new USGS df---------------------------
 
-filtdata <- filtdata %>%
-  rename(station = station_wq_chl)
+USGS_old <- filtdata %>%
+  filter(station %in% c('STTD', 'USGS-11455139', 'USGS-11455478')) %>%
+  select(c(station,date,chlorophyll,doy1998)) %>%
+  mutate(id = "old")
 
-old_USGS <- filtdata %>%
-  subset(station %in% c('USGS-11455139', 'USGS-11455478')) %>%
-  select(c(1:2,5))
+USGS_new <- new %>%
+  filter(station %in% c('STTD','USGS-11455139','USGS-11455478')) %>%
+  select(c(station,date,chlorophyll,doy1998)) %>%
+  mutate(id = "new")
 
-new_USGS <- new %>%
-  subset(station %in% c('USGS-11455139','USGS-11455478')) %>%
-  select(c(15, 1, 13))
+usgs_all <- bind_rows(USGS_new, USGS_old)
 
-check <- anti_join(old_USGS, new_USGS) # this is the real number of missing values
-write_csv(check, "data_publication/data_raw/missing_chla_in_new_dataset.csv")
+usgs_all %>% group_by(date) %>% tally() %>%
+  filter(n==1) %>% View()
 
-#concat dfs
-all <- rbind(old_USGS, new_USGS)
+# figure out which station/date record is missing or added
+# to see how many were dropped from original data
 
-missing <- distinct(all) #produced 22, which is different from compare table (I expected 14)
+# get site/dates that have old records but not a matching new record
+# make wider for easier filtering
+usgs_all <- tidyr::pivot_wider(usgs_all, names_from = id, values_from = id)
 
-missing <- all %>%
-  distinct(.keep_all = TRUE)
+# now filter to rows that have only new records (added since old data)
+usgs_new_only <- usgs_all %>% filter(new == "new" & is.na(old))
+nrow(usgs_new_only) # n=183 new records
 
+# now filter to rows that only have old records (were not brought forward)
+usgs_old_only <- usgs_all %>% filter(old == "old" & is.na(new)) %>%
+nrow(usgs_old_only) # n=14 old records
 
-
-
-
-
+# so these 14 records were filtered out at some point. We can't find where at the moment!
+usgs_old_only %>% select(-c(old, new)) %>%
+  write_csv("data_publication/data_raw/missing_chla_in_new_dataset.csv")
 
 
