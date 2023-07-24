@@ -1,3 +1,5 @@
+library(ggplot2)
+
 theme_vis <- theme_bw() +
   theme(strip.background = element_rect(color = "black", fill = "white"),
         axis.text = element_text(size = 10),
@@ -9,7 +11,7 @@ theme_vis <- theme_bw() +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-library(ggplot2)
+
 str(iris)
 
 ggplot(iris) +

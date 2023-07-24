@@ -9,7 +9,7 @@ library(patchwork)
 
 # data
 
-load("data_model/gams_origdata.Rdata")
+load("model_gam/gams_origdata.Rdata")
 downstream <- alldata %>% filter(region == "below")
 unique(downstream$station)
 
@@ -52,8 +52,8 @@ downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund
   scale_x_continuous(name ="log(daily flow (cfs))", limits = c(8.5, 12)) +
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  #theme_vis +
-  theme_classic() +
+  theme_vis +
+  #theme_classic() +
   theme(legend.position = "none") +
   ggtitle("Downstream")
 
@@ -97,8 +97,8 @@ upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_
   scale_x_continuous(name ="log(daily flow (cfs))", limits = c(9, 11)) +
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  #theme_vis +
-  theme_classic() +
+  theme_vis +
+  #theme_classic() +
   theme(legend.position = "top") +
   labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
   ggtitle("Mainstem")
@@ -138,8 +138,8 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   scale_x_continuous(name ="log(daily flow (cfs))", limits = c(4, 12)) +
   ylab("Predicted Chlorophyll") +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  #theme_vis +
-  theme_classic() +
+  theme_vis +
+  #theme_classic() +
   theme(legend.position = "none") +
   ggtitle("Floodplain")
 
