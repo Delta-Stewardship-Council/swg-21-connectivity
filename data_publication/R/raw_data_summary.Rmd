@@ -1,0 +1,166 @@
+---
+title: "Connectivity model summary statistics - raw data"
+author: "Liz Stumpner"
+date: "2023-06-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, fig.width=15, fig.height=15)
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(stringr)
+library(flextable)
+library(lubridate)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(broom)
+```
+The RMD is used to summarize the raw data used in the Connectivity GAM model. The
+results of the output table are used in the body of the methods text
+
+```{r}
+#update to new model data when 2023 discretewq comparison is vetted
+
+#new <- read_csv("data_publication/data_clean/model_chla_covars.csv")
+
+#for now, use old model data
+
+old <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/model_gam/model_chla_covars_gam.csv")
+
+#filter old model data to inundation period
+
+old$rdoy <-  lubridate::yday(old$date) + 92
+
+old$dowy <- ifelse(old$rdoy > 366, old$rdoy - 366, old$rdoy)
+
+inundPd <- old %>% filter(inundation == 1)
+inMin <- min(inundPd$dowy)
+inMax <- max(inundPd$dowy)
+
+filtdata <- old %>%
+  filter(dowy >= inMin & dowy <= inMax,
+         region!="cache")
+
+#summary stats
+
+dryPd <- filtdata %>%
+  filter(inundation == 0) #filtdata 519
+
+unique(dryPd$region)
+
+wetPd <- filtdata %>%
+  filter(inundation == 1) #filtdata 143
+
+unique(wetPd$region)
+
+#519+143 = 662
+
+data_tbl <- filtdata %>%
+  select(chlorophyll, WTmday, Q_sday,region, water_year, inundation)
+
+data_tbl <- unique(data_tbl)
+
+#summarize by region and inundation
+
+data_tbl <- data_tbl %>%
+  group_by(region, inundation) %>%
+  summarize(min_chla = min(chlorophyll),
+            max_chla = max(chlorophyll),
+            mean_chla = mean(chlorophyll),
+            r_chla = max_chla-min_chla,
+            sd_chla = sd(chlorophyll),
+            min_WTmday = min(WTmday),
+            max_WTmday = max(WTmday),
+            mean_WTmday = mean(WTmday),
+            r_WTmday = max_WTmday - min_WTmday,
+            sd_WTmday = sd(WTmday),
+            min_Q_sday = min(Q_sday),
+            max_Q_sday = max(Q_sday),
+            mean_Q_sday = mean(Q_sday),
+            sd_Q_sday = sd(Q_sday),
+            n = n())
+
+#round values
+data_tbl$min_chla <- round(data_tbl$min_chla, 1)
+data_tbl$max_chla <- round(data_tbl$max_chla, 1)
+data_tbl$mean_chla <- round(data_tbl$mean_chla, 1)
+data_tbl$r_chla <- round(data_tbl$r_chla, 1)
+data_tbl$sd_chla <- round(data_tbl$sd_chla, 1)
+data_tbl$min_WTmday <- round(data_tbl$min_WTmday, 1)
+data_tbl$max_WTmday <- round(data_tbl$max_WTmday, 1)
+data_tbl$mean_WTmday <- round(data_tbl$mean_WTmday, 1)
+data_tbl$r_WTmday <- round(data_tbl$r_WTmday, 1)
+data_tbl$sd_WTmday <- round(data_tbl$sd_WTmday, 1)
+data_tbl$min_Q_sday <- round(data_tbl$min_Q_sday, 0)
+data_tbl$max_Q_sday <- round(data_tbl$max_Q_sday, 0)
+data_tbl$mean_Q_sday <- round(data_tbl$mean_Q_sday, 0)
+data_tbl$sd_Q_sday <- round(data_tbl$sd_Q_sday, 0)
+
+
+data_tbl <- data_tbl %>% 
+  rename('inun' = 'inundation')
+#data_tbl<- data_tbl %>%
+  #mutate_at(vars(-c(inun, n), funs(round(., 1))))
+
+flextable(data_tbl)
+
+write_csv(data_tbl, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_inun.csv")
+
+#summarize by region 
+
+data_tbl2 <- filtdata %>%
+  select(chlorophyll, WTmday, Q_sday, region, water_year)
+
+data_tbl2 <- unique(data_tbl2)
+
+data_tbl2 <- data_tbl2 %>%
+  group_by(region) %>%
+  summarize(min_chla = min(chlorophyll),
+            max_chla = max(chlorophyll),
+            mean_chla = mean(chlorophyll),
+            r_chla = max_chla-min_chla,
+            sd_chla = sd(chlorophyll),
+            min_WTmday = min(WTmday),
+            max_WTmday = max(WTmday),
+            mean_WTmday = mean(WTmday),
+            r_WTmday = max_WTmday - min_WTmday,
+            sd_WTmday = sd(WTmday),
+            min_Q_sday = min(Q_sday),
+            max_Q_sday = max(Q_sday),
+            mean_Q_sday = mean(Q_sday),
+            sd_Q_sday = sd(Q_sday),
+            n = n())
+
+#round values
+data_tbl2$min_chla <- round(data_tbl2$min_chla, 1)
+data_tbl2$max_chla <- round(data_tbl2$max_chla, 1)
+data_tbl2$mean_chla <- round(data_tbl2$mean_chla, 1)
+data_tbl2$r_chla <- round(data_tbl2$r_chla, 1)
+data_tbl2$sd_chla <- round(data_tbl2$sd_chla, 1)
+data_tbl2$min_WTmday <- round(data_tbl2$min_WTmday, 1)
+data_tbl2$max_WTmday <- round(data_tbl2$max_WTmday, 1)
+data_tbl2$mean_WTmday <- round(data_tbl2$mean_WTmday, 1)
+data_tbl2$r_WTmday <- round(data_tbl2$r_WTmday, 1)
+data_tbl2$sd_WTmday <- round(data_tbl2$sd_WTmday, 1)
+data_tbl2$min_Q_sday <- round(data_tbl2$min_Q_sday, 0)
+data_tbl2$max_Q_sday <- round(data_tbl2$max_Q_sday, 0)
+data_tbl2$mean_Q_sday <- round(data_tbl2$mean_Q_sday, 0)
+data_tbl2$sd_Q_sday <- round(data_tbl2$sd_Q_sday, 0)
+
+
+#data_tbl2<- data_tbl2 %>%
+  #mutate_at(vars(-c(inun, n), funs(round(., 1))))
+
+flextable(data_tbl2)
+
+write_csv(data_tbl2, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_region.csv")
+
+
+```
+
+
