@@ -17,6 +17,7 @@ library(janitor)
 library(deltamapr) # devtools::install_github("InteragencyEcologicalProgram/deltamapr")
 library(cowplot)
 library(ggspatial)
+library(tigris)
 
 # Read in data --------------------------------------
 
@@ -177,6 +178,9 @@ mapview::mapview(WW_Watershed)
 
 # Make maps -----------------------------------------------
 
+# or try ne_coastline from rnaturalearth
+ca <- states(cb=TRUE, progress_bar = FALSE) %>%
+  dplyr::filter(STUSPS %in% c("CA"))
 
 ## CA Inset -----------------
 insetbbox0 = st_as_sfc(st_bbox(stations_sf_4269))
@@ -207,7 +211,6 @@ stations_crop <- st_crop(stations_sf_4269, cachebbox)
 regions_crop <- st_crop(regions_final, cachebbox)
 stnlabel_crop <- st_crop(station_labels, cachebbox)
 WW_Watershed_crop2 <- st_crop(WW_Watershed_4269, cachebbox)
-
 
 Sloughs <- WW_Watershed_crop %>% filter(HNAME %in% c("Steamboat Slough", "Miner Slough", "Sutter Slough",
                                                      "Elk Slough", "Lindsey Slough", "PUTAH CREEK",
@@ -243,11 +246,13 @@ ToeD <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Toe Drain"))
 SanJ <- WW_Watershed_crop3 %>% filter(HNAME %in% c("San Joaquin River", "SAN JOAQUIN RIVER"))
 Suisun <- WW_Watershed_crop3 %>% filter(HNAME %in% c("SUISUN CUTOFF", "SUISUN BAY"))
 
+
 sort(unique(WW_Watershed$HNAME))
 
 (delta_map <- ggplot() +
     geom_sf(data = yolo_4269, fill = "tan1", colour = "tan1", alpha = 0.3) +
     geom_sf(data = WW_Watershed_crop3, fill = "lightgrey", colour = "lightgrey", alpha = 0.4, inherit.aes = FALSE) +
+    geom_sf(data = ca, inherit.aes=FALSE, fill = NA, color = "grey40", alpha = 0.4) +
     geom_sf(data = SacR, colour = "steelblue", fill = "steelblue", alpha = 0.6, inherit.aes = FALSE)+
     geom_sf(data = SanJ, colour = "orange", fill = "orange", alpha = 0.6, inherit.aes = FALSE)+
     #geom_sf(data = Suisun, colour = "bisque3", fill = "bisque3", alpha = 0.6, inherit.aes = FALSE)+
@@ -262,8 +267,8 @@ sort(unique(WW_Watershed$HNAME))
     annotate(geom = "text", x = -122.05, y = 38.17, label = "Suisun Marsh", fontface = "italic") +
     annotate(geom = "text", x = -121.8, y = 38.42, label = "Yolo Bypass", fontface = "italic") +
     annotate(geom = "text", x = -122.2, y = 37.7, label = "San Francisco Bay", fontface = "italic") +
-    annotate(geom = "text", x = -122.61, y = 37.8, label = "Pacific Ocean", fontface = "italic", angle = 90) +
-    annotate("segment", x = -122.45, xend = -122.58, y = 37.84, yend = 37.84,
+    annotate(geom = "text", x = -122.7, y = 37.7, label = "Pacific Ocean", fontface = "italic", angle = 90) +
+    annotate("segment", x = -122.52, xend = -122.65, y = 37.8, yend = 37.73,
              arrow = arrow(ends = "first", type = "closed", length = unit(0.5, "cm")),alpha = 0.8,  color = "navy") +
     annotation_north_arrow(location = "tr", which_north = "true",
                            pad_x = unit(.005, "in"), pad_y = unit(0.15, "in"),
@@ -282,6 +287,7 @@ sort(unique(WW_Watershed$HNAME))
     #scale_fill_viridis(discrete = TRUE, option = "mako", direction = -1) +
   #scale_colour_viridis(discrete = TRUE, option = "mako", direction = -1) +
   #labs(title = "A")+
+  coord_sf(xlim = c(-122.8, -121), ylim = c(37.4, 38.9)) +
   theme_bw() +
     theme(axis.title = element_blank(),
         axis.text = element_text(size = 13) ,
@@ -346,7 +352,7 @@ delta_map
 ## California inset--------------------------------------------------
 (gg_inset_map = ggdraw() +
    draw_plot(delta_map) +
-   draw_plot(inset, x = 0.14, y = 0.6, width = 0.26, height = 0.31))
+   draw_plot(inset, x = 0.16, y = 0.57, width = 0.25, height = 0.30))
 
 
 ## Combine with patchwork -------------------------------------
@@ -361,26 +367,28 @@ library(patchwork)
 #                                           legend.margin = margin())
 # patchmap2
 
-patchmap3 <- (gg_inset_map | map_stations) + plot_layout(widths = c(3.9, 2.35)) +
-  #plot_annotation(tag_levels = "A") +
-  plot_layout(guides = 'collect') & theme(legend.position = "top", legend.box = "vertical",
-                                          legend.margin = margin())
-patchmap3
-ggsave("figures/manuscript_map5.png", width = 8, height = 7, units = "in", device = 'png', dpi = 300)
+# patchmap3 <- (gg_inset_map | map_stations) + plot_layout(widths = c(3.9, 2.35)) +
+#   #plot_annotation(tag_levels = "A") +
+#   plot_layout(guides = 'collect') & theme(legend.position = "top", legend.box = "vertical",
+#                                           legend.margin = margin())
+#patchmap3
+
+#ggsave("figures/manuscript_map5.png", width = 8, height = 7, units = "in", device = 'png', dpi = 300)
 
 
 
-patchmap4 <- guide_area() / (gg_inset_map | map_stations) + plot_layout(widths = c(6.5, 4.1, 2.2), heights = c(6)) +
-  plot_annotation(tag_levels = "A") +
-  plot_layout(guides = 'collect') & theme(legend.position = "top", legend.box = "vertical",
-                                          legend.margin = margin())
-patchmap4
-ggsave("figures/manuscript_map6.png", width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
+# patchmap4 <- guide_area() / (gg_inset_map | map_stations) + plot_layout(widths = c(6.5, 4.1, 2.2), heights = c(6)) +
+#   plot_annotation(tag_levels = "A") +
+#   plot_layout(guides = 'collect') & theme(legend.position = "top", legend.box = "vertical",
+#                                           legend.margin = margin())
+# patchmap4
+# ggsave("figures/manuscript_map6.png", width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
 
 
-patchmap5 <- gg_inset_map + plot_spacer() + map_stations  + plot_layout(widths = c(4.1, 0.1, 2.2), heights = c(7))
+patchmap5 <- gg_inset_map + plot_spacer() + map_stations  + plot_layout(widths = c(4.1, 0.05, 2.2))
 patchmap5
-ggsave("figures/manuscript_map7.png", width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
+
+ggsave("figures/manuscript_map7_rev.png", width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
 
 ## Save map png--------------------------------------------
 
