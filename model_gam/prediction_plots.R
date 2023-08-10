@@ -12,6 +12,12 @@ load("model_gam/gams_origdata.Rdata")
 downstream <- alldata %>% filter(region == "below")
 unique(downstream$station)
 
+# colors
+# none - #cc79A7
+# short - #D55E00
+# long - #0072B2
+ada_cols <- c("#0072B2", "#cc79A7", "#D55E00")
+
 #gamu6d prediction
 #range(downstream$log_qsdy)
 #new_dat<- data.frame(log_qsdy = rep(seq(4.5, 11.5, length.out = 75), 3),
@@ -47,14 +53,17 @@ model_p_station_sub <- subset(model_p_station, corr == "yes")
 # plot
 downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
+  scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(Q)", limits = c(8.5, 12)) +
-  ylab("Predicted log(Chl)") +
+  scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
+  scale_x_continuous(name =expression(log[e](Q)), limits = c(8.5, 12)) +
+  ylab(expression(log[e](Chl))) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
   theme(legend.position = "none") +
   labs(title = "Downstream", tag = "(c)")
+
 
 # found this online (https://cran.r-project.org/web/packages/tidymv/vignettes/predict-gam.html) slight different looking
 predict_gam(gamd6d, values = list (WTmwk = c(8, 12, 16)), exclude_terms = "station") %>%
@@ -93,9 +102,11 @@ model_p_upstream_sub <- subset(model_p_upstream, corr == "yes")
 # plot
 upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
+  scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(Q))", limits = c(9, 11)) +
-  ylab("Predicted log(Chl)") +
+  scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
+  scale_x_continuous(name =expression(log[e](Q)), limits = c(9, 11)) +
+  ylab(expression(log[e](Chl))) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
@@ -136,9 +147,11 @@ model_p_yolo_station_sub <- subset(model_p_yolo_station, corr == "yes")
 
 yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
+  scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(Q)", limits = c(4, 11)) +
-  ylab("Predicted (Chl)") +
+  scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
+  scale_x_continuous(name =expression(log[e](Q)), limits = c(4, 11)) +
+  ylab(expression(log[e](Chl))) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
