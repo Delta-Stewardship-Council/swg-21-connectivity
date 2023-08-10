@@ -9,7 +9,6 @@ library(patchwork)
 
 # data
 
-load("model_gam/gams_origdata.Rdata")
 downstream <- alldata %>% filter(region == "below")
 unique(downstream$station)
 
@@ -144,7 +143,7 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   ggtitle("Floodplain")
 
 # stack plots
-png("predict_plot.png", width = 8, height = 11, units = "in", pointsize = 12,
+png("predict_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
     bg = "white", res = 350)
 
 upstream_plot + yolo_plot + downstream_plot +
