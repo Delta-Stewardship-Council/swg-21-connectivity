@@ -8,7 +8,7 @@ library(tidymv)
 library(patchwork)
 
 # data
-
+load("model_gam/gams_origdata.Rdata")
 downstream <- alldata %>% filter(region == "below")
 unique(downstream$station)
 
@@ -54,7 +54,7 @@ downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund
   theme_vis +
   #theme_classic() +
   theme(legend.position = "none") +
-  ggtitle("Downstream")
+  labs(title = "Downstream", tag = "(c)")
 
 # found this online (https://cran.r-project.org/web/packages/tidymv/vignettes/predict-gam.html) slight different looking
 predict_gam(gamd6d, values = list (WTmwk = c(8, 12, 16)), exclude_terms = "station") %>%
@@ -99,8 +99,9 @@ upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_
   theme_vis +
   #theme_classic() +
   theme(legend.position = "top") +
-  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
-  ggtitle("Mainstem")
+  labs(title = "Mainstem", tag = "(a)") +
+  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") #+
+  #ggtitle("Mainstem")
 
 # gamyo6d
 yolo <- alldata %>% filter(region == "yolo")
@@ -140,7 +141,7 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   theme_vis +
   #theme_classic() +
   theme(legend.position = "none") +
-  ggtitle("Floodplain")
+  labs(title = "Floodplain", tag = "(b)")
 
 # stack plots
 png("predict_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
