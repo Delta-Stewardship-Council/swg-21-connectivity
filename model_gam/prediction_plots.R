@@ -61,8 +61,10 @@ downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
-  theme(legend.position = "none") +
-  labs(title = "Downstream", tag = "(c)")
+  #theme(legend.position = "none") +
+  labs(title = "Downstream", tag = "(c)") +
+  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
+  theme(legend.position = "bottom")
 
 
 # found this online (https://cran.r-project.org/web/packages/tidymv/vignettes/predict-gam.html) slight different looking
@@ -110,9 +112,10 @@ upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
-  theme(legend.position = "top") +
+  #theme(legend.position = "top") +
   labs(title = "Mainstem", tag = "(a)") +
-  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") #+
+  theme(legend.position = "none")
+  #labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") #+
   #ggtitle("Mainstem")
 
 # gamyo6d
