@@ -39,7 +39,7 @@ f_load_chla <- function() {
   head(regions_chla_covars)
 
   # check
-  sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #44 (had been 659 in previous script)
+  sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #44
   # remove NAs
   regions_chla_covars <- regions_chla_covars[!is.na(regions_chla_covars$chlorophyll),]
 
@@ -51,7 +51,7 @@ f_load_chla <- function() {
     ungroup() %>%
     mutate(is_duplicated = num_dups > 1)
 
-  sum(duplicate_chl$is_duplicated == TRUE) #79
+  sum(duplicate_chl$is_duplicated == TRUE) #168
 
   # select one measurement at random
   chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station, date)]

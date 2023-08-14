@@ -9,7 +9,7 @@ library(lubridate)
 
 f_clean_discretewq <- function(){
 
-  source_url <- "https://portal.edirepository.org/nis/dataviewer?packageid=edi.731.5&entityid=6c5f35b1d316e39c8de0bfadfb3c9692"
+  source_url <- "https://portal.edirepository.org/nis/dataviewer?packageid=edi.731.7&entityid=6c5f35b1d316e39c8de0bfadfb3c9692"
 
   wq_raw <- source_url %>%  ##First step: populating missing spatial data--EZ2 is a moving station, taking the mean across all observations
     read_csv(show_col_types = FALSE) %>%
@@ -71,7 +71,7 @@ f_clean_discretewq <- function(){
   wq$latitude[is.na(wq$latitude)] = lat_mean
     wq$longitude[is.na(wq$longitude)] = long_mean
 
-  wq <- subset(wq, select = c(2:4,6,23))
+  wq <- subset(wq, select = c(2:4,6,33))
 
   wq$station <- gsub('EMP ', '', wq$station)
 
@@ -82,6 +82,10 @@ f_clean_discretewq <- function(){
   wq$station <- gsub('USGS_SFBS ', '', wq$station)
 
   write_csv(wq, "data_publication/data_clean/clean_discretewq.csv")
+
+  # get raw data ID:
+  wq_clean_id <- contentid::store("data_publication/data_clean/clean_discretewq.csv")
+  wq_clean_file <- contentid::resolve(wq_clean_id)
 
 }
 
