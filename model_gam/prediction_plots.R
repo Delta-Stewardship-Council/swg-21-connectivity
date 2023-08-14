@@ -8,10 +8,15 @@ library(tidymv)
 library(patchwork)
 
 # data
-
-load("data_model/gams_origdata.Rdata")
+load("model_gam/gams_origdata.Rdata")
 downstream <- alldata %>% filter(region == "below")
 unique(downstream$station)
+
+# colors
+# none - #cc79A7
+# short - #D55E00
+# long - #0072B2
+ada_cols <- c("#0072B2", "#cc79A7", "#D55E00")
 
 #gamu6d prediction
 #range(downstream$log_qsdy)
@@ -36,9 +41,9 @@ downstream %>%
   group_by(inund_fac2) %>%
   summarise(max = max(log_qsdy), min = min(log_qsdy))
 
-model_p_station$corr <- ifelse(model_p_station$inund_fac2 == "none" & model_p_station$log_qsdy > 11.1, "no",
-                               ifelse(model_p_station$inund_fac2 == "short" & model_p_station$log_qsdy < 10.3 , "no",
-                                      ifelse(model_p_station$inund_fac2 == "short" & model_p_station$log_qsdy > 12 , "no",
+model_p_station$corr <- ifelse(model_p_station$inund_fac2 == "none" & model_p_station$log_qsdy > 11, "no",
+                               ifelse(model_p_station$inund_fac2 == "short" & model_p_station$log_qsdy < 10.5 , "no",
+                                      ifelse(model_p_station$inund_fac2 == "short" & model_p_station$log_qsdy > 11.5 , "no",
                                              ifelse(model_p_station$inund_fac2 == "long" & model_p_station$log_qsdy < 11 , "no",
                                                    "yes"))))
 
@@ -48,14 +53,19 @@ model_p_station_sub <- subset(model_p_station, corr == "yes")
 # plot
 downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
+  scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(daily flow (cfs))", limits = c(8.5, 12)) +
-  ylab("Predicted Chlorophyll") +
+  scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
+  scale_x_continuous(name =expression(log[e](Q)), limits = c(8.5, 12)) +
+  ylab(expression(log[e](Chl))) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  #theme_vis +
-  theme_classic() +
-  theme(legend.position = "none") +
-  ggtitle("Downstream")
+  theme_vis +
+  #theme_classic() +
+  #theme(legend.position = "none") +
+  labs(title = "Downstream", tag = "(c)") +
+  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
+  theme(legend.position = "bottom")
+
 
 # found this online (https://cran.r-project.org/web/packages/tidymv/vignettes/predict-gam.html) slight different looking
 predict_gam(gamd6d, values = list (WTmwk = c(8, 12, 16)), exclude_terms = "station") %>%
@@ -82,26 +92,31 @@ upstream %>%
   group_by(inund_fac2) %>%
   summarise(max = max(log_qsdy), min = min(log_qsdy))
 
-model_p_upstream$corr <- ifelse(model_p_upstream$inund_fac2 == "none" & model_p_upstream$log_qsdy > 10.9, "no",
-                               ifelse(model_p_upstream$inund_fac2 == "short" & model_p_upstream$log_qsdy < 10.3 , "no",
-                                      ifelse(model_p_upstream$inund_fac2 == "short" & model_p_upstream$log_qsdy > 11.2 , "no",
-                                             ifelse(model_p_upstream$inund_fac2 == "long" & model_p_upstream$log_qsdy < 10.8 , "no",
-                                                    "yes"))))
+model_p_upstream$corr <- ifelse(model_p_upstream$inund_fac2 == "none" & model_p_upstream$log_qsdy > 10.8, "no",
+                               ifelse(model_p_upstream$inund_fac2 == "short" & model_p_upstream$log_qsdy < 10.7 , "no",
+                                      ifelse(model_p_upstream$inund_fac2 == "short" & model_p_upstream$log_qsdy > 11.1 , "no",
+                                             ifelse(model_p_upstream$inund_fac2 == "long" & model_p_upstream$log_qsdy < 10.7 , "no",
+                                                    ifelse(model_p_upstream$inund_fac2 == "long" & model_p_upstream$log_qsdy > 11.1 , "no",
+                                                    "yes")))))
 
 model_p_upstream_sub <- subset(model_p_upstream, corr == "yes")
 
 # plot
 upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
+  scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(daily flow (cfs))", limits = c(9, 11)) +
-  ylab("Predicted Chlorophyll") +
+  scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
+  scale_x_continuous(name =expression(log[e](Q)), limits = c(9, 11)) +
+  ylab(expression(log[e](Chl))) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  #theme_vis +
-  theme_classic() +
-  theme(legend.position = "top") +
-  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
-  ggtitle("Mainstem")
+  theme_vis +
+  #theme_classic() +
+  #theme(legend.position = "top") +
+  labs(title = "Mainstem", tag = "(a)") +
+  theme(legend.position = "none")
+  #labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") #+
+  #ggtitle("Mainstem")
 
 # gamyo6d
 yolo <- alldata %>% filter(region == "yolo")
@@ -122,11 +137,12 @@ yolo %>%
   group_by(inund_fac2) %>%
   summarise(max = max(log_qsdy), min = min(log_qsdy))
 
-model_p_yolo_station$corr <- ifelse(model_p_yolo_station$inund_fac2 == "none" & model_p_yolo_station$log_qsdy > 8.41, "no",
-                                ifelse(model_p_yolo_station$inund_fac2 == "short" & model_p_yolo_station$log_qsdy < 7.86 , "no",
-                                       ifelse(model_p_yolo_station$inund_fac2 == "short" & model_p_yolo_station$log_qsdy > 12.1 , "no",
-                                              ifelse(model_p_yolo_station$inund_fac2 == "long" & model_p_yolo_station$log_qsdy < 8.29, "no",
-                                                     "yes"))))
+model_p_yolo_station$corr <- ifelse(model_p_yolo_station$inund_fac2 == "none" & model_p_yolo_station$log_qsdy > 8.5, "no",
+                                ifelse(model_p_yolo_station$inund_fac2 == "short" & model_p_yolo_station$log_qsdy < 8.5 , "no",
+                                       ifelse(model_p_yolo_station$inund_fac2 == "short" & model_p_yolo_station$log_qsdy > 11 , "no",
+                                              ifelse(model_p_yolo_station$inund_fac2 == "long" & model_p_yolo_station$log_qsdy < 9.5, "no",
+                                                     ifelse(model_p_yolo_station$inund_fac2 == "long" & model_p_yolo_station$log_qsdy > 11, "no",
+                                                     "yes")))))
 
 model_p_yolo_station_sub <- subset(model_p_yolo_station, corr == "yes")
 
@@ -134,17 +150,19 @@ model_p_yolo_station_sub <- subset(model_p_yolo_station, corr == "yes")
 
 yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
   geom_point(size=1.25) +
+  scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
-  scale_x_continuous(name ="log(daily flow (cfs))", limits = c(4, 12)) +
-  ylab("Predicted Chlorophyll") +
+  scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
+  scale_x_continuous(name =expression(log[e](Q)), limits = c(4, 11)) +
+  ylab(expression(log[e](Chl))) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
-  #theme_vis +
-  theme_classic() +
+  theme_vis +
+  #theme_classic() +
   theme(legend.position = "none") +
-  ggtitle("Floodplain")
+  labs(title = "Floodplain", tag = "(b)")
 
 # stack plots
-png("predict_plot.png", width = 8, height = 11, units = "in", pointsize = 12,
+png("predict_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
     bg = "white", res = 350)
 
 upstream_plot + yolo_plot + downstream_plot +
