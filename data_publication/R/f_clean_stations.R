@@ -42,42 +42,41 @@ wt_stations <- readr::read_csv(wt_stations_file)%>%
 yolo_stations_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.233.3&entityid=89146f1382d7dfa3bbf3e4b1554eb5cc")
 yolo_stations_file <- contentid::resolve(yolo_stations_id)
 yolo_stations0 <- readr::read_csv(yolo_stations_file) %>%
-  rename(station_name = StationName,
+  dplyr::rename(station_name = StationName,
          station = StationCode)
 
 yolo_stations <- yolo_stations0 %>%
-  mutate(region = "floodplain",
+  dplyr::mutate(region = "floodplain",
          data_type = "wtemp")  %>%
-  filter(!station %in% c("STTD", "LIS", "Alt_Fyke", "YB"))%>%
-  mutate(`sampling frequency` = case_when(MethodCode == "BSEIN" ~ "2 weeks",
+  dplyr::filter(!station %in% c("STTD", "LIS", "Alt_Fyke", "YB"))%>%
+  dplyr::mutate(sampling_frequency = dplyr::case_when(MethodCode == "BSEIN" ~ "2 weeks",
                                           MethodCode == "FKTR" ~ "daily during monitoring season",
                                           MethodCode == "RSTR" ~ "daily during monitoring season"),
-         `agency-program` = "DWR-YBFMP") %>%
+         agency_program = "DWR-YBFMP") %>%
   dplyr::select(latitude = Latitude,
                 longitude = Longitude,
                 station ,
                 region, data_type,
                 data_type,
                 station_name ,
-                `agency-program`,
-                `sampling frequency`)
+                agency_program,
+                sampling_frequency)
 
 # Chlorophyll ---------------------------
 chla_id <- contentid::store(here::here("data_publication/data_clean/model_chla.csv"))
-# chla_file <- contentid::resolve("hash://sha256/02f714352f36813feb323b1d7837c4d2e30d314177a6f2d67f35752ed2ff2b57")
 chla_file <- contentid::resolve("hash://sha256/9e8a36575f2ac604043d33455931d190c29c0bba20025d86c001fff3a822601b")
-stations_chl <- read_csv(chla_file) %>%
-  dplyr::mutate(latitude = case_when(station == "LIS" ~ 38.47482,
+stations_chl <- readr::read_csv(chla_file) %>%
+  dplyr::mutate(latitude = dplyr::case_when(station == "LIS" ~ 38.47482,
                                      station == "SHR" ~ 38.53188,
                                      station == "STTD" ~ 38.35338,
                                      TRUE~latitude),
-                longitude = case_when(station == "LIS" ~ -121.5886,
+                longitude = dplyr::case_when(station == "LIS" ~ -121.5886,
                                       station == "SHR" ~ -121.5280,
                                       station == "STTD" ~ -121.6430,
                                       TRUE~longitude)) %>%
-  filter(!(longitude <= -121.8),
+  dplyr::filter(!(longitude <= -121.8),
          !(station %in% c("56", "USGS-11455420"))) %>%
-  mutate(region = case_when(station %in% c("USGS-11447650", "SHR") ~"mainstem",
+  dplyr::mutate(region = case_when(station %in% c("USGS-11447650", "SHR") ~"mainstem",
                               station %in% c("LIS", "STTD",
                                                     "USGS-11455139") ~ "floodplain",
                               station %in% c("USGS-11455143", "USGS-382006121401601", "USGS-382010121402301", "USGS-11455146", "USGS-11455276", "USGS-11455166", "USGS-381424121405601", "USGS-11455315", "USGS-11455385", "USGS-11455350", "44", "USGS-11455167", "Pro", "USGS-11455140") ~"off_channel_below",
@@ -86,20 +85,22 @@ stations_chl <- read_csv(chla_file) %>%
   dplyr::filter(!is.na(chlorophyll)) %>%
   dplyr::filter(date > as.Date("1999-02-22") & year(date) < 2020) %>%
   dplyr::select(latitude, longitude, station, region) %>%
-  distinct() %>%
-  mutate(data_type = "chlorophyll")
+  dplyr::distinct() %>%
+  dplyr::mutate(data_type = "chlorophyll")
 
 
 # Bind data -------------------
-station_names <- read_csv(here::here("data_publication", "data_raw","station_names.csv")) %>%
-  filter(region!= "cache") %>%
-  dplyr::select(station, station_name, `agency-program`, `sampling frequency`)
+station_names <- readr::read_csv(here::here("data_publication", "data_raw","station_names.csv")) %>%
+  dplyr::filter(region!= "cache") %>%
+  dplyr::rename(agency_program = `agency-program`,
+         sampling_frequency = `sampling frequency`) %>%
+  dplyr::select(station, station_name, agency_program, sampling_frequency)
 
 stations_all <- stations_chl %>%
-  bind_rows(wt_stations) %>%
-  bind_rows(flow_stations) %>%
-  bind_rows(dayflow) %>%
-  mutate(data_type = case_when(station == "STTD" ~ "chlorophyll,wtemp",
+  dplyr::bind_rows(wt_stations) %>%
+  dplyr::bind_rows(flow_stations) %>%
+  dplyr::bind_rows(dayflow) %>%
+  dplyr::mutate(data_type = dplyr::case_when(station == "STTD" ~ "chlorophyll,wtemp",
                                station == "LIS" ~ "chlorophyll,wtemp",
                                station == "SHR" ~ "chlorophyll,wtemp",
                                station == "Pro" ~ "chlorophyll",
@@ -108,26 +109,26 @@ stations_all <- stations_chl %>%
                                station == "USGS_11425500" ~ "flow",
                                station == "657" ~ "flow",
                                TRUE ~ data_type)) %>%
-  left_join(station_names, by = "station") %>%
-  mutate(station_name = case_when(station == "RIV" ~ "Rio Vista",
+  dplyr::left_join(station_names, by = "station") %>%
+  dplyr::mutate(station_name = dplyr::case_when(station == "RIV" ~ "Rio Vista",
                                   station == "SRV" ~ "Sacramento River at Rio Vista",
                                   station == "USGS_11454210" ~ "Putah South CN near Winters",
                                   station == "USGS_11455420" ~ "Sacramento River at Rio Vista",
                                   station == "16" ~ "Sacramento River at Sherman Island",
                                   TRUE ~ as.character(station_name))) %>%
-  mutate(`agency-program` = case_when(station == "RIV" ~ "USBR",
+  dplyr::mutate(agency_program = dplyr::case_when(station == "RIV" ~ "USBR",
                                   station == "SRV" ~ "USGS",
                                   station == "USGS_11454210" ~ "USGS",
                                   station == "USGS_11455420" ~ "USGS",
                                   station == "16" ~ "USBR",
-                                  TRUE ~ as.character(`agency-program`))) %>%
-  mutate(`sampling frequency` = case_when(station == "RIV" ~ "hourly (binned to daily)",
+                                  TRUE ~ as.character(agency_program))) %>%
+  dplyr::mutate(sampling_frequency = dplyr::case_when(station == "RIV" ~ "hourly (binned to daily)",
                                   station == "SRV" ~ "15-minute (binned to daily)",
                                   station == "USGS_11454210" ~ "15-minute (binned to daily)",
                                   station == "USGS_11455420" ~ "15-minute (binned to daily)",
                                   station == "16" ~ "monthly",
-                                  TRUE ~ as.character(`sampling frequency`))) %>%
-  bind_rows(yolo_stations)
+                                  TRUE ~ as.character(`sampling_frequency`))) %>%
+  dplyr::bind_rows(yolo_stations)
 
 # Write data --------------------------
 write_csv(stations_all, here::here("data_publication", "data_clean", "stations.csv"))

@@ -1,6 +1,6 @@
 ##########################################################
 # Created by: Catarina Pien (cpien@usbr.gov)
-# Last updated: 5/2/2023
+# Last updated: 8/14/2023
 # Description: This script integrates covariate and chlorophyll data,
 #   creating the final dataset used for our model.
 #########################################################
@@ -24,6 +24,8 @@ f_integrate_model_data<- function(){
 
   # ContentIDs -----------------------------------
 
+  # Note: Whenever a file is changed, need to update the sha number! ####
+
   # inundation data
   inun_file <- inundation::calc_inundation()
 
@@ -33,14 +35,21 @@ f_integrate_model_data<- function(){
   flow_SRV_id <- contentid::store("data_publication/data_clean/clean_flow_usgs_11455420.csv")
   flow_SRV_file <- contentid::resolve("hash://sha256/dc58f63029337eac187867ea60db08c49710dd544954430b5b6c4c4c3849160c")
 
+  # srad data
+  (daymet_sttd_id <- contentid::store("data_publication/data_clean/clean_daymet_yolo_1998-2020.csv"))
+  daymet_sttd_file <- contentid::resolve("hash://sha256/fd36971bbb77abadc5a584419b6bfa96d63ba66ebe3450800253e0791b022df2")
+  (daymet_shr_id <- contentid::store("data_publication/data_clean/clean_daymet_upstream_1998-2020.csv"))
+  daymet_shr_file <- contentid::resolve("hash://sha256/7f25a4ec70af8bfb66b0d18d6c8a2ceec95805d8e57d031f56f02ff6a00762cf")
+  (daymet_657_id <- contentid::store("data_publication/data_clean/clean_daymet_downstream_1998-2020.csv"))
+  daymet_657_file <- contentid::resolve("hash://sha256/c2bacfc9ac03a96078da139ef2664397c5f33bb017aeab856f5890247b72d01f")
+
   # chla data
-  chla_id <- contentid::store("data_publication/data_clean/model_chla.csv")
-  chla_file <- contentid::resolve("hash://sha256/ac5b7af1961462804805cbcd51bf692793a9a5fa81e901e3a802c499db9f3136")
+  (chla_id <- contentid::store("data_publication/data_clean/model_chla.csv"))
+  chla_file <- contentid::resolve("hash://sha256/d54ad80b6fb282ec59ff0bd69716c2efad28e5c3837a19e093714c738ca3cdab")
 
   # water temp
-  watertemp_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1178.2&entityid=5055c89851653f175078378a6e8ba6eb")
-  watertemp_file <- contentid::resolve(watertemp_id)
-
+  (watertemp_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1178.2&entityid=5055c89851653f175078378a6e8ba6eb"))
+  watertemp_file <- contentid::resolve("hash://sha256/0c29007afac16887bae19f5ee61fe664e3aedda5b436480f1e8b8108b5ef3449")
 
   # Read data -------------------------------------
 
@@ -58,22 +67,22 @@ f_integrate_model_data<- function(){
   flow_verona <- readr::read_csv(flow_SAC_file) %>%
     dplyr::select(-flow_cd) %>%
     dplyr::rename(station_flow = site_no,
-                  flow_verona = flow) %>%
+                  flow_upstream = flow) %>%
     dplyr::filter(lubridate::year(date)>=1998) %>%
     dplyr::mutate(
       station_flow = as.character(station_flow),
       doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1) %>%
-    dplyr::select(doy1998, date, flow_verona)
+    dplyr::select(doy1998, date, flow_upstream)
 
   #  flow @ Rio Vista (SRV)
   flow_SRV <- readr::read_csv(flow_SRV_file) %>%
     dplyr::select(-flow_cd) %>%
     dplyr::rename(station_flow = site_no,
-                  flow_SRV=flow) %>%
+                  flow_downstream=flow) %>%
     dplyr::filter(lubridate::year(date)>=1998) %>%
     dplyr::mutate(
       doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)%>%
-    dplyr::select(doy1998, date,flow_SRV, )
+    dplyr::select(doy1998, date,flow_downstream)
 
   # water temperature
   watertemp <- read_csv(watertemp_file) %>%
@@ -85,7 +94,18 @@ f_integrate_model_data<- function(){
     dplyr::select(c(WTmday, date, region)) %>%
     dplyr::filter(lubridate::year(date)>=1998) %>%
     dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1) %>%
-    tidyr::pivot_wider(names_from = "region", values_from = c("WTmday"), id_cols = c("date", "doy1998"))
+    tidyr::pivot_wider(names_from = "region", values_from = c("WTmday"), id_cols = c("date", "doy1998"),
+                       names_prefix = "wt_")
+
+  # srad
+  files <- list(daymet_sttd_file, daymet_shr_file, daymet_657_file)
+  srad <- lapply(files, read_csv) %>%
+    bind_rows() %>%
+    dplyr::select(c(daymet_srad, date, region)) %>%
+    dplyr::rename(srad = daymet_srad) %>%
+    dplyr::mutate(doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1) %>%
+    tidyr::pivot_wider(names_from = "region", values_from = c("srad"), id_cols = c("date", "doy1998"),
+                       names_prefix = "srad_")
 
   # chla
   chla <- read_csv(chla_file) %>%
@@ -103,12 +123,20 @@ f_integrate_model_data<- function(){
 
   join1 <- dplyr::full_join(flow_verona, flow_SRV, by = c("doy1998", "date"))
   join2 <- dplyr::full_join(join1, inun)
-  covars <- dplyr::full_join(join2, watertemp)
+  join3 <- dplyr::full_join(join2, srad)
+  covars <- dplyr::full_join(join3, watertemp) %>%
+    dplyr::filter(date>as.Date("1999-02-16") & date< as.Date("2020-01-01")) %>%
+    arrange(doy1998)
 
-  # summary(covars)
+  summary(covars)
 
   covars_fill <- covars %>%
-    tidyr::fill(flow_SRV, .direction = "down") # fill missing SRV data
+    tidyr::fill(flow_downstream, .direction = "down") %>%
+    tidyr::fill(srad_downstream, .direction = "down") %>%
+    tidyr::fill(srad_yolo, .direction = "down") %>%
+    tidyr::fill(srad_upstream, .direction = "down") # fill missing data
+
+  summary(covars_fill)
 
    # no red flags
       # ggplot() +
@@ -120,19 +148,23 @@ f_integrate_model_data<- function(){
   final_covars <- covars_fill %>%
     dplyr::arrange(date) %>%
     dplyr::mutate(
-      WTmwk_downstream = zoo::rollapply(downstream, 7, mean, align = 'right', partial = TRUE),
-      WTmwk_upstream = zoo::rollapply(upstream, 7, mean, align = 'right', partial = TRUE),
-      WTmwk_yolo = zoo::rollapply(yolo, 7, mean, align = 'right', partial = TRUE))%>%
-    dplyr::rename(Q_upstream = flow_verona,
+      WTmwk_downstream = zoo::rollapply(wt_downstream, 7, mean, align = 'right', partial = TRUE),
+      WTmwk_upstream = zoo::rollapply(wt_upstream, 7, mean, align = 'right', partial = TRUE),
+      WTmwk_yolo = zoo::rollapply(wt_yolo, 7, mean, align = 'right', partial = TRUE),
+      sradmwk_downstream = zoo::rollapply(srad_downstream, 7, mean, align = 'right', partial = TRUE),
+      sradmwk_upstream = zoo::rollapply(srad_upstream, 7, mean, align = 'right', partial = TRUE),
+      sradmwk_yolo = zoo::rollapply(srad_yolo, 7, mean, align = 'right', partial = TRUE))%>%
+    dplyr::rename(Q_upstream = flow_upstream,
                   Q_yolo = flow_yolo,
-                  Q_downstream = flow_SRV) %>%
-    select(-downstream, -upstream, -yolo) %>%
-    dplyr::filter(date>as.Date("1999-02-22") & year(date)<2020)
+                  Q_downstream = flow_downstream) %>%
+    select(-wt_downstream, -wt_upstream, -wt_yolo, -srad_downstream, -srad_upstream, -srad_yolo) %>%
+    dplyr::filter(date>as.Date("1999-02-16") & year(date)<2020)
 
   # Pivot longer data --------------------------------------------------
   covars_long <- final_covars %>%
     tidyr::pivot_longer(cols = c(Q_upstream, Q_yolo, Q_downstream,
-                          WTmwk_downstream, WTmwk_upstream, WTmwk_yolo),
+                          WTmwk_downstream, WTmwk_upstream, WTmwk_yolo,
+                          sradmwk_downstream, sradmwk_upstream, sradmwk_yolo),
                  names_to = c(".value","region"), names_sep =  "_") %>%
     dplyr::rename(Q_sday = Q)
 
@@ -147,7 +179,7 @@ f_integrate_model_data<- function(){
            rdoy  = lubridate::yday(date) + 92,
            dowy = ifelse(rdoy > 366, rdoy - 366, rdoy)) %>%
     dplyr::select(c(date, doy1998, dowy, month, water_year, inundation, inund_days, inund_factor, region,
-             Q_sday, log_qsdy, WTmwk, chlorophyll, log_chla, station))
+             Q_sday, log_qsdy, WTmwk, sradmwk, chlorophyll, log_chla, station))
 
   # Filter to inundation period --------------------------------------------
   inundPd <- chla_covars %>% filter(inundation == 1)
@@ -157,11 +189,13 @@ f_integrate_model_data<- function(){
   filtdata <- chla_covars %>%
     filter(dowy >= inMin & dowy <= inMax)
 
+  summary(filtdata)
+
   # Write data -------------------------------------------------------
 
   print("Writing data...")
+  readr::write_csv(final_covars, "data_publication/data_clean/full_covars.csv")
   readr::write_csv(filtdata, "data_publication/data_clean/model_chla_covars.csv")
-
   print("Data saved!")
 
 }
