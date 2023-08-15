@@ -20,65 +20,41 @@ library(ggpubr)
 library(tidyverse)
 library(broom)
 ```
-The RMD is used to summarize the raw data used in the Connectivity GAM model. The
-results of the output table are used in the body of the methods text
+The RMD is used to summarize the raw data used in the Connectivity GAM model. The results of the output table are used in the body of the methods text
 
 ```{r}
-#update to new model data when 2023 discretewq comparison is vetted
 
-#new <- read_csv("data_publication/data_clean/model_chla_covars.csv")
-
-#for now, use old model data
-
-old <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/model_gam/model_chla_covars_gam.csv")
-
-#filter old model data to inundation period
-
-old$rdoy <-  lubridate::yday(old$date) + 92
-
-old$dowy <- ifelse(old$rdoy > 366, old$rdoy - 366, old$rdoy)
-
-inundPd <- old %>% filter(inundation == 1)
-inMin <- min(inundPd$dowy)
-inMax <- max(inundPd$dowy)
-
-filtdata <- old %>%
-  filter(dowy >= inMin & dowy <= inMax,
-         region!="cache")
+new <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/data_clean/model_chla_covars.csv")
 
 #summary stats
 
-dryPd <- filtdata %>%
-  filter(inundation == 0) #filtdata 519
+dryPd <- new %>%
+  filter(inundation == 0) #filtdata 520
 
-unique(dryPd$region)
-
-wetPd <- filtdata %>%
-  filter(inundation == 1) #filtdata 143
-
-unique(wetPd$region)
+wetPd <- new %>%
+  filter(inundation == 1) #filtdata 144
 
 #519+143 = 662
 
-data_tbl <- filtdata %>%
-  select(chlorophyll, WTmday, Q_sday,region, water_year, inundation)
+data_tbl <- new %>%
+  select(chlorophyll, WTmwk, Q_sday, region, water_year, inundation, inund_factor)
 
 data_tbl <- unique(data_tbl)
 
-#summarize by region and inundation
+#summarize by inundation factor (none, short, long) and region
 
 data_tbl <- data_tbl %>%
-  group_by(region, inundation) %>%
+  group_by(region, inundation, inund_factor) %>%
   summarize(min_chla = min(chlorophyll),
             max_chla = max(chlorophyll),
             mean_chla = mean(chlorophyll),
             r_chla = max_chla-min_chla,
             sd_chla = sd(chlorophyll),
-            min_WTmday = min(WTmday),
-            max_WTmday = max(WTmday),
-            mean_WTmday = mean(WTmday),
-            r_WTmday = max_WTmday - min_WTmday,
-            sd_WTmday = sd(WTmday),
+            min_WTmwk = min(WTmwk),
+            max_WTmwk = max(WTmwk),
+            mean_WTmwk = mean(WTmwk),
+            r_WTmwk = max_WTmwk - min_WTmwk,
+            sd_WTmwk = sd(WTmwk),
             min_Q_sday = min(Q_sday),
             max_Q_sday = max(Q_sday),
             mean_Q_sday = mean(Q_sday),
@@ -91,11 +67,11 @@ data_tbl$max_chla <- round(data_tbl$max_chla, 1)
 data_tbl$mean_chla <- round(data_tbl$mean_chla, 1)
 data_tbl$r_chla <- round(data_tbl$r_chla, 1)
 data_tbl$sd_chla <- round(data_tbl$sd_chla, 1)
-data_tbl$min_WTmday <- round(data_tbl$min_WTmday, 1)
-data_tbl$max_WTmday <- round(data_tbl$max_WTmday, 1)
-data_tbl$mean_WTmday <- round(data_tbl$mean_WTmday, 1)
-data_tbl$r_WTmday <- round(data_tbl$r_WTmday, 1)
-data_tbl$sd_WTmday <- round(data_tbl$sd_WTmday, 1)
+data_tbl$min_WTmwk <- round(data_tbl$min_WTmwk, 1)
+data_tbl$max_WTmwk <- round(data_tbl$max_WTmwk, 1)
+data_tbl$mean_WTmwk <- round(data_tbl$mean_WTmwk, 1)
+data_tbl$r_WTmwk <- round(data_tbl$r_WTmwk, 1)
+data_tbl$sd_WTmwk <- round(data_tbl$sd_WTmwk, 1)
 data_tbl$min_Q_sday <- round(data_tbl$min_Q_sday, 0)
 data_tbl$max_Q_sday <- round(data_tbl$max_Q_sday, 0)
 data_tbl$mean_Q_sday <- round(data_tbl$mean_Q_sday, 0)
@@ -104,17 +80,17 @@ data_tbl$sd_Q_sday <- round(data_tbl$sd_Q_sday, 0)
 
 data_tbl <- data_tbl %>% 
   rename('inun' = 'inundation')
-#data_tbl<- data_tbl %>%
-  #mutate_at(vars(-c(inun, n), funs(round(., 1))))
+
+#view and save table by inundation factor (none, short, long) and region 
 
 flextable(data_tbl)
 
-write_csv(data_tbl, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_region_inun.csv")
+write_csv(data_tbl, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_region_inunfac.csv")
 
 #summarize by region 
 
-data_tbl2 <- filtdata %>%
-  select(chlorophyll, WTmday, Q_sday, region, water_year)
+data_tbl2 <- new %>%
+  select(chlorophyll, WTmwk, Q_sday, region, water_year)
 
 data_tbl2 <- unique(data_tbl2)
 
@@ -125,11 +101,11 @@ data_tbl2 <- data_tbl2 %>%
             mean_chla = mean(chlorophyll),
             r_chla = max_chla-min_chla,
             sd_chla = sd(chlorophyll),
-            min_WTmday = min(WTmday),
-            max_WTmday = max(WTmday),
-            mean_WTmday = mean(WTmday),
-            r_WTmday = max_WTmday - min_WTmday,
-            sd_WTmday = sd(WTmday),
+            min_WTmwk = min(WTmwk),
+            max_WTmwk = max(WTmwk),
+            mean_WTmwk = mean(WTmwk),
+            r_WTmwk = max_WTmwk - min_WTmwk,
+            sd_WTmwk = sd(WTmwk),
             min_Q_sday = min(Q_sday),
             max_Q_sday = max(Q_sday),
             mean_Q_sday = mean(Q_sday),
@@ -142,30 +118,27 @@ data_tbl2$max_chla <- round(data_tbl2$max_chla, 1)
 data_tbl2$mean_chla <- round(data_tbl2$mean_chla, 1)
 data_tbl2$r_chla <- round(data_tbl2$r_chla, 1)
 data_tbl2$sd_chla <- round(data_tbl2$sd_chla, 1)
-data_tbl2$min_WTmday <- round(data_tbl2$min_WTmday, 1)
-data_tbl2$max_WTmday <- round(data_tbl2$max_WTmday, 1)
-data_tbl2$mean_WTmday <- round(data_tbl2$mean_WTmday, 1)
-data_tbl2$r_WTmday <- round(data_tbl2$r_WTmday, 1)
-data_tbl2$sd_WTmday <- round(data_tbl2$sd_WTmday, 1)
+data_tbl2$min_WTmwk <- round(data_tbl2$min_WTmwk, 1)
+data_tbl2$max_WTmwk <- round(data_tbl2$max_WTmwk, 1)
+data_tbl2$mean_WTmwk <- round(data_tbl2$mean_WTmwk, 1)
+data_tbl2$r_WTmwk <- round(data_tbl2$r_WTmwk, 1)
+data_tbl2$sd_WTmwk <- round(data_tbl2$sd_WTmwk, 1)
 data_tbl2$min_Q_sday <- round(data_tbl2$min_Q_sday, 0)
 data_tbl2$max_Q_sday <- round(data_tbl2$max_Q_sday, 0)
 data_tbl2$mean_Q_sday <- round(data_tbl2$mean_Q_sday, 0)
 data_tbl2$sd_Q_sday <- round(data_tbl2$sd_Q_sday, 0)
 
 
-#data_tbl2<- data_tbl2 %>%
-  #mutate_at(vars(-c(inun, n), funs(round(., 1))))
+#view and save table by region 
 
 flextable(data_tbl2)
 
 write_csv(data_tbl2, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_region.csv")
 
-#summarize by inundation
+#summarize by inundation (Y/N) and region
 
-#summarize by region 
-
-data_tbl3 <- filtdata %>%
-  select(chlorophyll, WTmday, Q_sday, inundation, water_year)
+data_tbl3 <- new %>%
+  select(chlorophyll, WTmwk, Q_sday, inundation, water_year)
 
 data_tbl3 <- unique(data_tbl3)
 
@@ -176,11 +149,11 @@ data_tbl3 <- data_tbl3 %>%
             mean_chla = mean(chlorophyll),
             r_chla = max_chla-min_chla,
             sd_chla = sd(chlorophyll),
-            min_WTmday = min(WTmday),
-            max_WTmday = max(WTmday),
-            mean_WTmday = mean(WTmday),
-            r_WTmday = max_WTmday - min_WTmday,
-            sd_WTmday = sd(WTmday),
+            min_WTmwk = min(WTmwk),
+            max_WTmwk = max(WTmwk),
+            mean_WTmwk = mean(WTmwk),
+            r_WTmwk = max_WTmwk - min_WTmwk,
+            sd_WTmwk = sd(WTmwk),
             min_Q_sday = min(Q_sday),
             max_Q_sday = max(Q_sday),
             mean_Q_sday = mean(Q_sday),
@@ -193,19 +166,17 @@ data_tbl3$max_chla <- round(data_tbl3$max_chla, 1)
 data_tbl3$mean_chla <- round(data_tbl3$mean_chla, 1)
 data_tbl3$r_chla <- round(data_tbl3$r_chla, 1)
 data_tbl3$sd_chla <- round(data_tbl3$sd_chla, 1)
-data_tbl3$min_WTmday <- round(data_tbl3$min_WTmday, 1)
-data_tbl3$max_WTmday <- round(data_tbl3$max_WTmday, 1)
-data_tbl3$mean_WTmday <- round(data_tbl3$mean_WTmday, 1)
-data_tbl3$r_WTmday <- round(data_tbl3$r_WTmday, 1)
-data_tbl3$sd_WTmday <- round(data_tbl3$sd_WTmday, 1)
+data_tbl3$min_WTmwk <- round(data_tbl3$min_WTmwk, 1)
+data_tbl3$max_WTmwk <- round(data_tbl3$max_WTmwk, 1)
+data_tbl3$mean_WTmwk <- round(data_tbl3$mean_WTmwk, 1)
+data_tbl3$r_WTmwk <- round(data_tbl3$r_WTmwk, 1)
+data_tbl3$sd_WTmwk <- round(data_tbl3$sd_WTmwk, 1)
 data_tbl3$min_Q_sday <- round(data_tbl3$min_Q_sday, 0)
 data_tbl3$max_Q_sday <- round(data_tbl3$max_Q_sday, 0)
 data_tbl3$mean_Q_sday <- round(data_tbl3$mean_Q_sday, 0)
 data_tbl3$sd_Q_sday <- round(data_tbl3$sd_Q_sday, 0)
 
-
-#data_tbl2<- data_tbl2 %>%
-  #mutate_at(vars(-c(inun, n), funs(round(., 1))))
+#view and save table by inundation (Y/N) and region
 
 flextable(data_tbl3)
 

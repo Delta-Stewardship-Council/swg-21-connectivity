@@ -1,0 +1,3 @@
+inundation,min_chla,max_chla,mean_chla,r_chla,sd_chla,min_WTmwk,max_WTmwk,mean_WTmwk,r_WTmwk,sd_WTmwk,min_Q_sday,max_Q_sday,mean_Q_sday,sd_Q_sday,n
+0,0.2,156,6.4,155.8,9.8,5.4,21.5,12.2,16,3.3,46,63500,12260,13091,517
+1,0.6,162.3,6.8,161.8,15.8,7.8,18,11.9,10.1,2.4,2582,251000,60341,50631,144
