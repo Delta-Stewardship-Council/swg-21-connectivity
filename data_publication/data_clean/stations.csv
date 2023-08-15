@@ -1,4 +1,4 @@
-latitude,longitude,station,region,data_type,station_name,agency-program,sampling frequency
+latitude,longitude,station,region,data_type,station_name,agency_program,sampling_frequency
 38.53188,-121.528,SHR,mainstem,"chlorophyll,wtemp",Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
 38.35338,-121.643,STTD,floodplain,"chlorophyll,wtemp",Screw Trap in Toe Drain,DWR-YBFMP,"2 weeks, daily during sampling season"
 38.47482,-121.5886,LIS,floodplain,"chlorophyll,wtemp",Yolo Bypass Toe Drain Below Lisbon Weir,"DWR-YBFMP, DWR-NCRO",2 weeks
