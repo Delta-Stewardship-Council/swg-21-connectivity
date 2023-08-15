@@ -1,0 +1,4 @@
+region,min_chla,max_chla,mean_chla,r_chla,sd_chla,min_WTmwk,max_WTmwk,mean_WTmwk,r_WTmwk,sd_WTmwk,min_Q_sday,max_Q_sday,mean_Q_sday,sd_Q_sday,n
+downstream,0.2,14.7,2.9,14.5,2.1,6.9,18.6,11.9,11.7,2.6,1700,251000,31820,36366,278
+upstream,0.7,21.7,3.4,21,2.5,6.7,20.8,11.7,14.1,2.8,5200,74700,26331,18858,144
+yolo,0.6,162.3,12.6,161.8,17,5.4,21.5,12.8,16,3.8,46,227863,10000,31397,239
