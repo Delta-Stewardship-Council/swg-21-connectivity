@@ -103,7 +103,7 @@ library(patchwork)
 
 
 # Write plots ---------------------------------------------------------
-tiff(here::here("data_publication", "figures","boxplots_databyRegion.tiff"), width = 8, height = 8, units = "in", res = 300)
+png(here::here("data_publication", "figures","boxplots_databyRegion.png"), width = 8, height = 8, units = "in", res = 300)
 boxplot
 dev.off()
 
