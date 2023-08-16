@@ -19,31 +19,33 @@ library(ggplot2)
 library(ggpubr)
 library(tidyverse)
 library(broom)
+library(here)
 ```
 The RMD is used to summarize the raw data used in the Connectivity GAM model. The results of the output table are used in the body of the methods text
 
 ```{r}
 
-new <- read_csv("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/data_clean/model_chla_covars.csv")
+new <- read_csv(here::here("data_publication/data_clean/model_chla_covars.csv"))
 
 #summary stats
 
 dryPd <- new %>%
-  filter(inundation == 0) #filtdata 520
+  filter(inundation == 0) #filtdata 519
 
 wetPd <- new %>%
-  filter(inundation == 1) #filtdata 144
+  filter(inundation == 1) #filtdata 143
 
 #519+143 = 662
 
 data_tbl <- new %>%
-  select(chlorophyll, WTmwk, Q_sday, region, water_year, inundation, inund_factor)
+  select(chlorophyll, WTmwk, Q_sday, region, water_year, inundation, inund_factor) %>%
+  mutate(inund_factor= factor(inund_factor, levels = c("none", "short", "long")))
 
 data_tbl <- unique(data_tbl)
 
 #summarize by inundation factor (none, short, long) and region
 
-data_tbl <- data_tbl %>%
+data_tbl1a <- data_tbl %>%
   group_by(region, inundation, inund_factor) %>%
   summarize(min_chla = min(chlorophyll),
             max_chla = max(chlorophyll),
@@ -62,30 +64,48 @@ data_tbl <- data_tbl %>%
             n = n())
 
 #round values
-data_tbl$min_chla <- round(data_tbl$min_chla, 1)
-data_tbl$max_chla <- round(data_tbl$max_chla, 1)
-data_tbl$mean_chla <- round(data_tbl$mean_chla, 1)
-data_tbl$r_chla <- round(data_tbl$r_chla, 1)
-data_tbl$sd_chla <- round(data_tbl$sd_chla, 1)
-data_tbl$min_WTmwk <- round(data_tbl$min_WTmwk, 1)
-data_tbl$max_WTmwk <- round(data_tbl$max_WTmwk, 1)
-data_tbl$mean_WTmwk <- round(data_tbl$mean_WTmwk, 1)
-data_tbl$r_WTmwk <- round(data_tbl$r_WTmwk, 1)
-data_tbl$sd_WTmwk <- round(data_tbl$sd_WTmwk, 1)
-data_tbl$min_Q_sday <- round(data_tbl$min_Q_sday, 0)
-data_tbl$max_Q_sday <- round(data_tbl$max_Q_sday, 0)
-data_tbl$mean_Q_sday <- round(data_tbl$mean_Q_sday, 0)
-data_tbl$sd_Q_sday <- round(data_tbl$sd_Q_sday, 0)
-
-
-data_tbl <- data_tbl %>% 
+data_tbl1a <- data_tbl1a %>% mutate(across(c(min_chla:sd_WTmwk), \(x) round(x, 1)))
+data_tbl1a <- data_tbl1a %>% mutate(across(c(min_Q_sday:sd_Q_sday), \(x) round(x, 0)))
+data_tbl1a <- data_tbl1a %>% 
   rename('inun' = 'inundation')
 
+data_tbl1b <- data_tbl %>%
+  group_by(inund_factor) %>%
+  summarize(chla_5 = quantile(chlorophyll, probs = 0.05),
+            chla_95 = quantile(chlorophyll, probs = 0.95),
+            chla_mean =mean(chlorophyll),
+            wt_5 = quantile(WTmwk, probs = 0.05),
+            wt_95 = quantile(WTmwk, probs = 0.95),
+            wt_mean = mean(WTmwk),
+            Q_5 = quantile(Q_sday, probs = 0.05),
+            Q_95 = quantile(Q_sday, probs = 0.95),
+            Q_mean = mean(Q_sday),
+            n  = n())
+
+data_tbl1b <- data_tbl1b %>% mutate(across(c(chla_5:wt_mean), \(x) round(x, 1)))
+data_tbl1b <- data_tbl1b %>% mutate(across(c(Q_5:Q_mean), \(x) round(x, 0)))
+
+data_tbl1c <- data_tbl %>%
+group_by(region, inund_factor) %>%
+  summarize(chla_5 = quantile(chlorophyll, probs = 0.05),
+            chla_95 = quantile(chlorophyll, probs = 0.95),
+            chla_mean =mean(chlorophyll),
+            wt_5 = quantile(WTmwk, probs = 0.05),
+            wt_95 = quantile(WTmwk, probs = 0.95),
+            wt_mean = mean(WTmwk),
+            Q_5 = quantile(Q_sday, probs = 0.05),
+            Q_95 = quantile(Q_sday, probs = 0.95),
+            Q_mean = mean(Q_sday),
+            n  = n())
+
+data_tbl1c <- data_tbl1c %>% mutate(across(c(chla_5:wt_mean), \(x) round(x, 1)))
+data_tbl1c <- data_tbl1c %>% mutate(across(c(Q_5:Q_mean), \(x) round(x, 0)))
 #view and save table by inundation factor (none, short, long) and region 
 
 flextable(data_tbl)
 
-write_csv(data_tbl, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_region_inunfac.csv")
+write_csv(data_tbl1b, here::here("data_publication/data_clean/raw_data_summary_inunfac.csv"))
+write_csv(data_tbl1c, here::here("data_publication/data_clean/raw_data_summary_region_inunfac.csv"))
 
 #summarize by region 
 
@@ -94,7 +114,7 @@ data_tbl2 <- new %>%
 
 data_tbl2 <- unique(data_tbl2)
 
-data_tbl2 <- data_tbl2 %>%
+data_tbl2a <- data_tbl2 %>%
   group_by(region) %>%
   summarize(min_chla = min(chlorophyll),
             max_chla = max(chlorophyll),
@@ -113,30 +133,31 @@ data_tbl2 <- data_tbl2 %>%
             n = n())
 
 #round values
-data_tbl2$min_chla <- round(data_tbl2$min_chla, 1)
-data_tbl2$max_chla <- round(data_tbl2$max_chla, 1)
-data_tbl2$mean_chla <- round(data_tbl2$mean_chla, 1)
-data_tbl2$r_chla <- round(data_tbl2$r_chla, 1)
-data_tbl2$sd_chla <- round(data_tbl2$sd_chla, 1)
-data_tbl2$min_WTmwk <- round(data_tbl2$min_WTmwk, 1)
-data_tbl2$max_WTmwk <- round(data_tbl2$max_WTmwk, 1)
-data_tbl2$mean_WTmwk <- round(data_tbl2$mean_WTmwk, 1)
-data_tbl2$r_WTmwk <- round(data_tbl2$r_WTmwk, 1)
-data_tbl2$sd_WTmwk <- round(data_tbl2$sd_WTmwk, 1)
-data_tbl2$min_Q_sday <- round(data_tbl2$min_Q_sday, 0)
-data_tbl2$max_Q_sday <- round(data_tbl2$max_Q_sday, 0)
-data_tbl2$mean_Q_sday <- round(data_tbl2$mean_Q_sday, 0)
-data_tbl2$sd_Q_sday <- round(data_tbl2$sd_Q_sday, 0)
+data_tbl2a <- data_tbl2a %>% mutate(across(c(min_chla:sd_WTmwk), \(x) round(x, 1)))
+data_tbl2a <- data_tbl2a %>% mutate(across(c(min_Q_sday:sd_Q_sday), \(x) round(x, 0)))
 
-
+data_tbl2b <- data_tbl2 %>%
+  group_by(region) %>%
+  summarize(chla_5 = quantile(chlorophyll, probs = 0.05),
+            chla_95 = quantile(chlorophyll, probs = 0.95),
+            chla_mean = mean(chlorophyll),
+            wt_5 = quantile(WTmwk, probs = 0.05),
+            wt_95 = quantile(WTmwk, probs = 0.95),
+            wt_mean = mean(WTmwk),
+            Q_5 = quantile(Q_sday, probs = 0.05),
+            Q_95 = quantile(Q_sday, probs = 0.95),
+            Q_mean = mean(Q_sday),
+            n  = n())
+  
+data_tbl2b <- data_tbl2b %>% mutate(across(c(chla_5:wt_mean), \(x) round(x, 1)))
+data_tbl2b <- data_tbl2b %>% mutate(across(c(Q_5:Q_mean), \(x) round(x, 0)))
 #view and save table by region 
 
 flextable(data_tbl2)
 
-write_csv(data_tbl2, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_region.csv")
+write_csv(data_tbl2b, here::here("data_publication/data_clean/raw_data_summary_region.csv"))
 
 #summarize by inundation (Y/N) and region
-
 data_tbl3 <- new %>%
   select(chlorophyll, WTmwk, Q_sday, inundation, water_year)
 
@@ -161,26 +182,14 @@ data_tbl3 <- data_tbl3 %>%
             n = n())
 
 #round values
-data_tbl3$min_chla <- round(data_tbl3$min_chla, 1)
-data_tbl3$max_chla <- round(data_tbl3$max_chla, 1)
-data_tbl3$mean_chla <- round(data_tbl3$mean_chla, 1)
-data_tbl3$r_chla <- round(data_tbl3$r_chla, 1)
-data_tbl3$sd_chla <- round(data_tbl3$sd_chla, 1)
-data_tbl3$min_WTmwk <- round(data_tbl3$min_WTmwk, 1)
-data_tbl3$max_WTmwk <- round(data_tbl3$max_WTmwk, 1)
-data_tbl3$mean_WTmwk <- round(data_tbl3$mean_WTmwk, 1)
-data_tbl3$r_WTmwk <- round(data_tbl3$r_WTmwk, 1)
-data_tbl3$sd_WTmwk <- round(data_tbl3$sd_WTmwk, 1)
-data_tbl3$min_Q_sday <- round(data_tbl3$min_Q_sday, 0)
-data_tbl3$max_Q_sday <- round(data_tbl3$max_Q_sday, 0)
-data_tbl3$mean_Q_sday <- round(data_tbl3$mean_Q_sday, 0)
-data_tbl3$sd_Q_sday <- round(data_tbl3$sd_Q_sday, 0)
+data_tbl3 <- data_tbl3 %>% mutate(across(c(min_chla:sd_WTmwk), \(x) round(x, 1)))
+data_tbl3 <- data_tbl3 %>% mutate(across(c(min_Q_sday:sd_Q_sday), \(x) round(x, 0)))
 
 #view and save table by inundation (Y/N) and region
 
 flextable(data_tbl3)
 
-write_csv(data_tbl3, "C:/Users/estumpne/Documents/R/swg-21-connectivity/data_publication/R/raw_data_summary_inun.csv")
+write_csv(data_tbl3, here::here("data_publication/R/raw_data_summary_inun.csv"))
 
 
 ```

@@ -71,9 +71,15 @@ f_load_chla <- function() {
 
   range(chl_daily_station$date)
 
+  hist(chl_daily_station$chlorophyll)
+  boxplot(chl_daily_station$chlorophyll)
+
+  chl_daily_rmoutliers <- chl_daily_station %>%
+    filter(chlorophyll<100)
+
   # export data ----------------------------------------
   print("Writing to 'data_publication/data_clean/model_chla.csv'")
-  readr::write_csv(chl_daily_station, "data_publication/data_clean/model_chla.csv")
+  readr::write_csv(chl_daily_rmoutliers, "data_publication/data_clean/model_chla.csv")
   }
 
 f_load_chla()

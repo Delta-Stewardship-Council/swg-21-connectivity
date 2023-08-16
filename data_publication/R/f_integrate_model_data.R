@@ -1,6 +1,6 @@
 ##########################################################
 # Created by: Catarina Pien (cpien@usbr.gov)
-# Last updated: 8/14/2023
+# Last updated: 8/16/2023
 # Description: This script integrates covariate and chlorophyll data,
 #   creating the final dataset used for our model.
 #########################################################
@@ -19,6 +19,7 @@ f_integrate_model_data<- function(){
   library(tidyr)
   library(ggplot2)
   library(zoo)
+  library(contentid)
 
   print("Downloading data...")
 
@@ -45,7 +46,7 @@ f_integrate_model_data<- function(){
 
   # chla data
   (chla_id <- contentid::store("data_publication/data_clean/model_chla.csv"))
-  chla_file <- contentid::resolve("hash://sha256/d54ad80b6fb282ec59ff0bd69716c2efad28e5c3837a19e093714c738ca3cdab")
+  chla_file <- contentid::resolve("hash://sha256/2b8dde4979f4f7f87a6e18c51e8847a13f060ff95716543bc615500fe646f8ca")
 
   # water temp
   (watertemp_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1178.2&entityid=5055c89851653f175078378a6e8ba6eb"))
