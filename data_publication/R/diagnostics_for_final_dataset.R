@@ -17,6 +17,11 @@ str(filtdata)
 
 filtdata$date <- as.Date(filtdata$date)
 
+# check against only data
+old_data <- read.csv("model_gam/model_chla_covars_gam.csv")
+head(final_covars)
+str(final_covars)
+
 # outliers
 boxplot(filtdata$chlorophyll)
 dotchart(filtdata$chlorophyll)
@@ -120,6 +125,11 @@ histogram( ~ chlorophyll | region, data = filtdata, breaks = 100) # yolo looks d
 histogram( ~ chlorophyll | inund_factor, data = filtdata, breaks = 100) # fine
 histogram( ~ chlorophyll | station, data = filtdata, breaks = 100) # stations are dissimilar
 # homogeneity of variance implications for region and station
+
+hist(filtdata$Q_sday)
+hist(filtdata$log_qsdy)
+hist(filtdata$WTmwk)
+hist(filtdata$sradmwk)
 
 # zeros
 chl_rmnas <- filtdata[!is.na(filtdata$chlorophyll),]
@@ -241,3 +251,32 @@ coplot(WTmwk ~  log_chla | region + station, data = filtdata,
 
 # independence
 acf(filtdata$chlorophyll) # nope
+
+# for supplemental
+# table S1
+filtdata %>%
+  group_by(region) %>%
+  summarise(sample_size = n(), min_date = min(date), max_date = max(date))
+
+old_data %>%
+  group_by(region) %>%
+  summarise(sample_size = n(), min_date = min(date), max_date = max(date))
+
+old_data %>%
+  group_by(region) %>%
+  summarise(min_chl = min(chlorophyll), max_chl = max(chlorophyll))
+
+filtdata %>%
+  group_by(region) %>%
+  summarise(min_chl = min(chlorophyll), max_chl = max(chlorophyll))
+
+# for inundation summary
+filtdata %>%
+  group_by(inund_factor) %>%
+  summarise(sample_size = n())
+
+# solar radiation
+plot(filtdata$WTmwk, filtdata$sradmwk)
+lm <- lm(WTmwk ~ sradmwk, filtdata)
+lm <- lm(sradmwk ~ WTmwk  , filtdata)
+summary(lm)$r.squared
