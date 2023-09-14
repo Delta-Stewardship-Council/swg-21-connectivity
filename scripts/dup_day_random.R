@@ -6,7 +6,7 @@ library(dplyr)
 library(data.table)
 
 # data
-chla_covars <- read.csv("data_model/model_chla_nuts_combined.csv")
+chla_covars <- read.csv("model_gam/model_chla_nuts_combined.csv")
 head(chla_covars)
 str(chla_covars)
 
