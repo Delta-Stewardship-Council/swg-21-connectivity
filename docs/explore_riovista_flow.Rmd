@@ -1,0 +1,113 @@
+---
+title: "explore_riovista_flow"
+author: "Liz Stumpner"
+date: "2023-09-15"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#load libraries
+```{r}
+library(readr)
+library(glue)
+library(dataRetrieval)
+library(dplyr)
+library(ggplot2)
+library(janitor)
+library(imputeTS)
+library(lubridate)
+```
+
+#check Rio Vista (SRV, USGS-11455420) and Sacramento River below Georgianna Slough relationship (WGB, USGS-11447905)
+
+```{r}
+
+SRV <- read_csv("data_publication/data_clean/clean_flow_usgs_11455420.csv")
+
+SRV <- subset(SRV, select = c(1,5))
+
+SRV <- SRV %>%
+  rename(SRV_Q = flow)
+
+gageID="11447905"
+param="72137"
+
+WGB <- dataRetrieval::readNWISdv(siteNumbers = gageID, parameterCd = c(param))
+
+WGB <- WGB %>%
+  rename(WGB_Q = X_72137_00003,
+         WGB_Q_cd = X_72137_00003_cd,
+         date=Date)
+
+WGB <- subset(WGB, select = c(3:4))
+
+WGB_SRV <- left_join(WGB, SRV, by = 'date')
+
+plot(WGB_SRV$WGB_Q, WGB_SRV$SRV_Q)
+
+model <- lm(WGB_Q~SRV_Q, data=WGB_SRV) #R2 = 0.7541
+
+summary(model)
+```
+
+#review Rio Vista data gaps
+
+```{r}
+continous.dates <- data.frame(x = 1:7623, date = seq(as.Date('1999-02-17'),as.Date('2019-12-31'), by='day'))
+
+SRV <- merge(continous.dates, SRV, by = "date", all.x = TRUE)
+
+# assigns length of data gaps
+SRV_sum <- SRV %>%
+  mutate(SRV_Q2=case_when(is.na(SRV_Q)~0,TRUE~1),
+         x1 = cumsum(SRV_Q2)) %>%
+  group_by(x1) %>%
+  summarise(length = n())
+
+#compiles length of all data gaps - used downstream in a join
+SRV_new <- SRV_sum %>%
+  filter(length>1)
+
+SRV_new2 <- SRV %>%
+  mutate(SRV_Q2=case_when(is.na(SRV_Q)~0,TRUE~1),
+         x1 = cumsum(SRV_Q2))
+
+SRV_missing=left_join(SRV_new, SRV_new2)
+
+#remove data when SRV_Q2 is = 0
+
+SRV_missing <- filter(SRV_missing, SRV_Q2 == 1)
+
+SRV_missing <- subset(SRV_missing, select = c(2:3, 5))
+
+#highest flow in data gap is when SRV flow is 81,100 cfs
+```
+
+#Rerun regression for Rio Vista flows below 81,100 cfs
+
+```{r}
+WGB_SRV_sub <- filter(WGB_SRV, SRV_Q < 81101)
+
+plot <-ggplot(WGB_SRV_sub, aes(x=WGB_Q, y=SRV_Q))+
+  geom_point()+
+  geom_smooth(method = "lm", color = "green")
+
+
+plot
+
+model <- lm(SRV_Q~WGB_Q, data=WGB_SRV_sub) #R2 = 0.9392
+
+summary(model)
+
+
+#significant positive relationship between SRV and WGB 
+#will use the following equation to model SRV data from WGB
+#SRV = -184.64557 + 2.25250x
+```
+
+
+
