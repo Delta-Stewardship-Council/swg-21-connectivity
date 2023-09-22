@@ -49,8 +49,21 @@ flowdat$group <- ifelse(is.na(flowdat$flow), "fill", "measure")
 
   flowdat$flow_modeled <- round(flowdat$flow_modeled)
 
+  #impute SRV flow to fill the missing modeled values
+
+  flowdat <- flowdat[order(flowdat$date),]
+
+  flowdat$flow_impute <- na_ma(flowdat$flow, k = 7, weighting = "exponential", maxgap = Inf)
+
   flowdat <- flowdat %>%
-    mutate(flow_for_gam =case_when(is.na(flow)~flow_modeled, TRUE~flow))
+    mutate(flow_for_gam_step1 =case_when(is.na(flow)~flow_modeled, TRUE~flow))
+
+  flowdat <- flowdat %>%
+    mutate(flow_for_gam_step2 =case_when(is.na(flow_for_gam_step1)~flow_impute, TRUE~flow))
+
+  flowdat <- flowdat %>%
+    mutate(flow_for_gam_final =case_when(is.na(flow_for_gam_step2)~flow_for_gam_step1, TRUE~flow_for_gam_step2))
+
 
   write_csv(flowdat, file=glue("data_publication/data_clean/clean_flow_usgs_{gageID}.csv"))
 }
