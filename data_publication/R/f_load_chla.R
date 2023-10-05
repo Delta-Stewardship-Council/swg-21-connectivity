@@ -40,6 +40,8 @@ f_load_chla <- function() {
 
   # check
   sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #44, all DWR sites from recent years
+  dwr_check <- subset(regions_chla_covars, is.na(chlorophyll) == TRUE)
+
   # remove NAs
   regions_chla_covars <- regions_chla_covars[!is.na(regions_chla_covars$chlorophyll),]
 
@@ -56,10 +58,27 @@ f_load_chla <- function() {
   unique(check_dup[,c(1,4)])
 
   # select one measurement at random
-  chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station, date)]
+  #chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station, date)]
+
+  # calculate a mean value for 8 instances with two values
+  dups <- check_dup %>%
+    group_by(date, station) %>%
+    summarise(chlorophyll_mean = mean(chlorophyll))
+
+  dups$method <- "mean"
+
+  # put them back together
+  not_dup <- subset(duplicate_chl, is_duplicated == FALSE & location != "off_channel_below")
+  not_dup$method <- "measured"
+
+  dups_region <- merge(dups, check_dup, by = c("date", "station"), all = TRUE)
+  dups_region <- dups_region[,-7]
+  colnames(dups_region)[3] <- "chlorophyll"
+
+  full_data <- rbind(not_dup, unique(dups_region))
 
   # check
-  check_chl <- chl_daily_station %>%
+  check_chl <- full_data %>%
     group_by(station, date) %>%
     mutate(num_dups = n()) %>%
     ungroup() %>%
@@ -67,16 +86,16 @@ f_load_chla <- function() {
 
   sum(check_chl$is_duplicated == TRUE) #0 (looks good!)
 
-  chl_daily_station %>%
+  full_data %>%
     group_by(location) %>%
     summarize(total = n()) # more data than in supplemental table, may still need to be subset by date
 
-  range(chl_daily_station$date)
+  range(full_data$date)
 
-  hist(chl_daily_station$chlorophyll)
-  boxplot(chl_daily_station$chlorophyll)
+  hist(full_data$chlorophyll)
+  boxplot(full_data$chlorophyll)
 
-  chl_daily_rmoutliers <- chl_daily_station %>%
+  chl_daily_rmoutliers <- full_data %>%
     filter(chlorophyll<100)
 
   # export data ----------------------------------------
