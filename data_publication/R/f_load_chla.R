@@ -34,12 +34,12 @@ f_load_chla <- function() {
     mutate(location = case_when(station %in% c("USGS-11447650", "SHR") ~"main_above",
                                 station %in% c("LIS", "STTD", "USGS-11455139") ~ "yolo",
                                 station %in% c("USGS-11455143", "USGS-382006121401601", "USGS-382010121402301", "USGS-11455146", "USGS-11455276", "USGS-11455166", "USGS-381424121405601", "USGS-11455315", "USGS-11455385", "USGS-11455350", "44", "USGS-11455167", "Pro", "USGS-11455140") ~"off_channel_below",
-                                station %in% c("34", "657", "NZ068", "653", "USGS-11455478", "16", "D22") ~ "main_below")) #EZ2 near Decker Island would fit in here
+                                station %in% c("34", "657", "NZ068", "653", "USGS-11455478", "16", "D22", "EZ2") ~ "main_below")) #EZ2 near Decker Island would fit in here
 
   head(regions_chla_covars)
 
   # check
-  sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #44
+  sum(is.na(regions_chla_covars$chlorophyll) == TRUE) #44, all DWR sites from recent years
   # remove NAs
   regions_chla_covars <- regions_chla_covars[!is.na(regions_chla_covars$chlorophyll),]
 
@@ -51,7 +51,9 @@ f_load_chla <- function() {
     ungroup() %>%
     mutate(is_duplicated = num_dups > 1)
 
-  sum(duplicate_chl$is_duplicated == TRUE) #168
+  sum(duplicate_chl$is_duplicated == TRUE & duplicate_chl$location != "off_channel_below") #16
+  check_dup <- subset(duplicate_chl, is_duplicated == TRUE & location != "off_channel_below")
+  unique(check_dup[,c(1,4)])
 
   # select one measurement at random
   chl_daily_station <- setDT(regions_chla_covars)[, .SD[sample(seq_len(.N), 1)], .(station, date)]
