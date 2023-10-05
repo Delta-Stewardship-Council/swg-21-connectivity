@@ -63,3 +63,8 @@ chl_daily_station %>%
   summarize(total = n())
 
 range(chl_daily_station$date)
+
+# check duplicate day-region for high variability
+
+check_dup <- subset(duplicate_chl, date > as.Date("2016-12-31") & date < as.Date("2017-12-31") & location == "yolo")
+plot(check_dup$date, check_dup$chlorophyll, col = as.factor(check_dup$station_wq_chl))
