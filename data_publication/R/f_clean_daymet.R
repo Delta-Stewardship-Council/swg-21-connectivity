@@ -16,7 +16,7 @@ source("data_publication/R/f_get_daymet.R")
 f_clean_daymet <- function(){
 
   # get raw data ID:
-  f_get_daymet(site = "yolo",lats = 38.307857513,lons = -121.692428589,start = 1998,end = 2020) # STTD
+  f_get_daymet(site = "yolo",lats = 38.35338,lons = -121.643,start = 1998,end = 2020) # STTD
   (daymet_sttd <- contentid::store("data_publication/data_raw/raw_daymet_yolo_1998-2020.csv"))
   daymet_file_sttd <- contentid::resolve("hash://sha256/c40ad579b758ba7c8ecbda64fea8c33ca8d01b876cac28d84470382dd0ec2812")
 

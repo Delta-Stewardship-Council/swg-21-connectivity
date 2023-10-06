@@ -7,8 +7,8 @@
 library(daymetr)
 
 f_get_daymet <- function(site = "yolo",
-                         lats = 38.307857513,
-                         lons = -121.692428589,
+                         lats = 38.35338,
+                         lons = -121.643,
                          start = 1994,
                          end = 2020){
 
