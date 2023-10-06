@@ -1,6 +1,6 @@
 ##########################################################
 # Created by: Catarina Pien (cpien@usbr.gov)
-# Last updated: 8/16/2023
+# Last updated: 10/6/2023
 # Description: This script integrates covariate and chlorophyll data,
 #   creating the final dataset used for our model.
 #########################################################
@@ -33,8 +33,8 @@ f_integrate_model_data<- function(){
   # flow data
   flow_SAC_id <- contentid::store("data_publication/data_clean/clean_flow_usgs_11425500.csv")
   flow_SAC_file <- contentid::resolve("hash://sha256/b33d6d01c6608665e380e29f9b63220ff0fe64bf551169f4e304073ad2800785")
-  flow_SRV_id <- contentid::store("data_publication/data_clean/clean_flow_usgs_11455420.csv")
-  flow_SRV_file <- contentid::resolve("hash://sha256/dc58f63029337eac187867ea60db08c49710dd544954430b5b6c4c4c3849160c")
+  (flow_SRV_id <- contentid::store("data_publication/data_clean/clean_flow_usgs_11455420.csv"))
+  flow_SRV_file <- contentid::resolve("hash://sha256/b478154cd4b5c1f6fd6387959608ecbb0bb24a6d5bea675c4916ade159e74da5")
 
   # srad data
   (daymet_sttd_id <- contentid::store("data_publication/data_clean/clean_daymet_yolo_1998-2020.csv"))
@@ -46,7 +46,7 @@ f_integrate_model_data<- function(){
 
   # chla data
   (chla_id <- contentid::store("data_publication/data_clean/model_chla.csv"))
-  chla_file <- contentid::resolve("hash://sha256/2b8dde4979f4f7f87a6e18c51e8847a13f060ff95716543bc615500fe646f8ca")
+  chla_file <- contentid::resolve("hash://sha256/5ca71b04402aa9a4aed9d28e29b9a9c47cfbccfa98993b589c8613eddcbe3eb0")
 
   # water temp
   (watertemp_id <- contentid::store("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1178.2&entityid=5055c89851653f175078378a6e8ba6eb"))
@@ -79,7 +79,7 @@ f_integrate_model_data<- function(){
   flow_SRV <- readr::read_csv(flow_SRV_file) %>%
     dplyr::select(-flow_cd) %>%
     dplyr::rename(station_flow = site_no,
-                  flow_downstream=flow) %>%
+                  flow_downstream=flow_for_gam_final) %>%
     dplyr::filter(lubridate::year(date)>=1998) %>%
     dplyr::mutate(
       doy1998 = as.numeric(difftime(date, as.Date("1998-01-01"), units = "day")) + 1)%>%
@@ -132,18 +132,23 @@ f_integrate_model_data<- function(){
   summary(covars)
 
   covars_fill <- covars %>%
-    tidyr::fill(flow_downstream, .direction = "down") %>%
+    # tidyr::fill(flow_downstream, .direction = "down") %>%
     tidyr::fill(srad_downstream, .direction = "down") %>%
     tidyr::fill(srad_yolo, .direction = "down") %>%
     tidyr::fill(srad_upstream, .direction = "down") # fill missing data
 
+  # Checking covar filling - remove this once we impute ------------------------
   summary(covars_fill)
+  covars_na <- covars %>% filter(is.na(flow_downstream))%>%
+    select(date, doy1998, flow_downstream, flow_upstream, flow_yolo, inund_factor)
+  covars_chla_na <- left_join(covars_na, chla) %>% filter(!is.na(chlorophyll), region == "downstream") %>%
+    mutate(lm_fill = if_else(date %in% c("2006-01-24", "2015-12-16", "2017-04-18", "2019-08-08"), "N", "Y")) %>%
+    select(date, doy1998, flow_downstream, flow_upstream, flow_yolo, inund_factor, chlorophyll, lm_fill) %>%
+    arrange(lm_fill)
+  write_csv(covars_na, "data_publication/data_raw/missing_downstream_q.csv")
+  write_csv(covars_chla_na, "data_publication/data_raw/missing_downstream_q_chla.csv")
 
-   # no red flags
-      # ggplot() +
-      #   geom_point(data = covars_fill, aes(doy1998, flow_SRV), color = "red") +
-      #   geom_point(data = covars, aes(doy1998, flow_SRV), color = "black", size = 0.8) +
-      #   theme_bw()
+  # ------------------------------------------------------------------------------
 
   # Calculate lags and rename -----------------------------------------------
   final_covars <- covars_fill %>%
