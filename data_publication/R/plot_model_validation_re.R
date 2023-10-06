@@ -36,7 +36,8 @@ downstream <- alldata %>% filter(region == "downstream")
 ## Downstream -------------------------------------------------------------
 resid_d = residuals(gam_downstream)
 res_d <- data.frame(fitted = fitted(gam_downstream), resid = resid_d, flow = downstream$log_qsdy,
-                    WTmwk = downstream$WTmwk, inund_fac = downstream$inund_factor)
+                    WTmwk = downstream$WTmwk, inund_fac = downstream$inund_factor) %>%
+  mutate(inund_fac = factor(inund_fac, levels = c("none", "short", "long")))
 
 ### RE
 sm <- smooth_estimates(gam_downstream) %>%
@@ -98,7 +99,8 @@ bpacfdf_d <- with(bpacf_d, data.frame(lag, acf))
 ## Yolo ---------------------------------------------------------------------
 resid_y = residuals(gam_yolo)
 res_y <- data.frame(fitted = fitted(gam_yolo), resid = resid_y, flow = yolo$log_qsdy,
-                    WTmwk = yolo$WTmwk, inund_fac = yolo$inund_factor)
+                    WTmwk = yolo$WTmwk, inund_fac = yolo$inund_factor)%>%
+  mutate(inund_fac = factor(inund_fac, levels = c("none", "short", "long")))
 
 ### RE
 sm_yolo <- smooth_estimates(gam_yolo) %>%
@@ -160,7 +162,8 @@ bpacfdf_y <- with(bpacf_y, data.frame(lag, acf))
 ## Upstream --------------------------------------------------------
 resid_u = residuals(gam_upstream)
 res_u <- data.frame(fitted = fitted(gam_upstream), resid = resid_u, flow = upstream$log_qsdy,
-                    WTmwk = upstream$WTmwk, inund_fac = upstream$inund_factor)
+                    WTmwk = upstream$WTmwk, inund_fac = upstream$inund_factor)%>%
+  mutate(inund_fac = factor(inund_fac, levels = c("none", "short", "long")))
 ### RE
 sm_up <- smooth_estimates(gam_upstream) %>%
   add_confint()
@@ -225,14 +228,14 @@ bpacfdf_u <- with(bpacf_u, data.frame(lag, acf))
 
 # Save figures---------------------------------------------------------
 
-png(filename = "./figures/validation/validation_gam_downstream.png", width = 7.5, height = 9, units = "in", res = 300)
+png(filename = "./data_publication/figures/validation_gam_downstream.png", width = 7.5, height = 9, units = "in", res = 300)
 patched_d
 dev.off()
 
-png(filename = "./figures/validation/validation_gam_yolo.png", width = 7.5, height = 9, units = "in", res = 300)
+png(filename = "./data_publication/figures/validation_gam_yolo.png", width = 7.5, height = 9, units = "in", res = 300)
 patched_y
 dev.off()
 
-png(filename = "./figures/validation/validation_gam_upstream.png", width = 7.5, height = 9, units = "in", res = 300)
+png(filename = "./data_publication/figures/validation_gam_upstream.png", width = 7.5, height = 9, units = "in", res = 300)
 patched_u
 dev.off()

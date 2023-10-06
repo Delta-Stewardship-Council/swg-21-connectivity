@@ -1,6 +1,6 @@
 ##########################################################
 # Created by: Catarina Pien (cpien@usbr.gov)
-# Last updated: 8/16/2023
+# Last updated: 10/6/2023
 # Description: This script plots the raw data - correlation plots, histograms, boxplots.
 # Plots are based on clean integrated dataset.
 #########################################################
@@ -39,7 +39,7 @@ pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
   geom_jitter(aes(x = inund_factor, y = log_chla, color = inund_factor), alpha = 0.7) +
   geom_boxplot(aes(x = inund_factor, y = log_chla ),alpha = 0, size = 0.6) +
   scale_color_manual(values = pal_vals) +
-  scale_y_continuous(breaks = seq(-2, 5, 1), sec.axis = sec_axis(~exp(.), name = expression(Chlorophyll-a~(µg~L^-1)), breaks = c(0.37, 1, 2.71, 7.39, 20.09, 54.6))) +
+  scale_y_continuous(breaks = seq(-2, 4, 1), sec.axis = sec_axis(~exp(.), name = expression(Chlorophyll-a~(µg~L^-1)), breaks = c(0.37, 1, 2.71, 7.39, 20.09, 54.6))) +
   facet_wrap(~region) +
     labs(y = expression(log[e]~Chlorophyll-a), x = "Inundation Factor", color = "Region") +
   theme_bw() +
@@ -88,16 +88,16 @@ library(patchwork)
 
 (histogram_qsdy <- ggplot(clean_chl, aes(Q_sday)) +
     labs(x = "Daily Mean Flow (cfs)") +
-    geom_histogram(color = "black", fill = "gray50", binwidth = 5000) + theme_bw()+
+    geom_histogram(color = "black", fill = "gray50", binwidth = 10000) + theme_bw()+
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5)))
 
 (histogram_chl_t <- ggplot(clean_chl, aes(log_chla)) +
-    geom_histogram(color = "black", fill = "olivedrab" ,binwidth = 0.2, alpha = 0.4) +
+    geom_histogram(color = "black", fill = "olivedrab" ,binwidth = 0.4, alpha = 0.4) +
     labs(x = expression(log[e]~Chlorophyll-a)) + theme_bw())
 
 (histogram_chl <- ggplot(clean_chl, aes(chlorophyll)) +
     labs(x = expression(Chlorophyll-a~(µg~L^-1))) +
-    geom_histogram(color = "black",fill = "olivedrab" , binwidth = 2, alpha = 0.9) + theme_bw())
+    geom_histogram(color = "black",fill = "olivedrab" , binwidth = 4, alpha = 0.9) + theme_bw())
 
 (histos <- (histogram_qsdy|histogram_chl)/(histogram_qsdy_t |histogram_chl_t))
 
