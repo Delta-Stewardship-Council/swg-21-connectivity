@@ -15,7 +15,7 @@ library(mgcv)
 # Read Data -------------------------------------------------
 alldata <- readr::read_csv(here::here("data_publication/data_clean/model_chla_covars.csv")) %>%
   mutate(station = factor(station),
-         inund_factor = factor(inund_factor))
+         inund_factor = factor(inund_factor, levels = c("none", "short", "long")))
 downstream <- alldata %>% filter(region == "downstream")
 upstream <- alldata %>% filter(region == "upstream")
 yolo <- alldata %>% filter(region == "yolo")
