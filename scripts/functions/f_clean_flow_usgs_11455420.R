@@ -6,6 +6,9 @@ library(glue)
 library(contentid)
 library(janitor)
 library(tidyr)
+library(ggplot2)
+library(dataRetrieval)
+library(lubridate)
 
 f_clean_flow_usgs_11455420 <- function(){
 
@@ -38,7 +41,7 @@ f_clean_flow_usgs_11455420 <- function(){
               flow_inst = mean(flow_inst, na.rm = TRUE))
 
   #explore data - notice step change between WY05 and WY06
-  library(ggplot2)
+
   plot <- ggplot() + geom_line(data = SRVdv, aes(x=date, y=gh), color = "red")
   plot
 
@@ -102,7 +105,20 @@ f_clean_flow_usgs_11455420 <- function(){
 
   plot
 
-  #quick view of 2016
+
+#quick view of 2016
+
+
+
+  WY16 <- filter(SRVdv_off, year(date) == c(2015, 2016))
+
+  plot <- ggplot()+
+    geom_line(data =   WY16, aes(x=date, y=flow_inst), color = "blue") +
+    geom_line(data =   WY16, aes(x=date, y=Q_tf), color = "black")+
+    geom_line(data =   WY16, aes(x=date, y=tidal_flow), color = "green")
+
+
+  plot
 
 
   #write new file
