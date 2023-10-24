@@ -10,9 +10,9 @@ library(tidyr)
 f_clean_flow_usgs_11455420 <- function(){
 
   # get raw data ID:
-  SRV_flow <- contentid::store("data_raw/raw_flow_usgs_11455420.zip")
+  SRV_flow <- contentid::store("C:/Users/estumpne/Documents/R/swg-21-connectivity/data_raw/raw_flow_usgs_11455420.csv.gz")
 
-  SRV_flow_id <- contentid::resolve("hash://sha256/7c2b6318b8b2efccc4ede3021a33f1c32c0a7c9498877e4d29a378e461bee89a")
+  SRV_flow_id <- contentid::resolve("hash://sha256/68d16e5d27aac06dd5de81b54c38090736efc86124826adc25d6bf2a8a5dc682")
 
   # read in data
 
@@ -22,14 +22,20 @@ f_clean_flow_usgs_11455420 <- function(){
 
   SRVuv <- rename(SRVuv, Q_tf = x_72137_inst)
 
-  SRVuv <- subset(SRVuv, select = c(date_time, gh_inst, Q_tf))
+  SRVuv <- subset(SRVuv, select = c(date_time, gh_inst, Q_tf, flow_inst))
+
+  SRVuv <- SRVuv %>%
+    mutate(tidal_flow = flow_inst - Q_tf)
 
   #downstep SRV stage and flow to daily mean
 
   SRVdv <- SRVuv %>%
     mutate(date = as.Date(date_time)) %>%
     group_by(date) %>%
-    summarize(gh = mean(gh_inst, na.rm=TRUE), Q_tf = mean(Q_tf, na.rm = TRUE))
+    summarize(gh = mean(gh_inst, na.rm=TRUE),
+              Q_tf = mean(Q_tf, na.rm = TRUE),
+              tidal_flow = mean(tidal_flow, na.rm = TRUE),
+              flow_inst = mean(flow_inst, na.rm = TRUE))
 
   #explore data - notice step change between WY05 and WY06
   library(ggplot2)
@@ -77,11 +83,27 @@ f_clean_flow_usgs_11455420 <- function(){
   SRVdv_off <- SRV_off %>%
     mutate(date = as.Date(date_time)) %>%
     group_by(date) %>%
-    summarize(gh = mean(gh_off, na.rm=TRUE), Q_tf = mean(Q_tf, na.rm = TRUE))
+    summarize(gh = mean(gh_off, na.rm=TRUE),
+              Q_tf = mean(Q_tf, na.rm = TRUE),
+              tidal_flow = mean(tidal_flow, na.rm = TRUE),
+              flow_inst = mean(flow_inst, na.rm = TRUE))
 
-  #view new timeseries with offset
+  #view new gage height timeseries with offset
   plot <- ggplot()+ geom_line(data = SRVdv_off, aes(x=date, y=gh), color = "blue")
   plot
+
+  #check flow data
+
+  plot <- ggplot()+
+    geom_line(data = SRVdv_off, aes(x=date, y=flow_inst), color = "blue") +
+    geom_line(data = SRVdv_off, aes(x=date, y=Q_tf), color = "black")+
+    geom_line(data = SRVdv_off, aes(x=date, y=tidal_flow), color = "green")
+
+
+  plot
+
+  #quick view of 2016
+
 
   #write new file
 
