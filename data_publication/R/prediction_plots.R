@@ -79,7 +79,7 @@ predict_gam(gamd6d, values = list (WTmwk = c(8, 12, 16)), exclude_terms = "stati
   facet_grid(.~ WTmwk, scales="free", space="free")
 
 # gamu6d
-upstream <- alldata %>% filter(region == "above")
+upstream <- alldata %>% filter(region == "upstream")
 unique(upstream$station)
 
 #model_p_upstream <- predict_gam(gamu6d, exclude_terms = "s(station)", values = list (WTmwk = c(8, 12, 16)), station = NULL)
@@ -87,38 +87,39 @@ unique(upstream$station)
 #model_p_upstream <- predict_gam(gamu6d, values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11447650", "SHR"))))
 
 #alternate
-model_p_upstream <- predict_gam(gamu6d, values = c(WTmwk = 12, list (station = c("USGS-11447650", "SHR"))))
+model_p_upstream <- predict_gam(gam_upstream, values = c(WTmwk = 12, list (station = c("USGS-11447650", "SHR"))))
 
 model_p_upstream$lower <- model_p_upstream$fit - model_p_upstream$se.fit
 model_p_upstream$upper <- model_p_upstream$fit + model_p_upstream$se.fit
 
 # need to remove unrealistic values
 upstream %>%
-  group_by(inund_fac2) %>%
+  group_by(inund_factor) %>%
   summarise(max = max(log_qsdy), min = min(log_qsdy))
 
-model_p_upstream$corr <- ifelse(model_p_upstream$inund_fac2 == "none" & model_p_upstream$log_qsdy > 10.8, "no",
-                               ifelse(model_p_upstream$inund_fac2 == "short" & model_p_upstream$log_qsdy < 10.7 , "no",
-                                      ifelse(model_p_upstream$inund_fac2 == "short" & model_p_upstream$log_qsdy > 11.1 , "no",
-                                             ifelse(model_p_upstream$inund_fac2 == "long" & model_p_upstream$log_qsdy < 10.7 , "no",
-                                                    ifelse(model_p_upstream$inund_fac2 == "long" & model_p_upstream$log_qsdy > 11.1 , "no",
+model_p_upstream$corr <- ifelse(model_p_upstream$inund_factor == "none" & model_p_upstream$log_qsdy > 10.8, "no",
+                               ifelse(model_p_upstream$inund_factor == "short" & model_p_upstream$log_qsdy < 10.7 , "no",
+                                      ifelse(model_p_upstream$inund_factor == "short" & model_p_upstream$log_qsdy > 11.1 , "no",
+                                             ifelse(model_p_upstream$inund_factor == "long" & model_p_upstream$log_qsdy < 10.7 , "no",
+                                                    ifelse(model_p_upstream$inund_factor == "long" & model_p_upstream$log_qsdy > 11.1 , "no",
                                                     "yes")))))
 
 model_p_upstream_sub <- subset(model_p_upstream, corr == "yes")
 
 # plot
-upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
+upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_factor)) +
   geom_point(size=1.25) +
   scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
-  geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
+  geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_factor),linetype=2, alpha=0.1) +
   scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   scale_x_continuous(name =expression(log[e](Q)), limits = c(9, 11)) +
-  ylab(expression(log[e](Chl))) +
+  ylab(expression(log[e]~Chlorophyll-a)) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
   #theme(legend.position = "top") +
   labs(title = "Mainstem", tag = "(a)") +
+  scale_y_continuous(sec.axis = sec_axis(~exp(.),  name=expression(Chlorophyll-a~(µg~L^-1)))) +
   theme(legend.position = "none")
   #labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") #+
   #ggtitle("Mainstem")
