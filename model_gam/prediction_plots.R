@@ -61,13 +61,14 @@ downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund
   geom_ribbon(data = model_p_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
   scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   scale_x_continuous(name =expression(log[e](Q)), limits = c(8.5, 12)) +
-  ylab(expression(log[e](Chl))) +
+  ylab(expression(log[e]~Chlorophyll-a)) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
   #theme(legend.position = "none") +
   labs(title = "Downstream", tag = "(c)") +
   labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
+  scale_y_continuous(sec.axis = sec_axis(~exp(.),  name=expression(Chlorophyll-a~(µg~L^-1)))) +
   theme(legend.position = "bottom")
 
 

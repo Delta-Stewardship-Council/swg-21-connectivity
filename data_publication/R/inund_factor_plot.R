@@ -46,10 +46,14 @@ mean(inun_event$inund_days) # 23.28939
 median(inun_event$inund_days) # 17
 
 # plot
+png("data_publication/figures/inun_factor.png", width = 8, height = 10, units = "in", pointsize = 12,
+    bg = "white", res = 600)
+
 par(mfrow=c(1,1))
-plot(inun_col$wy_day, inun_col$inund_days, col = inun_col$color, pch = inun_col$pch, xlim = c(50,259), cex = 2, lwd = 1.75, xlab = "Day of Water Year", ylab = "Inundation Days")
+plot(inun_col$wy_day, inun_col$inund_days, col = inun_col$color, pch = inun_col$pch, xlim = c(50,259), cex = 2, lwd = 2.5, xlab = "Day of Water Year", ylab = "Inundation Days")
 abline(h = 23.28939, col = "black", lty = 2)
 abline(h = 17, col = "black", lty = 4)
 
-
 legend("topleft", c("1999", "2000", "2002", "2003", "2004", "2005", "2006", "2010", "2011", "2013", "2016", "2017", "2018", "2019", "mean", "median"), col = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FFFF99", "#FDBF6F", "#FF7F00","#B15928", "#CAB2D6", "#6A3D9A",  "#666666", "black", "black", "black"), pch = c(16,16,16,16,16,16,16,16,16,16,16,16,16,16,NA,NA), lty = c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,4))
+
+dev.off()
