@@ -1,41 +1,55 @@
 ##########################################################
 # Created by: Pascale Goertler (pascale.goertler@water.ca.gov)
-# Last updated:
+# Last updated: update with feedback from UCD working meeting, 11/7/23
 # Description: This script makes a plot for inundation threshold/categorization exploration for methods
 ##########################################################
-# continuous data
-chl <- read.csv("data_model/model_covars_chla_fulljoin.csv")
-head(chl)
-str(chl)
+# inundation data
+devtools::install_github("goertler/inundation")
 
-check_inud_yr <- subset(chl, inundation == 1)
-unique(check_inud_yr$water_year)
+library(inundation)
+library(dplyr)
+library(lubridate)
+
+inun <- calc_inundation()
+
+head(inun)
+str(inun)
+
+# calculate offset for water year
+dates.posix <- as.POSIXlt(inun$date)
+offset <- ifelse(dates.posix$mon >= 10 - 1, 1, 0)
+
+# Water year
+inun$water_year <- dates.posix$year + 1900 + offset
+
+# make color pal
 water_year <- c(1999, 2000, 2002, 2003, 2004, 2005, 2006, 2010, 2011, 2013, 2016, 2017, 2018, 2019)
 
-brewer.pal(n = 12, name = "Paired")
-
-color <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928", "#666666", "black")
+color <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FFFF99", "#FDBF6F", "#FF7F00","#B15928", "#CAB2D6", "#6A3D9A",  "#666666", "black")
 
 col <- data.frame(color, water_year)
 
-chl_col <- merge(chl, col, by = "water_year")
-unique(chl_col$water_year)
+inun_col <- merge(inun, col, by = "water_year")
+unique(inun_col$water_year)
 
-chl_col$j_day <- yday(chl_col$date)
-chl_col$wy_day <- chl_col$j_day-273
-chl_col$wy_day <- ifelse(chl_col$wy_day < 0, chl_col$j_day+92, chl_col$wy_day)
+# water year day
+inun_col$j_day <- yday(inun_col$date)
+inun_col$wy_day <- inun_col$j_day-273
+inun_col$wy_day <- ifelse(inun_col$wy_day < 0, inun_col$j_day+92, inun_col$wy_day)
 
-chl_col$pch <- ifelse(chl_col$inund_days == 0, NA,
-                      ifelse(chl_col$inund_days > 0 & chl_col$inund_days <22, 1,
-                             ifelse(chl_col$inund_days >21, 17, NA)))
+inun_col$pch <- ifelse(inun_col$inund_days == 0, NA,
+                      ifelse(inun_col$inund_days > 0 & inun_col$inund_days <22, 1,
+                             ifelse(inun_col$inund_days >21, 2, NA)))
+# mean and median
+inun_event <- subset(inun, inund_days > 0)
+mean(inun_event$inund_days) # 23.28939
+median(inun_event$inund_days) # 17
 
+# plot
 par(mfrow=c(1,1))
-plot(chl_col$wy_day, chl_col$inund_days, col = chl_col$color, pch = chl_col$pch, xlim = c(50,259), cex = 2, xlab = "Day of Water Year", ylab = "Inundation Days")
-abline(h = 22.62368, col = "black", lty = 2)
+plot(inun_col$wy_day, inun_col$inund_days, col = inun_col$color, pch = inun_col$pch, xlim = c(50,259), cex = 2, lwd = 1.75, xlab = "Day of Water Year", ylab = "Inundation Days")
+abline(h = 23.28939, col = "black", lty = 2)
 abline(h = 17, col = "black", lty = 4)
 
-chl_inud <- subset(chl, inund_days > 0)
-mean(chl_inud$inund_days) # 22.62368
-median(chl_inud$inund_days) # 17
 
-legend("topleft", c("1999", "2000", "2002", "2003", "2004", "2005", "2006", "2010", "2011", "2013", "2016", "2017", "2018", "2019", "mean", "median"), col = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928", "#666666", "black", "black", "black"), pch = c(16,16,16,16,16,16,16,16,16,16,16,16,16,16,NA,NA), lty = c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,4))
+legend("topleft", c("1999", "2000", "2002", "2003", "2004", "2005", "2006", "2010", "2011", "2013", "2016", "2017", "2018", "2019", "mean", "median"), col = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FFFF99", "#FDBF6F", "#FF7F00","#B15928", "#CAB2D6", "#6A3D9A",  "#666666", "black", "black", "black"), pch = c(16,16,16,16,16,16,16,16,16,16,16,16,16,16,NA,NA), lty = c(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,4))
