@@ -133,38 +133,39 @@ unique(yolo$station)
 #model_p_yolo_station <- predict_gam(gamyo6d, exclude_terms = 's(station)', values = c(list (WTmwk = c(8, 12, 16)), list (station = c("USGS-11455139", "LIS", "STTD"))))
 
 #alternate
-model_p_yolo_station <- predict_gam(gamyo6d, values = c(WTmwk = 12, list (station = c("USGS-11455139", "LIS", "STTD"))))
+model_p_yolo_station <- predict_gam(gam_yolo, values = c(WTmwk = 12, list (station = c("USGS-11455139", "LIS", "STTD"))))
 
 model_p_yolo_station$lower <- model_p_yolo_station$fit - model_p_yolo_station$se.fit
 model_p_yolo_station$upper <- model_p_yolo_station$fit + model_p_yolo_station$se.fit
 
 # need to remove unrealistic values
 yolo %>%
-  group_by(inund_fac2) %>%
+  group_by(inund_factor) %>%
   summarise(max = max(log_qsdy), min = min(log_qsdy))
 
-model_p_yolo_station$corr <- ifelse(model_p_yolo_station$inund_fac2 == "none" & model_p_yolo_station$log_qsdy > 8.5, "no",
-                                ifelse(model_p_yolo_station$inund_fac2 == "short" & model_p_yolo_station$log_qsdy < 8.5 , "no",
-                                       ifelse(model_p_yolo_station$inund_fac2 == "short" & model_p_yolo_station$log_qsdy > 11 , "no",
-                                              ifelse(model_p_yolo_station$inund_fac2 == "long" & model_p_yolo_station$log_qsdy < 9.5, "no",
-                                                     ifelse(model_p_yolo_station$inund_fac2 == "long" & model_p_yolo_station$log_qsdy > 11, "no",
+model_p_yolo_station$corr <- ifelse(model_p_yolo_station$inund_factor == "none" & model_p_yolo_station$log_qsdy > 8.5, "no",
+                                ifelse(model_p_yolo_station$inund_factor == "short" & model_p_yolo_station$log_qsdy < 8.5 , "no",
+                                       ifelse(model_p_yolo_station$inund_factor == "short" & model_p_yolo_station$log_qsdy > 11 , "no",
+                                              ifelse(model_p_yolo_station$inund_factor == "long" & model_p_yolo_station$log_qsdy < 9.5, "no",
+                                                     ifelse(model_p_yolo_station$inund_factor == "long" & model_p_yolo_station$log_qsdy > 11, "no",
                                                      "yes")))))
 
 model_p_yolo_station_sub <- subset(model_p_yolo_station, corr == "yes")
 
 # plot
 
-yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_fac2)) +
+yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_factor)) +
   geom_point(size=1.25) +
   scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
-  geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_fac2),linetype=2, alpha=0.1) +
+  geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_factor),linetype=2, alpha=0.1) +
   scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   scale_x_continuous(name =expression(log[e](Q)), limits = c(4, 11)) +
-  ylab(expression(log[e](Chl))) +
+  ylab(expression(log[e]~Chlorophyll-a)) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
   theme(legend.position = "none") +
+  scale_y_continuous(sec.axis = sec_axis(~exp(.),  name=expression(Chlorophyll-a~(µg~L^-1)))) +
   labs(title = "Floodplain", tag = "(b)")
 
 # stack plots
