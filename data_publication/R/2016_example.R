@@ -60,9 +60,13 @@ chl_2016_y <- chl_2016_y[order(as.Date(chl_2016_y$date)),]
 chl_2016_ma <- subset(chl_flow_temp, location == "main_above")
 chl_2016_ma <- chl_2016_ma[order(as.Date(chl_2016_ma$date)),]
 
+png("data_publication/figures/2016_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
+    bg = "white", res = 350)
+
 plot(chl_2016_mb$date, chl_2016_mb$chlorophyll, xlim = c(as.Date("2015-12-05"), as.Date("2016-06-13")),
      col = "#56B4E9", ylim = c(0,70), type = 'b', lwd = 3, lty = 5, pch = 2,
      xlab = "Date", ylab = expression(Chlorophyll-a~(µg~L^-1)))
+mtext( "Temperature (°C)", side=2, line=2)
 rect(xleft = as.Date("2016-03-12"), xright = as.Date("2016-03-24"), ybottom = 0, ytop = 70)
 par(new = TRUE)
 plot(chl_2016_y$date, chl_2016_y$chlorophyll, xlim = c(as.Date("2015-12-05"), as.Date("2016-06-13")),
@@ -76,6 +80,8 @@ par(new = TRUE)
 plot(chl_2016_y$date, chl_2016_y$yolo_dayflow, xlim = c(as.Date("2015-12-05"), as.Date("2016-06-13")),
      col = "#0072B2", type = 'b', lwd = 3, lty = 6, pch = 18,
      xlab = "", ylab = "", xaxt='n', yaxt='n')
+mtext("Flow (in thousands, cfs)", side=4, line=-1.5)
+axis(4, at = seq(3000, 15000, 3000), labels = c(3, 6, 9, 12, 15))
 par(new = TRUE)
 plot(chl_2016_y$date, chl_2016_y$mean, xlim = c(as.Date("2015-12-05"), as.Date("2016-06-13")),
      col = "#D55E00", ylim = c(0,70), type = 'b', lwd = 3, lty = 4, pch = 20,
@@ -86,3 +92,5 @@ legend("topleft", c("Mainstem", "Floodplain", "Downstream", "Flow (cfs)", "Tempe
                     col = c("#999999", "#009E73", "#56B4E9", "#0072B2", "#D55E00"),
                     pch = c(0, 1, 2, 18, 20),
                     lty = c(3, 2, 5, 6, 4), lwd = 2)
+
+dev.off()
