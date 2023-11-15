@@ -1,6 +1,6 @@
 ##########################################################
 # Created by: Pascale Goertler (pascale.goertler@water.ca.gov)
-# Last updated: 9/07/2023
+# Last updated: 10/05/2023
 # Description: This script evaluates data using diagnostics from Zuur et al. 2010
 # covariate and chlorophyll data from f_integrate_model_data.R (the final dataset used for our model).
 #########################################################
@@ -17,10 +17,19 @@ str(filtdata)
 
 filtdata$date <- as.Date(filtdata$date)
 
-# check against only data
+# check against old data
 old_data <- read.csv("model_gam/model_chla_covars_gam.csv")
 head(final_covars)
 str(final_covars)
+
+# need to remove non-inudation period
+inundPd <- chla_covars %>% filter(inundation == 1)
+inMin <- min(inundPd$dowy)
+inMax <- max(inundPd$dowy)
+
+filtdata <- chla_covars %>%
+  filter(dowy >= inMin & dowy <= inMax)
+
 
 # outliers
 boxplot(filtdata$chlorophyll)
