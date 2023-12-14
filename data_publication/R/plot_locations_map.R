@@ -46,7 +46,7 @@ yolo_4269 <- st_transform(yolo_sf, crs = 4269) %>%
   dplyr::filter(FID == 1)
 
 ## regions polygon (created from Rosie's app; edited in ArcMap)
-regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shpExport.shp"))
+regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shapefile_with_ez2_updated.shp"))
 regions_4269 <- st_transform(regions_sf, crs = 4269) %>%
   mutate(id = rownames(.),
          region = case_when(id == 1 ~ "Downstream",
@@ -59,7 +59,7 @@ regionnames <- data.frame(region = c("Downstream", "tidal slough complex", "Floo
 regions_final <- cbind(regions_4269, regionnames) %>%
   filter(region!="tidal slough complex") %>%
   select(-notes)
-regions_buffer <- st_buffer(regions_final, 0.01)
+regions_buffer <- st_buffer(regions_final, 0.001)
 
 # stations
 stations <- read_csv(here::here("data_publication", "data_clean", "stations.csv"))
@@ -169,9 +169,9 @@ delta_map
    geom_sf(data = WW_Watershed_crop, fill = "lightgrey", colour = "lightgrey", alpha = 0.35, inherit.aes = FALSE) +
    geom_sf(data = Sloughs, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
    geom_sf(data = regions_buffer, alpha = 0.2, color = "steelblue2") +
-   geom_sf(data = regions_final, fill = "steelblue1", color = NA,size = 0.9,alpha = 0.2) +
-   geom_sf(data = stations_sf_4269, aes(shape = data_type, fill = data_type, size = data_type, color = data_type),alpha = 0.8, inherit.aes = FALSE) +
-   geom_sf_label(data = stations_sf_filt, aes(label = station_name ), hjust = 1, vjust = -0.3, inherit.aes = FALSE) +
+   geom_sf(data = regions_final, fill = "steelblue1", color = NA,size = 1,alpha = 0.2) +
+   geom_sf(data = stations_sf_4269 %>% filter(data_type != "srad"), aes(shape = data_type, fill = data_type, size = data_type, color = data_type),alpha = 0.8, inherit.aes = FALSE) +
+   geom_sf_label(data = stations_sf_filt , aes(label = station_name ), hjust = 1, vjust = -0.3, inherit.aes = FALSE) +
    annotation_scale(location = "bl", bar_cols = c("darkgray", "white", "darkgray", "white"), text_cex = 1.1)+
    annotate(geom = "text", x = -121.59, y = 38.82, label = "Mainstem (NC)", fontface = "italic") +
    annotate(geom = "text", x = -121.82, y = 38.1, label = "Downstream\n(C)", fontface = "italic") +
@@ -213,7 +213,7 @@ patchmap <- gg_inset_map +
   plot_spacer() +
   map_stations  + plot_layout(widths = c(4.1, 0.05, 2.2), heights = 7)
 patchmap
-ggsave("figures/manuscript_map.png", width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
+ggsave(here("data_publication/figures/manuscript_map.png"), width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
 
 ## Save map png--------------------------------------------
 

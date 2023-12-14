@@ -1,0 +1,11 @@
+givenName	middleInitial	surName	organizationName	electronicMailAddress	userId	role	projectTitle	fundingAgency	fundingNumber
+Catarina		Pien	Bureau of Reclamation and California Department of Water Resources	cpien@usbr.gov	0000-0003-4427-6300	Creator			
+Catarina		Pien	Bureau of Reclamation and California Department of Water Resources	cpien@usbr.gov	0000-0003-4427-6300	Contact			
+Elizabeth		Stumpner	Department of Water Resources	Elizabeth.Stumpner@water.ca.gov	0000-0003-2356-2244	Creator			
+Pascale		Goertler	Department of Water Resources	Pascale.Goertler@water.ca.gov	0000-0001-6259-5108	Creator			
+Ryan		Peek	California Department of Fish and Wildlife	Ryan.Peek@wildlife.ca.gov	0000-0002-9577-6885	Creator			
+Dylan		Chapple	Delta Science Program	Dylan.chapple@deltacouncil.ca.gov 	0000-0001-9124-7831	Creator			
+Lauren		Yamane	U.S. Fish and Wildlife Service	Lauren_yamane@fws.gov	0000-0002-0666-4196	Creator			
+Mattea		Berglund	UC Davis	mkberglund@ucdavis.edu	0000-0002-3076-9465	Creator			
+Shruti		Khanna	California Department of Fish and Wildlife	Shruti.Khanna@wildlife.ca.gov	0000-0003-1724-248X	Creator			
+Shruti		Khanna	California Department of Fish and Wildlife	Shruti.Khanna@wildlife.ca.gov	0000-0003-1724-248X	PI	NCEASConnectivityAnalysis	Delta Stewardship Council	Contract 19167

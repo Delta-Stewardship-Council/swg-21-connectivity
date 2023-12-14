@@ -84,20 +84,20 @@ library(patchwork)
 
 (histogram_qsdy_t <- ggplot(clean_chl, aes(log_qsdy)) +
     labs(x = expression(log[e]~Mean~Daily~Flow)) +
-    geom_histogram(color = "black", fill = "gray50" ,binwidth = 0.5, alpha = 0.4) + theme_bw())
+    geom_histogram(color = "black", fill = "gray50" ,binwidth = 0.5, alpha = 0.6) + theme_bw())
 
 (histogram_qsdy <- ggplot(clean_chl, aes(Q_sday)) +
     labs(x = "Daily Mean Flow (cfs)") +
-    geom_histogram(color = "black", fill = "gray50", binwidth = 10000) + theme_bw()+
+    geom_histogram(color = "black", fill = "gray50", binwidth = 15000, alpha = 0.6) + theme_bw()+
     theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5)))
 
 (histogram_chl_t <- ggplot(clean_chl, aes(log_chla)) +
-    geom_histogram(color = "black", fill = "olivedrab" ,binwidth = 0.4, alpha = 0.4) +
+    geom_histogram(color = "black", fill = "gray50" ,binwidth = 0.4, alpha = 0.6) +
     labs(x = expression(log[e]~Chlorophyll-a)) + theme_bw())
 
 (histogram_chl <- ggplot(clean_chl, aes(chlorophyll)) +
     labs(x = expression(Chlorophyll-a~(µg~L^-1))) +
-    geom_histogram(color = "black",fill = "olivedrab" , binwidth = 4, alpha = 0.9) + theme_bw())
+    geom_histogram(color = "black",fill = "gray50" , binwidth = 4, alpha = 0.6) + theme_bw())
 
 (histos <- (histogram_qsdy|histogram_chl)/(histogram_qsdy_t |histogram_chl_t))
 
