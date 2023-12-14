@@ -1,0 +1,23 @@
+attributeName	code	definition
+agency_program	DWR-EMP	Department of Water Resources Environmental Monitoring Program
+agency_program	DWR-YBFMP	Department of Water Resources Yolo Bypass Fish Monitoring Program
+agency_program	DWR-YBFMP, DWR-NCRO	Department of Water Resources Yolo Bypass Fish Monitoring Program and North Central Regional Office
+agency_program	Daymet	Daymet
+agency_program	USBR	United States Bureau of Reclamation
+agency_program	USGS	United States Geological Survey
+agency_program	USGS CAWSC	USGS California Water Science Center
+agency_program	USGS SFO	USGS San Francisco Office
+data_type	chlorophyll	chlorophyll
+data_type	flow	flow
+data_type	srad	solar radiation
+data_type	wtemp	water temperature
+region	downstream	downstream region
+region	floodplain	floodplain region
+region	mainstem	mainstem region
+sampling_frequency	15-minute (binned to daily)	15-minute (binned to daily)
+sampling_frequency	2 weeks	2 weeks
+sampling_frequency	2 weeks, daily during sampling season	2 weeks, daily during sampling season
+sampling_frequency	daily	daily
+sampling_frequency	daily during monitoring season	daily during monitoring season
+sampling_frequency	hourly (binned to daily)	hourly (binned to daily)
+sampling_frequency	monthly	monthly

@@ -1,0 +1,9 @@
+attributeName	code	definition
+inund_factor	long	greater than 21 days of inundation
+inund_factor	none	no inundation
+inund_factor	short	less than or equal to 21 days of inundation
+inundation	0	no inundation
+inundation	1	inundation
+region	downstream	downstream region
+region	upstream	upstream region, equivalent to mainstem
+region	yolo	yolo region, equivalent to floodplain

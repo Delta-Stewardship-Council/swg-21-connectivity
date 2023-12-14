@@ -1,0 +1,1428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eml:eml xmlns:eml="https://eml.ecoinformatics.org/eml-2.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:stmml="http://www.xml-cml.org/schema/stmml-1.2" packageId="edi.1537.2" xsi:schemaLocation="https://eml.ecoinformatics.org/eml-2.2.0/eml.xsd https://eml.ecoinformatics.org/eml-2.2.0/eml.xsd" system="edi">
+  <access authSystem="https://pasta.edirepository.org/authentication" order="allowFirst" scope="document">
+    <allow>
+      <principal>uid=catarinapien,o=EDI,dc=edirepository,dc=org</principal>
+      <permission>all</permission>
+    </allow>
+    <allow>
+      <principal>public</principal>
+      <permission>read</permission>
+    </allow>
+  </access>
+  <dataset>
+    <title>Discrete water temperature, flow, solar radiation, chlorophyll-a and inundation, Sacramento-San Joaquin Delta, CA, 1999-2019</title>
+    <creator>
+      <individualName>
+        <givenName>Catarina</givenName>
+        <surName>Pien</surName>
+      </individualName>
+      <organizationName>Bureau of Reclamation and California Department of Water Resources</organizationName>
+      <electronicMailAddress>cpien@usbr.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0003-4427-6300</userId>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Elizabeth</givenName>
+        <surName>Stumpner</surName>
+      </individualName>
+      <organizationName>Department of Water Resources</organizationName>
+      <electronicMailAddress>Elizabeth.Stumpner@water.ca.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0003-2356-2244</userId>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Pascale</givenName>
+        <surName>Goertler</surName>
+      </individualName>
+      <organizationName>Department of Water Resources</organizationName>
+      <electronicMailAddress>Pascale.Goertler@water.ca.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0001-6259-5108</userId>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Ryan</givenName>
+        <surName>Peek</surName>
+      </individualName>
+      <organizationName>California Department of Fish and Wildlife</organizationName>
+      <electronicMailAddress>Ryan.Peek@wildlife.ca.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0002-9577-6885</userId>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Dylan</givenName>
+        <surName>Chapple</surName>
+      </individualName>
+      <organizationName>Delta Science Program</organizationName>
+      <electronicMailAddress>Dylan.chapple@deltacouncil.ca.gov </electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0001-9124-7831</userId>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Lauren</givenName>
+        <surName>Yamane</surName>
+      </individualName>
+      <organizationName>U.S. Fish and Wildlife Service</organizationName>
+      <electronicMailAddress>Lauren_yamane@fws.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0002-0666-4196</userId>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Mattea</givenName>
+        <surName>Berglund</surName>
+      </individualName>
+      <organizationName>UC Davis</organizationName>
+      <electronicMailAddress>mkberglund@ucdavis.edu</electronicMailAddress>
+    </creator>
+    <creator>
+      <individualName>
+        <givenName>Shruti</givenName>
+        <surName>Khanna</surName>
+      </individualName>
+      <organizationName>California Department of Fish and Wildlife</organizationName>
+      <electronicMailAddress>Shruti.Khanna@wildlife.ca.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0003-1724-248X</userId>
+    </creator>
+    <pubDate>2023-12-13</pubDate>
+    <abstract>
+      <para>The objective of our study is to better understand the factors affecting chlorophyll-a production within a floodplain and its transport downstream to determine how lateral connectivity influences longitudinal connectivity.  The Yolo Bypass is an engineered floodplain of the Sacramento River that inundates during periods of high outflow via overtopping weirs. Water traveling through the Yolo Bypass flows parallel to the Sacramento River and re-connects to the mainstem at the southern extent of the floodplain. Several monitoring programs in the Sacramento San-Joaquin Delta and Yolo Bypass collect discrete and continuous water quality data, including chlorophyll measurements. For this study, we synthesized available flow, water temperature, chlorophyll and inundation data between March 1999 to December 2019 and modeled the effects of environmental variables and inundation on chlorophyll-a production in the floodplain, the mainstem, and downstream of the floodplain/mainstem. </para>
+    </abstract>
+    <keywordSet>
+      <keyword>chlorophyll a</keyword>
+      <keyword>primary productivity</keyword>
+      <keyword>floodplain</keyword>
+      <keyword>estuary</keyword>
+      <keywordThesaurus>LTER</keywordThesaurus>
+    </keywordSet>
+    <keywordSet>
+      <keyword>Sacramento-San Joaquin Delta</keyword>
+      <keyword>connectivity</keyword>
+    </keywordSet>
+    <intellectualRights>
+      <para>This information is released under the Creative Commons license - Attribution - CC BY (https://creativecommons.org/licenses/by/4.0/). The consumer of these data ("Data User" herein) is required to cite it appropriately in any publication that results from its use. The Data User should realize that these data may be actively used by others for ongoing research and that coordination may be necessary to prevent duplicate publication. The Data User is urged to contact the authors of these data if any questions about methodology or results occur. Where appropriate, the Data User is encouraged to consider collaboration or co-authorship with the authors. The Data User should realize that misinterpretation of data may occur if used out of context of the original study. While substantial efforts are made to ensure the accuracy of data and associated documentation, complete accuracy of data sets cannot be guaranteed. All data are made available "as is." The Data User should be aware, however, that data are updated periodically and it is the responsibility of the Data User to check for new versions of the data. The data authors and the repository where these data were obtained shall not be liable for damages resulting from any use or misinterpretation of the data. Thank you.
+</para>
+    </intellectualRights>
+    <coverage>
+      <geographicCoverage>
+        <geographicDescription>16</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.7425</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.7425</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.0889</northBoundingCoordinate>
+          <southBoundingCoordinate>38.0889</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>34</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.6856</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.6856</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.1576</northBoundingCoordinate>
+          <southBoundingCoordinate>38.1576</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>653</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.72</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.72</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.105</northBoundingCoordinate>
+          <southBoundingCoordinate>38.105</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>657</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.688333</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.688333</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.151667</northBoundingCoordinate>
+          <southBoundingCoordinate>38.151667</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>AL1</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.586639</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.586639</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.5445</northBoundingCoordinate>
+          <southBoundingCoordinate>38.5445</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>AL2</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.586639</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.586639</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.52806</northBoundingCoordinate>
+          <southBoundingCoordinate>38.52806</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>AL3</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.588623</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.588623</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.5185</northBoundingCoordinate>
+          <southBoundingCoordinate>38.5185</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>AL4</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.588583</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.588583</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.49439</northBoundingCoordinate>
+          <southBoundingCoordinate>38.49439</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>BL1</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.590851</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.590851</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.46681</northBoundingCoordinate>
+          <southBoundingCoordinate>38.46681</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>BL2</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.607053</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.607053</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.43189</northBoundingCoordinate>
+          <southBoundingCoordinate>38.43189</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>BL3</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.626278</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.626278</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.38939</northBoundingCoordinate>
+          <southBoundingCoordinate>38.38939</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>BL4</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.6422</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.6422</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.35496</northBoundingCoordinate>
+          <southBoundingCoordinate>38.35496</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>BL5</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.664178</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.664178</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.27428</northBoundingCoordinate>
+          <southBoundingCoordinate>38.27428</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>BL6</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.663182</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.663182</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.282465</northBoundingCoordinate>
+          <southBoundingCoordinate>38.282465</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>D22</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.7391</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.7391</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.08453</northBoundingCoordinate>
+          <southBoundingCoordinate>38.08453</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>EZ2</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.740700916667</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.740700916667</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.0954010714286</northBoundingCoordinate>
+          <southBoundingCoordinate>38.0954010714286</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>FW1</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.635232</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.635232</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.74979</northBoundingCoordinate>
+          <southBoundingCoordinate>38.74979</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>LIHF</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.588083</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.588083</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.47417</northBoundingCoordinate>
+          <southBoundingCoordinate>38.47417</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>LIHFS</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.588364</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.588364</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.47355</northBoundingCoordinate>
+          <southBoundingCoordinate>38.47355</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>LIS</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.5886</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.5886</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.47482</northBoundingCoordinate>
+          <southBoundingCoordinate>38.47482</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>NZ068</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.6895</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.6895</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.14272</northBoundingCoordinate>
+          <southBoundingCoordinate>38.14272</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>PCS</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.590934</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.590934</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.466958</northBoundingCoordinate>
+          <southBoundingCoordinate>38.466958</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>RD22</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.643972</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.643972</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.676367</northBoundingCoordinate>
+          <southBoundingCoordinate>38.676367</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>RIV</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.684543</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.684543</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.159203</northBoundingCoordinate>
+          <southBoundingCoordinate>38.159203</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>SB1</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.564176</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.564176</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.605219</northBoundingCoordinate>
+          <southBoundingCoordinate>38.605219</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>SB2</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.56625</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.56625</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.604167</northBoundingCoordinate>
+          <southBoundingCoordinate>38.604167</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>SHR</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.528</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.528</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.53188</northBoundingCoordinate>
+          <southBoundingCoordinate>38.53188</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>SRV</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.686</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.686</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.16</northBoundingCoordinate>
+          <southBoundingCoordinate>38.16</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>STTD</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.643</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.643</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.35338</northBoundingCoordinate>
+          <southBoundingCoordinate>38.35338</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS-11447650</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.5013437</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.5013437</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.45601954</northBoundingCoordinate>
+          <southBoundingCoordinate>38.45601954</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS-11455139</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.6377417</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.6377417</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.36513889</northBoundingCoordinate>
+          <southBoundingCoordinate>38.36513889</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS-11455478</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.7371772</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.7371772</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.093252</northBoundingCoordinate>
+          <southBoundingCoordinate>38.093252</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS_11425500</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.5982925</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.5982925</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.7743454</northBoundingCoordinate>
+          <southBoundingCoordinate>38.7743454</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS_11426000</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.5541666667</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.5541666667</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.6069444444</northBoundingCoordinate>
+          <southBoundingCoordinate>38.6069444444</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS_11453000</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.6430555556</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.6430555556</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.6777777778</northBoundingCoordinate>
+          <southBoundingCoordinate>38.6777777778</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS_11454210</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-122.0019</westBoundingCoordinate>
+          <eastBoundingCoordinate>-122.0019</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.49278</northBoundingCoordinate>
+          <southBoundingCoordinate>38.49278</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>USGS_11455420</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.686</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.686</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.16</northBoundingCoordinate>
+          <southBoundingCoordinate>38.16</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <geographicCoverage>
+        <geographicDescription>YBI80</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-121.638005</westBoundingCoordinate>
+          <eastBoundingCoordinate>-121.638005</eastBoundingCoordinate>
+          <northBoundingCoordinate>38.56531</northBoundingCoordinate>
+          <southBoundingCoordinate>38.56531</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <temporalCoverage>
+        <rangeOfDates>
+          <beginDate>
+            <calendarDate>1999-03-09</calendarDate>
+          </beginDate>
+          <endDate>
+            <calendarDate>2019-12-27</calendarDate>
+          </endDate>
+        </rangeOfDates>
+      </temporalCoverage>
+    </coverage>
+    <maintenance>
+      <description>not updated, associated with completed study</description>
+    </maintenance>
+    <contact>
+      <individualName>
+        <givenName>Catarina</givenName>
+        <surName>Pien</surName>
+      </individualName>
+      <organizationName>Bureau of Reclamation and California Department of Water Resources</organizationName>
+      <electronicMailAddress>cpien@usbr.gov</electronicMailAddress>
+      <userId directory="https://orcid.org">https://orcid.org/0000-0003-4427-6300</userId>
+    </contact>
+    <methods>
+      <methodStep>
+        <description>
+          <markdown># Methods &#13;
+&#13;
+We integrated data collected from various agencies to examine the relationship between chlorophyll and water temperature, solar radiation, flow, and inundation. Please see original data sources for metadata and associated code. Data were downloaded and integrated using R Version 4.3.0. &#13;
+&#13;
+- We downloaded parameters of interest (flow, inundation, solar radiation, water temperature) from original data sources (Table 1).&#13;
+    + Flow&#13;
+        * We obtained USGS daily mean flow data using the “readNWISdv” function from the dataRetrieval package (DeCicco et al. 2022).&#13;
+        * We obtained dayflow data using the “calc_inundation” function from the inundation package (Clark &amp; Goertler 2022). &#13;
+    + Inundation&#13;
+        * We obtained inundation data using the “calc_inundation” function from the inundation package (Clark &amp; Goertler 2022, Goertler 2022).&#13;
+    + Solar radiation &#13;
+        * We obtained solar radiation data using the “download_daymet” function from the daymetr package (Hufkens et al. 2018).&#13;
+    +	Water temperature&#13;
+        * We obtained water temperature data from Goertler &amp; Pien (2022). &#13;
+- We further processed data and created a full dataset for covariates.&#13;
+    + We used the “rollapply” function from the zoo package (Zeileis &amp; Grothendiek 2005) to calculate weekly mean water temperature and solar radiation. &#13;
+    + Missing data &#13;
+        *	We filled missing flow data at Sacramento River at Rio Vista using linear regression with an upstream station (USGS-11447905, Sacramento River below Georgiana Slough; R2 = 0.938). For any remaining missing data, values were imputed with the "imputeTS"" R package (Moritz and Bartz-Beielstein 2017). &#13;
+        * Missing solar radiation data were filled with the “fill” function from the tidyr package when data were missing (Wickham &amp; Girlich 2023). &#13;
+    + We assigned each data point to the designated region (see pdf metadata). &#13;
+- We downloaded chlorophyll a data from original data sources (Table 1), and assigned each station to the designated region. When there was more than one chlorophyll value for a given station on a given date (8 instances), we used the mean of the values. &#13;
+- We joined covariates to the chlorophyll-a data, thus removing dates when chlorophyll-a data were not available.&#13;
+- We filtered the dataset to March 1999 to December 2019 to cover the period of data availability.&#13;
+- We filtered the dataset to period of potential inundation (December 5 to May 2) based on historical dates of inundation.&#13;
+- Processing code are available at: [https://github.com/Delta-Stewardship-Council/swg-21-connectivity/tree/main/data_publication/R](https://github.com/Delta-Stewardship-Council/swg-21-connectivity/tree/main/data_publication/R)&#13;
+&#13;
+&#13;
+**Table 1.** Summary of Data Sources and Metrics in Integrated Dataset. &#13;
+&#13;
+| Data type	| Metric | Dataset |	Description of dataset | Reference |&#13;
+| --------- | ------- | --------- | ---------------------- | --------- |&#13;
+| Chlorophyll-a	| Chlorophyll-a (µg/L) | Yolo Bypass Fish Monitoring Program | Discrete chlorophyll data |	Adams and Pien 2023 |&#13;
+| Chlorophyll-a	| Chlorophyll-a (µg/L)	| Discrete Water Quality Integrated Dataset |	Discrete chlorophyll from 16 monitoring programs  | Bashevkin et al. 2023 |&#13;
+| Flow |	Daily mean flow (cfs)	| USGS flow data | Continuous discharge (parameter 00060) from USGS 11445500 (Sacramento River at Verona) | USGS 2023 |&#13;
+| Flow	| Daily mean flow (cfs)	| USGS flow data	| Continuous tidally filtered discharge (parameter 72137) from USGS 11455420 (Sacramento River at Rio Vista)	| USGS 2023 |&#13;
+| Flow | Daily mean QYOLO (cfs) | Dayflow | Modeled Yolo Bypass flow	| CDWR 2022 |&#13;
+| Solar radiation |	Mean weekly solar radiation	| Daymet | Simulated daily solar radiation | Hufkens et al. 2018 |&#13;
+| Water temperature	| Mean weekly water temperature	| Yolo Bypass water temperature dataset	| Continuous and discrete water temperature from the Yolo Bypass, Rio Vista and Sacramento River at Sherwood Harbor	| Goertler &amp; Pien 2022 |&#13;
+| Inundation | Inundation duration factor (no inundation, short inundation &lt;21 days, long inundation &gt;= 21 days) | Yolo Bypass Inundation | Inundation metrics based on stage height at Fremont Weir and modeled flow data |	Clark &amp; Goertler 2022, Goertler 2022 |&#13;
+&#13;
+## Methods References&#13;
+&#13;
+* Adams, J. and C. Pien. 2023. Interagency Ecological Program: Discrete water quality and phytoplankton data from the Sacramento River floodplain and Yolo Bypass tidal slough, collected by the Yolo Bypass Fish Monitoring Program, 1998 - 2022 ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/5791d7eaca09fb9471c5589c66f86863.&#13;
+&#13;
+* Bashevkin, S.M., D. Bosworth, S.E. Perry, E.B. Stumpner, and R. Hartman. 2023. Six decades (1959-2022) of water quality in the upper San Francisco Estuary: an integrated database of 16 discrete monitoring surveys in the Sacramento San Joaquin Delta, Suisun Bay, Suisun Marsh, and San Francisco Bay ver 7. Environmental Data Initiative. https://doi.org/10.6073/pasta/8dbd29c8c22f3295bbc5d3819fb51d00.&#13;
+&#13;
+* Clark J, Goertler P (2022). _inundation: Calculate Delta Inundation Metrics_. R package version 0.1.0. https://zenodo.org/records/6450272 &#13;
+&#13;
+* De Cicco, L.A., Hirsch, R.M., Lorenz, D., Watkins, W.D., Johnson, M., 2022, dataRetrieval: R packages for discovering and retrieving water data available from Federal hydrologic web services, v.2.7.12, doi:10.5066/P9X4L3GE&#13;
+&#13;
+* California Department of Water Resources (CDWR). 2023. Dayflow data available on the World Wide Web, accessed in 2023. https://data.cnra.ca.gov/dataset/dayflow.&#13;
+&#13;
+* Goertler, P. 2022. Modeled daily Yolo Bypass inundation ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/d57a74bcff69ed673bfac1de994dd9d2.&#13;
+&#13;
+* Goertler, P. and C. Pien. 2022. Daily water temperature (C) in the Yolo Bypass and Sacramento River, 1998-2019 ver 2. Environmental Data Initiative. https://doi.org/10.6073/pasta/5d84e5b8ea74dd0854d4aba1e4a6122d.&#13;
+&#13;
+* Hufkens et al. (2018). An integrated phenology modelling framework in R: modelling vegetation phenology with phenor Methods in Ecology &amp; Evolution, 9(2), 1-10.&#13;
+&#13;
+* Moritz S, Bartz-Beielstein T (2017). “imputeTS: Time Series Missing Value Imputation in R.” _The R Journal_,*9*(1), 207-218. doi:10.32614/RJ-2017-009 &lt;https://doi.org/10.32614/RJ-2017-009&gt;.&#13;
+&#13;
+* U.S. Geological Survey (USGS). 2023, National Water Information System data available on the World Wide Web (Water Data for the Nation), accessed in 2023. http://waterdata.usgs.gov/nwis/.&#13;
+&#13;
+* Wickham H, Vaughan D, Girlich M (2023). _tidyr: Tidy Messy Data_. R package version 1.3.0, &lt;https://CRAN.R-project.org/package=tidyr&gt;.&#13;
+&#13;
+&#13;
+			&#13;
+</markdown>
+        </description>
+      </methodStep>
+      <methodStep>
+        <description>
+          <para>This method step describes provenance-based metadata as specified in the LTER EML Best Practices.</para>
+          <para>This provenance metadata does not contain entity specific information.</para>
+        </description>
+        <dataSource>
+          <title>Six decades (1959-2022) of water quality in the upper San Francisco Estuary: an integrated database of 16 discrete monitoring surveys in the Sacramento San Joaquin Delta, Suisun Bay, Suisun Marsh, and San Francisco Bay</title>
+          <creator>
+            <individualName>
+              <givenName>Samuel</givenName>
+              <givenName>M</givenName>
+              <surName>Bashevkin</surName>
+            </individualName>
+            <organizationName>California State Water Resources Control Board</organizationName>
+            <electronicMailAddress>sam.bashevkin@waterboards.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0001-7406-7089</userId>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>David</givenName>
+              <surName>Bosworth</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>David.Bosworth@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0003-0740-3390</userId>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Sarah</givenName>
+              <givenName>E</givenName>
+              <surName>Perry</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>Sarah.Perry@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0002-3708-6675</userId>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Elizabeth</givenName>
+              <givenName>B</givenName>
+              <surName>Stumpner</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>Elizabeth.Stumpner@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0003-2356-2244</userId>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Rosemary</givenName>
+              <surName>Hartman</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>Rosemary.Hartman@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0002-0642-183X</userId>
+          </creator>
+          <distribution>
+            <online>
+              <onlineDescription>This online link references an EML document that describes data used in the creation of this derivative data package.</onlineDescription>
+              <url function="information">https://pasta.lternet.edu/package/metadata/eml/edi/731/7</url>
+            </online>
+          </distribution>
+          <contact>
+            <individualName>
+              <givenName>Samuel</givenName>
+              <givenName>M</givenName>
+              <surName>Bashevkin</surName>
+            </individualName>
+            <organizationName>California State Water Resources Control Board</organizationName>
+            <electronicMailAddress>sam.bashevkin@waterboards.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0001-7406-7089</userId>
+          </contact>
+          <contact>
+            <individualName>
+              <givenName>David</givenName>
+              <surName>Bosworth</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>David.Bosworth@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">https://orcid.org/0000-0003-0740-3390</userId>
+          </contact>
+        </dataSource>
+      </methodStep>
+      <methodStep>
+        <description>
+          <para>This method step describes provenance-based metadata as specified in the LTER EML Best Practices.</para>
+          <para>This provenance metadata does not contain entity specific information.</para>
+        </description>
+        <dataSource>
+          <title>Interagency Ecological Program: Discrete water quality and phytoplankton data from the Sacramento River floodplain and Yolo Bypass tidal slough, collected by the Yolo Bypass Fish Monitoring Program, 1998 - 2022</title>
+          <creator>
+            <individualName>
+              <surName>Interagency Ecological Program (IEP)</surName>
+            </individualName>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Jesse</givenName>
+              <surName>Adams</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>Jesse.Adams@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0002-0739-8782</userId>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Catarina</givenName>
+              <surName>Pien</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources and Bureau of Reclamation</organizationName>
+            <electronicMailAddress>cpien@usbr.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0003-4427-6300</userId>
+          </creator>
+          <distribution>
+            <online>
+              <onlineDescription>This online link references an EML document that describes data used in the creation of this derivative data package.</onlineDescription>
+              <url function="information">https://pasta.lternet.edu/package/metadata/eml/edi/1391/1</url>
+            </online>
+          </distribution>
+          <contact>
+            <individualName>
+              <givenName>Jesse</givenName>
+              <surName>Adams</surName>
+            </individualName>
+            <organizationName>California Department of Water Resources</organizationName>
+            <electronicMailAddress>Jesse.Adams@water.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0002-0739-8782</userId>
+          </contact>
+        </dataSource>
+      </methodStep>
+      <methodStep>
+        <description>
+          <para>This method step describes provenance-based metadata as specified in the LTER EML Best Practices.</para>
+          <para>This provenance metadata does not contain entity specific information.</para>
+        </description>
+        <dataSource>
+          <title>Daily water temperature (C) in the Yolo Bypass and Sacramento River, 1998-2019</title>
+          <creator>
+            <individualName>
+              <givenName>Pascale </givenName>
+              <surName>Goertler</surName>
+            </individualName>
+            <organizationName>Delta Stewardship Council – Delta Science Program</organizationName>
+            <positionName>Senior Environmental Scientist</positionName>
+            <electronicMailAddress>pascale.goertler@deltacouncil.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0001-6259-5108</userId>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Catarina</givenName>
+              <surName>Pien</surName>
+            </individualName>
+            <organizationName>U.S. Bureau of Reclamation</organizationName>
+            <positionName>Fish Biologist</positionName>
+            <electronicMailAddress>cpien@usbr.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0003-4427-6300</userId>
+          </creator>
+          <distribution>
+            <online>
+              <onlineDescription>This online link references an EML document that describes data used in the creation of this derivative data package.</onlineDescription>
+              <url function="information">https://pasta.lternet.edu/package/metadata/eml/edi/1178/2</url>
+            </online>
+          </distribution>
+          <contact>
+            <individualName>
+              <givenName>Pascale </givenName>
+              <surName>Goertler</surName>
+            </individualName>
+            <positionName>Senior Environmental Scientist</positionName>
+            <electronicMailAddress>pascale.goertler@deltacouncil.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0001-6259-5108</userId>
+          </contact>
+        </dataSource>
+      </methodStep>
+      <methodStep>
+        <description>
+          <para>This method step describes provenance-based metadata as specified in the LTER EML Best Practices.</para>
+          <para>This provenance metadata does not contain entity specific information.</para>
+        </description>
+        <dataSource>
+          <title>Modeled daily Yolo Bypass inundation</title>
+          <creator>
+            <individualName>
+              <givenName>Pascale </givenName>
+              <surName>Goertler</surName>
+            </individualName>
+            <organizationName>Delta Stewardship Council – Delta Science Program</organizationName>
+            <positionName>Senior Environmental Scientist</positionName>
+            <electronicMailAddress>pascale.goertler@deltacouncil.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0001-6259-5108</userId>
+          </creator>
+          <distribution>
+            <online>
+              <onlineDescription>This online link references an EML document that describes data used in the creation of this derivative data package.</onlineDescription>
+              <url function="information">https://pasta.lternet.edu/package/metadata/eml/edi/1180/1</url>
+            </online>
+          </distribution>
+          <contact>
+            <individualName>
+              <givenName>Pascale </givenName>
+              <surName>Goertler</surName>
+            </individualName>
+            <organizationName>Delta Stewardship Council – Delta Science Program</organizationName>
+            <positionName>Senior Environmental Scientist</positionName>
+            <electronicMailAddress>pascale.goertler@deltacouncil.ca.gov</electronicMailAddress>
+            <userId directory="https://orcid.org">0000-0001-6259-5108</userId>
+          </contact>
+        </dataSource>
+      </methodStep>
+      <methodStep>
+        <description>This provenance metadata does not contain entity specific information.</description>
+        <dataSource>
+          <title>USGS Flow Data</title>
+          <creator>
+            <individualName>
+              <givenName>Elizabeth</givenName>
+              <surName>Stumpner</surName>
+            </individualName>
+            <organizationName>Department of Water Resources</organizationName>
+            <electronicMailAddress>elizabeth.stumpner@water.ca.gov</electronicMailAddress>
+          </creator>
+          <creator>
+            <individualName>
+              <givenName>Catherine</givenName>
+              <surName>Ruhl</surName>
+            </individualName>
+            <organizationName>United States Geological Survey</organizationName>
+            <electronicMailAddress>rcruhl@usgs.gov</electronicMailAddress>
+          </creator>
+          <distribution>
+            <online>
+              <onlineDescription>Link to the homepage for USGS water data</onlineDescription>
+              <url>https://waterservices.usgs.gov/</url>
+            </online>
+          </distribution>
+          <contact>
+            <individualName>
+              <givenName>Elizabeth</givenName>
+              <surName>Stumpner</surName>
+            </individualName>
+            <organizationName>Department of Water Resources</organizationName>
+            <electronicMailAddress>elizabeth.stumpner@water.ca.gov</electronicMailAddress>
+          </contact>
+          <contact>
+            <individualName>
+              <givenName>Catherine</givenName>
+              <surName>Ruhl</surName>
+            </individualName>
+            <organizationName>United States Geological Survey</organizationName>
+            <electronicMailAddress>rcruhl@usgs.gov</electronicMailAddress>
+          </contact>
+        </dataSource>
+      </methodStep>
+      <methodStep>
+        <description>This provenance metadata does not contain entity specific information.</description>
+        <dataSource>
+          <title>Dayflow</title>
+          <creator>
+            <individualName>
+              <givenName>Robin</givenName>
+              <surName>Cheng</surName>
+            </individualName>
+            <organizationName>Department of Water Resources</organizationName>
+            <electronicMailAddress>robin.cheng@water.ca.gov</electronicMailAddress>
+          </creator>
+          <distribution>
+            <online>
+              <onlineDescription>Link to the page to download dayflow data</onlineDescription>
+              <url>https://data.cnra.ca.gov/dataset/dayflow</url>
+            </online>
+          </distribution>
+          <contact>
+            <individualName>
+              <givenName>Robin</givenName>
+              <surName>Cheng</surName>
+            </individualName>
+            <organizationName>Department of Water Resources</organizationName>
+            <electronicMailAddress>robin.cheng@water.ca.gov</electronicMailAddress>
+          </contact>
+        </dataSource>
+      </methodStep>
+    </methods>
+    <project>
+      <title>NCEASConnectivityAnalysis</title>
+      <personnel>
+        <individualName>
+          <givenName>Shruti</givenName>
+          <surName>Khanna</surName>
+        </individualName>
+        <organizationName>California Department of Fish and Wildlife</organizationName>
+        <electronicMailAddress>Shruti.Khanna@wildlife.ca.gov</electronicMailAddress>
+        <userId directory="https://orcid.org">https://orcid.org/0000-0003-1724-248X</userId>
+        <role>Principal Investigator</role>
+      </personnel>
+      <funding>Delta Stewardship Council Contract 19167</funding>
+    </project>
+    <dataTable>
+      <entityName>Chlorophyll and Covariate Data</entityName>
+      <entityDescription>Chlorophyll, water temperature, solar radiation, and inundation data across regions</entityDescription>
+      <physical>
+        <objectName>model_chla_covars.csv</objectName>
+        <size unit="bytes">91548</size>
+        <authentication method="MD5">bd6a37ce3358e6a2e502201afc30743c</authentication>
+        <dataFormat>
+          <textFormat>
+            <numHeaderLines>1</numHeaderLines>
+            <recordDelimiter>\n</recordDelimiter>
+            <attributeOrientation>column</attributeOrientation>
+            <simpleDelimited>
+              <fieldDelimiter>,</fieldDelimiter>
+              <quoteCharacter>"</quoteCharacter>
+            </simpleDelimited>
+          </textFormat>
+        </dataFormat>
+      </physical>
+      <attributeList>
+        <attribute>
+          <attributeName>date</attributeName>
+          <attributeDefinition>Date</attributeDefinition>
+          <storageType>date</storageType>
+          <measurementScale>
+            <dateTime>
+              <formatString>YYYY-MM-DD</formatString>
+              <dateTimeDomain/>
+            </dateTime>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>doy1998</attributeName>
+          <attributeDefinition>Count of days since January 1, 1998</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>nominalDay</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>natural</numberType>
+                <bounds>
+                  <minimum exclusive="false">433</minimum>
+                  <maximum exclusive="false">8031</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>dowy</attributeName>
+          <attributeDefinition>Day of water year</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>nominalDay</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>natural</numberType>
+                <bounds>
+                  <minimum exclusive="false">65</minimum>
+                  <maximum exclusive="false">215</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>month</attributeName>
+          <attributeDefinition>Month</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>dimensionless</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>natural</numberType>
+                <bounds>
+                  <minimum exclusive="false">1</minimum>
+                  <maximum exclusive="false">12</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>water_year</attributeName>
+          <attributeDefinition>Water year</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>nominalYear</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>natural</numberType>
+                <bounds>
+                  <minimum exclusive="false">1999</minimum>
+                  <maximum exclusive="false">2020</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>inundation</attributeName>
+          <attributeDefinition>Inundated or not inundated</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>0</code>
+                    <definition>no inundation</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>1</code>
+                    <definition>inundation</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>inund_days</attributeName>
+          <attributeDefinition>Number of days inundated during the current inundation event</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>nominalDay</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>whole</numberType>
+                <bounds>
+                  <minimum exclusive="false">0</minimum>
+                  <maximum exclusive="false">79</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>inund_factor</attributeName>
+          <attributeDefinition>Categorical classification of number of days inundated</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>long</code>
+                    <definition>greater than 21 days of inundation</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>none</code>
+                    <definition>no inundation</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>short</code>
+                    <definition>less than or equal to 21 days of inundation</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>region</attributeName>
+          <attributeDefinition>Region</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>downstream</code>
+                    <definition>downstream region</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>upstream</code>
+                    <definition>upstream region, equivalent to mainstem</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>yolo</code>
+                    <definition>yolo region, equivalent to floodplain</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>Q_sday</attributeName>
+          <attributeDefinition>Mean daily flow</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>cubicFeetPerSecond</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">46</minimum>
+                  <maximum exclusive="false">251000</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>log_qsdy</attributeName>
+          <attributeDefinition>Log of mean daily flow</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>cubicFeetPerSecond</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">3.8286413964891</minimum>
+                  <maximum exclusive="false">12.4332082181139</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>WTmwk</attributeName>
+          <attributeDefinition>Mean weekly water temperature</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>celsius</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">5.44166666666667</minimum>
+                  <maximum exclusive="false">21.4611092824226</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>sradmwk</attributeName>
+          <attributeDefinition>Mean weekly solar radiation</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>wattPerMeterSquared</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">100.877142857143</minimum>
+                  <maximum exclusive="false">517.675714285714</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>chlorophyll</attributeName>
+          <attributeDefinition>Chlorophyll-a concentration</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>microgramsPerLiter</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">0.19</minimum>
+                  <maximum exclusive="false">67.08</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>log_chla</attributeName>
+          <attributeDefinition>Log of chlorophyll-a concentration</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>microgramsPerLiter</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">-1.66073120682165</minimum>
+                  <maximum exclusive="false">4.20588593695501</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>station</attributeName>
+          <attributeDefinition>Station code or number</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>Station code or number</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+      </attributeList>
+      <numberOfRecords>690</numberOfRecords>
+    </dataTable>
+    <dataTable>
+      <entityName>Station locations</entityName>
+      <entityDescription>Station locations and metadata</entityDescription>
+      <physical>
+        <objectName>stations.csv</objectName>
+        <size unit="bytes">4260</size>
+        <authentication method="MD5">637e7a35fb9c67a8e219f91ff399cf54</authentication>
+        <dataFormat>
+          <textFormat>
+            <numHeaderLines>1</numHeaderLines>
+            <recordDelimiter>\n</recordDelimiter>
+            <attributeOrientation>column</attributeOrientation>
+            <simpleDelimited>
+              <fieldDelimiter>,</fieldDelimiter>
+              <quoteCharacter>"</quoteCharacter>
+            </simpleDelimited>
+          </textFormat>
+        </dataFormat>
+      </physical>
+      <attributeList>
+        <attribute>
+          <attributeName>latitude</attributeName>
+          <attributeDefinition>Latitude</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <customUnit>decimalDegree</customUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">38.08453</minimum>
+                  <maximum exclusive="false">38.7743454</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>longitude</attributeName>
+          <attributeDefinition>Longitude</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <customUnit>decimalDegree</customUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+                <bounds>
+                  <minimum exclusive="false">-122.0019</minimum>
+                  <maximum exclusive="false">-121.5013437</maximum>
+                </bounds>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>station</attributeName>
+          <attributeDefinition>Station code or number</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>Station code or number</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>region</attributeName>
+          <attributeDefinition>Region name</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>downstream</code>
+                    <definition>downstream region</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>floodplain</code>
+                    <definition>floodplain region</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>mainstem</code>
+                    <definition>mainstem region</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>data_type</attributeName>
+          <attributeDefinition>Metric</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>chlorophyll</code>
+                    <definition>chlorophyll</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>flow</code>
+                    <definition>flow</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>srad</code>
+                    <definition>solar radiation</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>wtemp</code>
+                    <definition>water temperature</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>station_name</attributeName>
+          <attributeDefinition>Station name</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>Station name</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>agency_program</attributeName>
+          <attributeDefinition>Agency and/or Program name</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>DWR-EMP</code>
+                    <definition>Department of Water Resources Environmental Monitoring Program</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>DWR-YBFMP</code>
+                    <definition>Department of Water Resources Yolo Bypass Fish Monitoring Program</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>DWR-YBFMP, DWR-NCRO</code>
+                    <definition>Department of Water Resources Yolo Bypass Fish Monitoring Program and North Central Regional Office</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>Daymet</code>
+                    <definition>Daymet</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>USBR</code>
+                    <definition>United States Bureau of Reclamation</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>USGS</code>
+                    <definition>United States Geological Survey</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>USGS CAWSC</code>
+                    <definition>USGS California Water Science Center</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>USGS SFO</code>
+                    <definition>USGS San Francisco Office</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>sampling_frequency</attributeName>
+          <attributeDefinition>Sampling frequency</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>15-minute (binned to daily)</code>
+                    <definition>15-minute (binned to daily)</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>2 weeks</code>
+                    <definition>2 weeks</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>2 weeks, daily during sampling season</code>
+                    <definition>2 weeks, daily during sampling season</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>daily</code>
+                    <definition>daily</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>daily during monitoring season</code>
+                    <definition>daily during monitoring season</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>hourly (binned to daily)</code>
+                    <definition>hourly (binned to daily)</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>monthly</code>
+                    <definition>monthly</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+      </attributeList>
+      <numberOfRecords>44</numberOfRecords>
+    </dataTable>
+    <otherEntity>
+      <entityName>Metadata for Connectivity Study</entityName>
+      <entityDescription>Metadata for Connectivity Study</entityDescription>
+      <physical>
+        <objectName>Metadata_Connectivity_v1.1.pdf</objectName>
+        <size unit="bytes">994606</size>
+        <authentication method="MD5">071d47258f739e852f35dac2df78fba9</authentication>
+        <dataFormat>
+          <externallyDefinedFormat>
+            <formatName>application/pdf</formatName>
+          </externallyDefinedFormat>
+        </dataFormat>
+      </physical>
+      <entityType>unknown</entityType>
+    </otherEntity>
+  </dataset>
+  <additionalMetadata>
+    <metadata>
+      <unitList>
+        <unit id="decimalDegree" multiplierToSI="" name="decimalDegree" parentSI="" unitType="">
+          <description>decimal degree, WGS 1984</description>
+        </unit>
+      </unitList>
+    </metadata>
+  </additionalMetadata>
+  <additionalMetadata>
+    <metadata>
+      <emlEditor>
+        <app>EMLassemblyline</app>
+        <release>3.5.4</release>
+      </emlEditor>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

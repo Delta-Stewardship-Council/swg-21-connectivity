@@ -1,0 +1,7 @@
+keyword	keywordThesaurus
+chlorophyll a	LTER
+primary productivity	LTER
+floodplain	LTER
+estuary	LTER
+Sacramento-San Joaquin Delta	
+connectivity	

@@ -1,0 +1,2 @@
+id	unitType	parentSI	multiplierToSI	description
+decimalDegree				decimal degree, WGS 1984

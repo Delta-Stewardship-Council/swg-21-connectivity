@@ -1,0 +1,17 @@
+attributeName	attributeDefinition	class	unit	dateTimeFormatString	missingValueCode	missingValueCodeExplanation
+date	Date	Date		YYYY-MM-DD		
+doy1998	Count of days since January 1, 1998	numeric	nominalDay			
+dowy	Day of water year	numeric	nominalDay			
+month	Month	numeric	dimensionless			
+water_year	Water year	numeric	nominalYear			
+inundation	Inundated or not inundated	categorical				
+inund_days	Number of days inundated during the current inundation event	numeric	nominalDay			
+inund_factor	Categorical classification of number of days inundated	categorical				
+region	Region	categorical				
+Q_sday	Mean daily flow	numeric	cubicFeetPerSecond			
+log_qsdy	Log of mean daily flow	numeric	cubicFeetPerSecond			
+WTmwk	Mean weekly water temperature	numeric	celsius			
+sradmwk	Mean weekly solar radiation	numeric	wattPerMeterSquared			
+chlorophyll	Chlorophyll-a concentration	numeric	microgramsPerLiter			
+log_chla	Log of chlorophyll-a concentration	numeric	microgramsPerLiter			
+station	Station code or number	character				

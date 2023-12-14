@@ -1,0 +1,9 @@
+attributeName	attributeDefinition	class	unit	dateTimeFormatString	missingValueCode	missingValueCodeExplanation
+latitude	Latitude	numeric	decimalDegree			
+longitude	Longitude	numeric	decimalDegree			
+station	Station code or number	character				
+region	Region name	categorical				
+data_type	Metric	categorical				
+station_name	Station name	character				
+agency_program	Agency and/or Program name	categorical				
+sampling_frequency	Sampling frequency	categorical				
