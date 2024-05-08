@@ -39,7 +39,7 @@ wt_stations <- readr::read_csv(wt_stations_file)%>%
                 data_type = "water temp")
 
   # Yolo specific file
-yolo_shr_wt <- data.frame(latitude = 38.53188, longitude = -121.5280, station = "SHR", region = "floodplain",
+yolo_shr_wt <- data.frame(latitude = 38.53188, longitude = -121.5280, station = "SHR", region = "mainstem",
                           data_type = "wtemp", station_name = "Sacramento River at Sherwood Harbor", agency_program = "DWR-YBFMP",
                           sampling_frequency = "2 weeks")
 

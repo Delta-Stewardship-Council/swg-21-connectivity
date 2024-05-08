@@ -28,7 +28,7 @@ latitude,longitude,station,region,data_type,station_name,agency_program,sampling
 38.605219,-121.564176,SB1,floodplain,wtemp,Sacramento Bypass 1,DWR-YBFMP,2 weeks
 38.604167,-121.56625,SB2,floodplain,wtemp,Sacramento Bypass 2,DWR-YBFMP,2 weeks
 38.53188,-121.528,SHR,mainstem,chlorophyll,Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
-38.53188,-121.528,SHR,floodplain,wtemp,Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
+38.53188,-121.528,SHR,mainstem,wtemp,Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
 38.53188,-121.528,SHR,mainstem,srad,Sacramento River at Sherwood Harbor,Daymet,daily
 38.16,-121.686,SRV,downstream,wtemp,Sacramento River at Rio Vista,USGS,15-minute (binned to daily)
 38.35338,-121.643,STTD,floodplain,chlorophyll,Screw Trap in Toe Drain,DWR-YBFMP,"2 weeks, daily during sampling season"
