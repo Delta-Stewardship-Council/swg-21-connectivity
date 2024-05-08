@@ -49,13 +49,13 @@ yolo_4269 <- st_transform(yolo_sf, crs = 4269) %>%
 regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shapefile_with_ez2_updated.shp"))
 regions_4269 <- st_transform(regions_sf, crs = 4269) %>%
   mutate(id = rownames(.),
-         region = case_when(id == 1 ~ "Downstream",
+         region = case_when(id == 1 ~ "downstream",
                             id == 2 ~ "tidal slough complex",
-                            id == 3 ~ "Floodplain",
-                            id == 4 ~ "Mainstem",
+                            id == 3 ~ "floodplain",
+                            id == 4 ~ "mainstem",
                             TRUE ~ as.character("NA")))
 
-regionnames <- data.frame(region = c("Downstream", "tidal slough complex", "Floodplain", "Mainstem"))
+regionnames <- data.frame(region = c("downstream", "tidal slough complex", "floodplain", "mainstem"))
 regions_final <- cbind(regions_4269, regionnames) %>%
   filter(region!="tidal slough complex") %>%
   select(-notes)
@@ -108,7 +108,7 @@ Sloughs <- WW_Watershed_crop %>% filter(HNAME %in% c("Steamboat Slough", "Miner 
 
 ## Delta inset ----------------------
 ### Make a sacramento river and toe drain highlight ---------------
-mapview::mapview(WW_Watershed_crop3)
+mapview::mapview(WW_Watershed_crop)
 WW_Watershed_crop3 <- st_crop(WW_Watershed_4269,xmin = -124, xmax = -121, ymin = 37, ymax = 38.9)
 SacR <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Sacramento River", "SACRAMENTO RIVER") )
 ToeD <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Toe Drain"))
@@ -126,18 +126,19 @@ sort(unique(WW_Watershed$HNAME))
     geom_sf(data = SanJ, colour = "#E69F00", fill = "#E69F00", alpha = 0.6, inherit.aes = FALSE)+
     geom_sf(data = ToeD, colour = "#D55E00", fill = "#D55E00", alpha = 0.2, inherit.aes = FALSE)+
     geom_sf(data = Putah, colour = "lightskyblue3", fill = "lightskyblue3", alpha = 0.5, inherit.aes = FALSE)+
-    geom_sf(data = weirs_4269, colour = "black", shape = 18, size = 2.6, inherit.aes = FALSE)+
+    geom_sf(data = weirs_4269, colour = "black", shape = 18, size = 2.4, inherit.aes = FALSE)+
     geom_sf_label(data = weirs_4269, aes(label = station_name),
-                  nudge_x = c(0.24, -0.21), #Sac, Fremont
-                  nudge_y = c(0.04, 0.01),
-                  colour = "black",  size = 3.5, inherit.aes = FALSE)+
-    annotate(geom = "text", x = -121.25, y = 38.5, label = "Sacramento River", fontface = "italic") +
-    annotate(geom = "text", x = -121.7, y = 37.93, label = "San Joaquin River", fontface = "italic") +
-    annotate(geom = "text", x = -122.05, y = 38.17, label = "Suisun Marsh", fontface = "italic") +
-    annotate(geom = "text", x = -121.8, y = 38.42, label = "Yolo Bypass", fontface = "italic") +
-    annotate(geom = "text", x = -122.2, y = 37.7, label = "San Francisco Bay", fontface = "italic") +
+                  nudge_x = c(0.24, 0.2), #Sac, Fremont
+                  nudge_y = c(0.05, 0.06),
+                  colour = "black",  size = 4, inherit.aes = FALSE)+
+    annotate(geom = "text", x = -121.25, y = 38.5, label = "Sacramento River", fontface = "italic", size = 3.8) +
+    annotate(geom = "text", x = -121.7, y = 37.93, label = "San Joaquin River", fontface = "italic", size = 3.8) +
+    annotate(geom = "text", x = -122.05, y = 38.17, label = "Suisun Marsh", fontface = "italic", size = 4) +
+    annotate(geom = "text", x = -122.04, y = 38.08, label = "Suisun Bay", fontface = "italic", size = 4) +
+    annotate(geom = "text", x = -121.79, y = 38.42, label = "Yolo Bypass", fontface = "italic", size = 4) +
+    annotate(geom = "text", x = -122.2, y = 37.7, label = "San Francisco Bay", fontface = "italic", size = 4) +
     annotate(geom = "text", x = -121.6, y = 38.39, angle = 72, size = 3, label = "Toe Drain", fontface = "italic") +
-    annotate(geom = "text", x = -121.84, y = 38.593, label = "Putah Creek", fontface = "italic") +
+    annotate(geom = "text", x = -121.83, y = 38.592, label = "Putah Creek", fontface = "italic", size = 3.8) +
     annotate("segment", x = -121.666389, xend = -121.666389, y = 38.75, yend = 38.71,
              arrow = arrow(ends = "last", type = "closed", length = unit(0.25, "cm")),alpha = 0.8,  color = "#009E73") +
     annotate("segment", x = -121.5566237, xend = -121.62, y = 38.6049049, yend = 38.58,
@@ -150,8 +151,9 @@ sort(unique(WW_Watershed$HNAME))
                            pad_x = unit(.005, "in"), pad_y = unit(0.15, "in"),
                            style = north_arrow_fancy_orienteering) +
     annotation_scale(location = "bl", bar_cols = c("darkgray", "white", "darkgray", "white"), text_cex = 1.1)+
-    coord_sf(xlim = c(-122.6, -121),
-                ylim= c(37.4, 38.9))+
+    coord_sf(xlim = c(-122.5, -121),
+                ylim= c(37.5, 38.9))+
+    scale_x_continuous(breaks = seq(-122.5, -121, by = 0.5)) +
   labs(title = "A) San Francisco Estuary")+
   theme_bw() +
     theme(axis.title = element_blank(),
@@ -164,23 +166,29 @@ delta_map
 
 
 ### Make map --------------
+pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
+
 (map_stations <- ggplot() +
-   geom_sf(data = yolo_4269, fill = "grey36", colour = "grey36", alpha = 0.3) +
-   geom_sf(data = WW_Watershed_crop, fill = "lightgrey", colour = "lightgrey", alpha = 0.35, inherit.aes = FALSE) +
-   geom_sf(data = Sloughs, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
-   geom_sf(data = regions_buffer, alpha = 0.2, color = "steelblue2") +
-   geom_sf(data = regions_final, fill = "steelblue1", color = NA,size = 1,alpha = 0.2) +
-   geom_sf(data = stations_sf_4269 %>% filter(data_type != "srad"), aes(shape = data_type, fill = data_type, size = data_type, color = data_type),alpha = 0.8, inherit.aes = FALSE) +
+   geom_sf(data = yolo_4269, colour = "grey36", alpha = 0.3) +
+   geom_sf(data = WW_Watershed_crop,  colour = "lightgrey", alpha = 0.35, inherit.aes = FALSE) +
+   # geom_sf(data = Sloughs, fill = "grey36", colour = "grey36", alpha = 0.5, inherit.aes = FALSE) +
+   #geom_sf(data = regions_buffer, alpha = 0.2, color = "steelblue2") +
+   #geom_sf(data = regions_final, fill = "steelblue1", color = NA,size = 1,alpha = 0.2) +
+   geom_sf(data = regions_buffer, aes(fill = region, color = region), alpha = 0.2, inherit.aes = FALSE) +
+   geom_sf(data = regions_final, aes(fill = region), color = NA,size = 1,alpha = 0.2, inherit.aes = FALSE) +
+   geom_sf(data = stations_sf_4269 %>% filter(data_type != "srad"), aes(shape = data_type, size = data_type, color = region, fill = region),alpha = 0.85, inherit.aes = FALSE) +
    geom_sf_label(data = stations_sf_filt , aes(label = station_name ), hjust = 1, vjust = -0.3, inherit.aes = FALSE) +
    annotation_scale(location = "bl", bar_cols = c("darkgray", "white", "darkgray", "white"), text_cex = 1.1)+
    annotate(geom = "text", x = -121.59, y = 38.82, label = "Mainstem (NC)", fontface = "italic") +
    annotate(geom = "text", x = -121.82, y = 38.1, label = "Downstream\n(C)", fontface = "italic") +
-   annotate(geom = "text", x = -121.74, y = 38.6, label = "Floodplain\n(C*)", fontface = "italic") +
+   annotate(geom = "text", x = -121.74, y = 38.4, label = "Floodplain\n(C*)", fontface = "italic") +
    labs(title = "B) Study Regions and Stations") +
    scale_shape_manual(values = c(8, 17, 16)) +
    scale_size_manual(values = c(4, 3, 3)) +
-   scale_fill_manual(values = viridis(7, option = "mako")[c(2,4,6)])+
-   scale_colour_manual(values = viridis(9, option = "turbo")[c(8,1,9)])+
+   scale_fill_manual(values = c("gray40", "#009E73", "#56B4E9"))+
+   scale_colour_manual(values = c("gray40", "#009E73", "#56B4E9"))+
+   # scale_fill_manual(values = viridis(7, option = "mako")[c(2,4,6)])+
+   # scale_colour_manual(values = viridis(9, option = "turbo")[c(8,1,9)])+
    theme_bw() +
    theme(panel.border=element_rect(colour="indianred4", linewidth = 1.5))+
    theme(axis.title = element_blank(),
@@ -192,16 +200,16 @@ delta_map
          axis.text.y = element_blank(),
          legend.text = element_text(size = 10),
          legend.title = element_blank(),
-         legend.position = c(0.25, .9),
+         legend.position = c(0.25, .82),
          legend.box.background = element_rect(colour = "black"),
          legend.background = element_blank(),
-         plot.title = element_text(margin=margin(0,0,-95,0)),
+         plot.title = element_text(margin=margin(0,0,-75,0)),
          legend.margin = margin(0, 0.1, 0.1, 0.1, "cm")))
 
 ## California inset--------------------------------------------------
 (gg_inset_map = ggdraw() +
    draw_plot(delta_map) +
-   draw_plot(inset, x = 0.14, y = 0.5, width = 0.29, height = 0.44))
+   draw_plot(inset, x = 0.14, y = 0.53, width = 0.29, height = 0.4))
 
 
 ## Combine with patchwork -------------------------------------
@@ -211,9 +219,9 @@ library(patchwork)
 # Most current
 patchmap <- gg_inset_map +
   plot_spacer() +
-  map_stations  + plot_layout(widths = c(4.1, 0.05, 2.2), heights = 7)
+  map_stations  + plot_layout(widths = c(4.1, 0.02, 2.2), heights = 7.2)
 patchmap
-ggsave(here("data_publication/figures/manuscript_map.png"), width = 8.5, height = 7.8, units = "in", device = 'png', dpi = 300)
+ggsave(here("data_publication/figures/manuscript_map_test.png"), width = 8.5, height = 7.5, units = "in", device = 'png', dpi = 300)
 
 ## Save map png--------------------------------------------
 
