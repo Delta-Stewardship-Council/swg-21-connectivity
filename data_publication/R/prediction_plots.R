@@ -169,7 +169,7 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   labs(title = "Floodplain", tag = "(b)")
 
 # stack plots
-png("data_publication/figures/predict_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
+tiff("data_publication/figures/predict_plot.tif", width = 7, height = 8.5, units = "in", pointsize = 14,
     bg = "white", res = 350)
 
 upstream_plot + yolo_plot + downstream_plot +
