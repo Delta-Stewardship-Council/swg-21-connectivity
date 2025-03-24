@@ -77,7 +77,7 @@ chl_2016_y <- chl_2016_y[order(as.Date(chl_2016_y$date)),]
 chl_2016_ma <- subset(chl_flow_temp, region == "upstream") # main_above
 chl_2016_ma <- chl_2016_ma[order(as.Date(chl_2016_ma$date)),]
 
-png("data_publication/figures/2016_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
+tiff("data_publication/figures/2016_plot.tif", width = 7, height = 8.5, units = "in", pointsize = 14,
     bg = "white", res = 350)
 
 plot(chl_2016_mb$date, chl_2016_mb$chlorophyll, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
