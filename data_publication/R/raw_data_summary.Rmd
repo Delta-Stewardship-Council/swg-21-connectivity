@@ -195,3 +195,45 @@ write_csv(data_tbl3, here::here("data_publication/R/raw_data_summary_inun.csv"))
 ```
 
 
+```{r}
+#summarize by inundation factor and region - most similar to table in the manuscript
+data_tbl4<- new %>%
+  select(chlorophyll, WTmwk, Q_sday, inund_factor, region, water_year)
+
+data_tbl4 <- unique(data_tbl4)
+
+tbl4_long <- data_tbl4 %>%
+  pivot_longer(cols = chlorophyll:Q_sday,
+               names_to = "var",
+               values_to = "value")
+
+tbl4_summary <- tbl4_long %>%
+  group_by(region, inund_factor, var) %>%
+  summarize(p5 = round(quantile(value, probs = 0.05),1),
+            mean = round(mean(value, na.rm = TRUE),1),
+            p95 = round(quantile(value, probs = 0.95),1)) %>%
+  arrange(var)
+
+tbl4_wide <- tbl4_summary  %>%
+  mutate(inund_factor = factor(inund_factor, levels = c("none", "short", "long"))) %>%
+  arrange(inund_factor) %>%
+  pivot_wider(names_from = "inund_factor",
+              values_from = c(p5, mean, p95)) %>% 
+  arrange(var)
+
+data_tbl4 <- data_tbl4 %>%
+  group_by(region, inund_factor) %>%
+  summarize(chla_5 = quantile(chlorophyll, probs = 0.05),
+            chla_95 = quantile(chlorophyll, probs = 0.95),
+            chla_mean = mean(chlorophyll),
+            wt_5 = quantile(WTmwk, probs = 0.05),
+            wt_95 = quantile(WTmwk, probs = 0.95),
+            wt_mean = mean(WTmwk),
+            Q_5 = quantile(Q_sday, probs = 0.05),
+            Q_95 = quantile(Q_sday, probs = 0.95),
+            Q_mean = mean(Q_sday),
+            n  = n())
+
+write_csv(data_tbl4, here::here("data_publication/data_clean/raw_data_summarytable_inunfac.csv"))
+```
+

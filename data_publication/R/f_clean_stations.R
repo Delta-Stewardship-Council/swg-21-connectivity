@@ -39,7 +39,7 @@ wt_stations <- readr::read_csv(wt_stations_file)%>%
                 data_type = "water temp")
 
   # Yolo specific file
-yolo_shr_wt <- data.frame(latitude = 38.53188, longitude = -121.5280, station = "SHR", region = "floodplain",
+yolo_shr_wt <- data.frame(latitude = 38.53188, longitude = -121.5280, station = "SHR", region = "mainstem",
                           data_type = "wtemp", station_name = "Sacramento River at Sherwood Harbor", agency_program = "DWR-YBFMP",
                           sampling_frequency = "2 weeks")
 
@@ -66,7 +66,9 @@ yolo_stations <- yolo_stations0 %>%
                 agency_program,
                 sampling_frequency) %>%
   rbind(yolo_shr_wt) %>%
-  filter(!station%in%c("CCS1", "CCS2", "CCS3", "CCS4"))
+  # filter stations actually used in the water temp dataset
+  filter(station%in%c("AL1", "AL2", "AL3", "AL4", "BL6", "BL4", "BL3", "BL2", "BL1", "PCS", "STTD"))
+
 
 
 
