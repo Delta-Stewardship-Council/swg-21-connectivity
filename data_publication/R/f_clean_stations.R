@@ -66,7 +66,9 @@ yolo_stations <- yolo_stations0 %>%
                 agency_program,
                 sampling_frequency) %>%
   rbind(yolo_shr_wt) %>%
-  filter(!station%in%c("CCS1", "CCS2", "CCS3", "CCS4"))
+  # filter stations actually used in the water temp dataset
+  filter(station%in%c("AL1", "AL2", "AL3", "AL4", "BL6", "BL4", "BL3", "BL2", "BL1", "PCS", "STTD"))
+
 
 
 
