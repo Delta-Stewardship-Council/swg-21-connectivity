@@ -1,15 +1,16 @@
 ##########################################################
 # Created by: Pascale Goertler (pascale.goertler@water.ca.gov)
-# Last updated: 10/05/2023
+# Last updated: 11/15/2023
 # Description: This script evaluates data using diagnostics from Zuur et al. 2010
 # covariate and chlorophyll data from f_integrate_model_data.R (the final dataset used for our model).
 #########################################################
 # get data
-final_covars <- read.csv("data_publication/data_clean/full_covars.csv")
-head(final_covars)
-str(final_covars)
+#final_covars <- read.csv("data_publication/data_clean/full_covars.csv")
+load("data_publication/data_clean/data_gam_results.Rdata")
+head(alldata)
+str(alldata)
 
-final_covars$date <- as.Date(final_covars$date)
+#final_covars$date <- as.Date(final_covars$date)
 
 filtdata <- read.csv("data_publication/data_clean/model_chla_covars.csv")
 head(filtdata)
@@ -263,8 +264,8 @@ acf(filtdata$chlorophyll) # nope
 
 # for supplemental
 # table S1
-filtdata %>%
-  group_by(region) %>%
+alldata %>%
+  group_by(inund_factor) %>%
   summarise(sample_size = n(), min_date = min(date), max_date = max(date))
 
 old_data %>%
@@ -275,15 +276,17 @@ old_data %>%
   group_by(region) %>%
   summarise(min_chl = min(chlorophyll), max_chl = max(chlorophyll))
 
-filtdata %>%
+alldata %>%
   group_by(region) %>%
   summarise(min_chl = min(chlorophyll), max_chl = max(chlorophyll))
 
 # for inundation summary
-filtdata %>%
+alldata %>%
   group_by(inund_factor) %>%
   summarise(sample_size = n())
 
+mean(alldata$inund_days)
+median(alldata$inund_days)
 # solar radiation
 plot(filtdata$WTmwk, filtdata$sradmwk)
 lm <- lm(WTmwk ~ sradmwk, filtdata)

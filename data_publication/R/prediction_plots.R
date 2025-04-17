@@ -1,6 +1,6 @@
 ##########################################################
 # Created by: Pascale Goertler (pascale.goertler@water.ca.gov)
-# Last updated: add y-axis, update model data (11/7/23)
+# Last updated: add y-axis, update model data with EZ2 (11/15/23)
 # Description: This script makes a prediction plot
 ##########################################################
 
@@ -60,14 +60,14 @@ downstream_plot <- ggplot(model_p_station_sub, aes(log_qsdy, fit, colour = inund
   scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_station_sub, aes(ymin = lower, ymax = upper, fill = inund_factor),linetype=2, alpha=0.1) +
   scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
-  scale_x_continuous(name =expression(log[e](Q)), limits = c(8.5, 12)) +
+  scale_x_continuous(name =expression(log[e](Flow (cfs))), limits = c(8.5, 12)) +
   ylab(expression(log[e]~Chlorophyll-a)) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
   #theme_classic() +
   #theme(legend.position = "none") +
   labs(title = "Downstream", tag = "(c)") +
-  labs(fill="Inundation Duration (categorical)", color="Inundation Duration (categorical)") +
+  labs(fill="Inundation Factor", color="Inundation Factor") +
   scale_y_continuous(sec.axis = sec_axis(~exp(.),  name=expression(Chlorophyll-a~(µg~L^-1)))) +
   theme(legend.position = "bottom")
 
@@ -112,7 +112,7 @@ upstream_plot <- ggplot(model_p_upstream_sub, aes(log_qsdy, fit, colour = inund_
   scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_upstream_sub, aes(ymin = lower, ymax = upper, fill = inund_factor),linetype=2, alpha=0.1) +
   scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
-  scale_x_continuous(name =expression(log[e](Q)), limits = c(9, 11)) +
+  scale_x_continuous(name =expression(log[e](Flow (cfs))), limits = c(9, 11)) +
   ylab(expression(log[e]~Chlorophyll-a)) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
@@ -159,7 +159,7 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   scale_colour_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
   geom_ribbon(data = model_p_yolo_station_sub, aes(ymin = lower, ymax = upper, fill = inund_factor),linetype=2, alpha=0.1) +
   scale_fill_manual(values = c("none"="#cc79A7", "short"="#D55E00", "long"="#0072B2")) +
-  scale_x_continuous(name =expression(log[e](Q)), limits = c(4, 11)) +
+  scale_x_continuous(name =expression(log[e](Flow (cfs))), limits = c(4, 11)) +
   ylab(expression(log[e]~Chlorophyll-a)) +
   #facet_grid(.~ WTmwk, scales="free", space="free") +
   theme_vis +
@@ -169,7 +169,7 @@ yolo_plot <- ggplot(model_p_yolo_station_sub, aes(log_qsdy, fit, colour = inund_
   labs(title = "Floodplain", tag = "(b)")
 
 # stack plots
-png("data_publication/figures/predict_plot.png", width = 8, height = 11, units = "in", pointsize = 18,
+tiff("data_publication/figures/predict_plot.tif", width = 7, height = 8.5, units = "in", pointsize = 14,
     bg = "white", res = 350)
 
 upstream_plot + yolo_plot + downstream_plot +
