@@ -46,7 +46,7 @@ yolo_4269 <- st_transform(yolo_sf, crs = 4269) %>%
   dplyr::filter(FID == 1)
 
 ## regions polygon (created from Rosie's app; edited in ArcMap)
-regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shapefile_with_ez2_updated.shp"))
+regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shapefile_with_ez2_updated_20240613.shp"))
 regions_4269 <- st_transform(regions_sf, crs = 4269) %>%
   mutate(id = rownames(.),
          region = case_when(id == 1 ~ "downstream",
@@ -57,15 +57,15 @@ regions_4269 <- st_transform(regions_sf, crs = 4269) %>%
 
 regionnames <- data.frame(region = c("downstream", "tidal slough complex", "floodplain", "mainstem"))
 regions_final <- cbind(regions_4269, regionnames) %>%
-  filter(region!="tidal slough complex") %>%
-  select(-notes)
+  filter(region!="tidal slough complex")
 regions_buffer <- st_buffer(regions_final, 0.001)
 
 # stations
 stations <- read_csv(here::here("data_publication", "data_clean", "stations.csv"))
 stations_sf <- st_as_sf(stations, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE)
 stations_sf_4269 <- stations_sf %>% st_transform(crs = st_crs(California)) %>%
-  filter(longitude < -121.5)
+  filter(longitude < -121.5) %>%
+  mutate(data_type = replace(data_type, data_type == "wtemp", "water \ntemperature"))
 stations_sf_filt <- stations_sf_4269  %>% filter(station %in% c("RIV"))
 
 stations_weirs_sf_4269 <- bind_rows(stations_sf_4269, weirs_4269)
@@ -110,11 +110,18 @@ Sloughs <- WW_Watershed_crop %>% filter(HNAME %in% c("Steamboat Slough", "Miner 
 ### Make a sacramento river and toe drain highlight ---------------
 mapview::mapview(WW_Watershed_crop)
 WW_Watershed_crop3 <- st_crop(WW_Watershed_4269,xmin = -124, xmax = -121, ymin = 37, ymax = 38.9)
-SacR <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Sacramento River", "SACRAMENTO RIVER") )
-ToeD <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Toe Drain"))
-SanJ <- WW_Watershed_crop3 %>% filter(HNAME %in% c("San Joaquin River", "SAN JOAQUIN RIVER"))
+SacR <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Sacramento River", "SACRAMENTO RIVER") ) %>%mutate(river = "Sacramento\nRiver")
+ToeD <- WW_Watershed_crop3 %>% filter(HNAME %in% c("Toe Drain")) %>% mutate(river = "Toe Drain")
+SanJ <- WW_Watershed_crop3 %>% filter(HNAME %in% c("San Joaquin River", "SAN JOAQUIN RIVER")) %>% mutate(river = "San Joaquin\nRiver")
 Putah <- WW_Watershed_crop3 %>% filter(HNAME == "PUTAH CREEK")
 Suisun <- WW_Watershed_crop3 %>% filter(HNAME %in% c("SUISUN CUTOFF", "SUISUN BAY"))
+yolo_merge <- yolo_4269 %>%
+  dplyr::rename(Shape_Area=Shape_STAr,
+        Shape_Leng=  Shape_STLe,
+          HNAME=NAME ,
+         Perimeter=PERIMETER ) %>%
+  mutate(river = "Yolo\nBypass")
+Rivers <- bind_rows(SacR, SanJ, yolo_merge)
 
 sort(unique(WW_Watershed$HNAME))
 
@@ -122,8 +129,11 @@ sort(unique(WW_Watershed$HNAME))
     geom_sf(data = yolo_4269, fill = "#009E73", colour = "#009E73", alpha = 0.1) +
     geom_sf(data = WW_Watershed_crop3, fill = "lightgrey", colour = "lightgrey", alpha = 0.4, inherit.aes = FALSE) +
     geom_sf(data = ca, inherit.aes=FALSE, fill = NA, color = "grey40", alpha = 0.4) +
-    geom_sf(data = SacR, colour = "#56B4E9", fill = "#56B4E9", alpha = 0.6, inherit.aes = FALSE)+
-    geom_sf(data = SanJ, colour = "#E69F00", fill = "#E69F00", alpha = 0.6, inherit.aes = FALSE)+
+    geom_sf(data = Rivers, aes(fill = river, color = river), alpha = 0.6, inherit.aes = FALSE) +
+    scale_fill_manual(values = c("#56B4E9", "#E69F00", "#009E73"))+
+    scale_color_manual(values = c("#56B4E9", "#E69F00", "#009E73"))+
+    # geom_sf(data = SacR, colour = "#56B4E9", fill = "#56B4E9", alpha = 0.6, inherit.aes = FALSE)+
+    # geom_sf(data = SanJ, colour = "#E69F00", fill = "#E69F00", alpha = 0.6, inherit.aes = FALSE)+
     geom_sf(data = ToeD, colour = "#D55E00", fill = "#D55E00", alpha = 0.2, inherit.aes = FALSE)+
     geom_sf(data = Putah, colour = "lightskyblue3", fill = "lightskyblue3", alpha = 0.5, inherit.aes = FALSE)+
     geom_sf(data = weirs_4269, colour = "black", shape = 18, size = 2.4, inherit.aes = FALSE)+
@@ -131,11 +141,11 @@ sort(unique(WW_Watershed$HNAME))
                   nudge_x = c(0.24, 0.2), #Sac, Fremont
                   nudge_y = c(0.05, 0.06),
                   colour = "black",  size = 4, inherit.aes = FALSE)+
-    annotate(geom = "text", x = -121.25, y = 38.5, label = "Sacramento River", fontface = "italic", size = 3.8) +
-    annotate(geom = "text", x = -121.7, y = 37.93, label = "San Joaquin River", fontface = "italic", size = 3.8) +
+    # annotate(geom = "text", x = -121.25, y = 38.5, label = "Sacramento River", fontface = "italic", size = 3.8) +
+    # annotate(geom = "text", x = -121.7, y = 37.93, label = "San Joaquin River", fontface = "italic", size = 3.8) +
     annotate(geom = "text", x = -122.05, y = 38.17, label = "Suisun Marsh", fontface = "italic", size = 4) +
     annotate(geom = "text", x = -122.04, y = 38.08, label = "Suisun Bay", fontface = "italic", size = 4) +
-    annotate(geom = "text", x = -121.79, y = 38.42, label = "Yolo Bypass", fontface = "italic", size = 4) +
+    # annotate(geom = "text", x = -121.79, y = 38.42, label = "Yolo Bypass", fontface = "italic", size = 4) +
     annotate(geom = "text", x = -122.2, y = 37.7, label = "San Francisco Bay", fontface = "italic", size = 4) +
     annotate(geom = "text", x = -121.6, y = 38.39, angle = 72, size = 3, label = "Toe Drain", fontface = "italic") +
     annotate(geom = "text", x = -121.83, y = 38.592, label = "Putah Creek", fontface = "italic", size = 3.8) +
@@ -158,6 +168,9 @@ sort(unique(WW_Watershed$HNAME))
   theme_bw() +
     theme(axis.title = element_blank(),
           axis.text = element_text(size = 13) ,
+          legend.position = "bottom",
+          legend.title = element_blank(),
+          legend.text = element_text(size = 13),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.border = element_rect(colour = "navy", linewidth = 1.5)))
@@ -166,7 +179,6 @@ delta_map
 
 
 ### Make map --------------
-pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
 
 (map_stations <- ggplot() +
    geom_sf(data = yolo_4269, colour = "grey36", alpha = 0.3) +
