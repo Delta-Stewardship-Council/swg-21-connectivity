@@ -12,23 +12,14 @@ latitude,longitude,station,region,data_type,station_name,agency_program,sampling
 38.43189,-121.607053,BL2,floodplain,wtemp,Below Lisbon Weir 2,DWR-YBFMP,2 weeks
 38.38939,-121.626278,BL3,floodplain,wtemp,Below Lisbon Weir 3,DWR-YBFMP,2 weeks
 38.35496,-121.6422,BL4,floodplain,wtemp,Below Lisbon Weir 4,DWR-YBFMP,2 weeks
-38.27428,-121.664178,BL5,floodplain,wtemp,Prospect Slough,DWR-YBFMP,2 weeks
 38.282465,-121.663182,BL6,floodplain,wtemp,Below Lisbon Weir 6,DWR-YBFMP,2 weeks
 38.08453,-121.7391,D22,downstream,chlorophyll,Sacramento River at Emmaton/Three Mile Slough,USBR,monthly
 38.09540107142857,-121.74070091666667,EZ2,downstream,chlorophyll,Entrapment Zone -2000 uS/cm bottom EC,DWR-EMP,monthly
-38.74979,-121.635232,FW1,floodplain,wtemp,Fremont Weir 1,DWR-YBFMP,2 weeks
-38.47417,-121.588083,LIHF,floodplain,wtemp,Lisbon Weir - High Flow Site North,DWR-YBFMP,2 weeks
-38.47355,-121.588364,LIHFS,floodplain,wtemp,Lisbon Weir - High Flow Site South,DWR-YBFMP,2 weeks
 38.47482,-121.5886,LIS,floodplain,chlorophyll,Yolo Bypass Toe Drain Below Lisbon Weir,"DWR-YBFMP, DWR-NCRO",2 weeks
-38.474816,-121.588584,LIS,floodplain,wtemp,Toe Drain at Lisbon Weir,DWR-YBFMP,2 weeks
 38.14272,-121.6895,NZ068,downstream,chlorophyll,Sacramento River below Rio Vista Bridge near United States Coast Guard station,DWR-EMP,monthly
 38.466958,-121.590934,PCS,floodplain,wtemp,Putah Creek Sinks,DWR-YBFMP,daily during monitoring season
-38.676367,-121.643972,RD22,floodplain,wtemp,Toe Drain at Road 22,DWR-YBFMP,2 weeks
 38.159203,-121.684543,RIV,downstream,wtemp,Rio Vista,USBR,hourly (binned to daily)
-38.605219,-121.564176,SB1,floodplain,wtemp,Sacramento Bypass 1,DWR-YBFMP,2 weeks
-38.604167,-121.56625,SB2,floodplain,wtemp,Sacramento Bypass 2,DWR-YBFMP,2 weeks
 38.53188,-121.528,SHR,mainstem,chlorophyll,Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
-38.53188,-121.528,SHR,mainstem,wtemp,Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
 38.53188,-121.528,SHR,mainstem,srad,Sacramento River at Sherwood Harbor,Daymet,daily
 38.16,-121.686,SRV,downstream,wtemp,Sacramento River at Rio Vista,USGS,15-minute (binned to daily)
 38.35338,-121.643,STTD,floodplain,chlorophyll,Screw Trap in Toe Drain,DWR-YBFMP,"2 weeks, daily during sampling season"
@@ -42,4 +33,3 @@ latitude,longitude,station,region,data_type,station_name,agency_program,sampling
 38.6777777778,-121.6430555556,USGS_11453000,floodplain,flow,Yolo Bypass nr Woodland CA,USGS SFO,15-minute (binned to daily)
 38.49278,-122.0019,USGS_11454210,floodplain,flow,Putah South CN near Winters,USGS,15-minute (binned to daily)
 38.16,-121.686,USGS_11455420,downstream,flow,Sacramento River at Rio Vista,USGS,15-minute (binned to daily)
-38.56531,-121.638005,YBI80,floodplain,wtemp,Yolo Bypass West Side near I80,DWR-YBFMP,2 weeks
