@@ -1,18 +1,11 @@
 ##########################################################
 # Created by: Pascale Goertler (pascale.goertler@water.ca.gov)
-# Last updated: 5/09/2024
-# Description: This script evaluates adding another downstream site and plots and example "lag" and makes a 2016 plot for the discussion
+# Last updated: 4/22/2025
+# Description: makes a 2016 plot for the discussion
 # chlorophyll data from f_load_chla.R (the final dataset, but without date filer for inundation season).
 #########################################################
 
-# explore additional site
-# create regions_chla_covars from f_load_chla
-
-new_site <- subset(regions_chla_covars, is.na(location) == TRUE)
-
-ez2 <- unique(new_site[,c(2:3)]) # 84 of 97 occurrences has a unique lat/lon
-
-# create 2016 plot for all regions (pre inundation dates filer)
+# create 2016 plot for all regions (pre inundation dates filter)
 # use chla data pre-integration script
 # chl_daily_rmoutliers is from f_load_chla.R
 
@@ -38,18 +31,9 @@ temp_dat <- read_data_entity(packageId = "edi.1178.2", entityId = temp$entityId[
 data <- readr::read_csv(file = temp_dat)
 temp_date <- subset(data, date > as.Date("2015-12-05") & date < as.Date("2016-06-13") & region == "floodplain_bypass")
 
-# tides from Liz
-#tide <- read.csv("data_clean/clean_flow_usgs_11455420.csv")
-#str(tide)
-#tide$date <- as.Date(tide$date)
-#tide_date <- subset(tide, date > as.Date("2015-12-05") & date < as.Date("2016-06-13"))
-
-# quick check
-#plot(tide_date$date, tide_date$gh)
-#plot(tide_date$date, tide_date$Q_tf)
 
 # chla data (from f_integrate_model_data.R)
-(chla_id <- contentid::store("data_publication/data_clean/model_chla.csv"))
+(chla_id <- contentid::store("manuscript_code/data_clean/model_chla.csv"))
 chla_file <- contentid::resolve("hash://sha256/5ca71b04402aa9a4aed9d28e29b9a9c47cfbccfa98993b589c8613eddcbe3eb0")
 
 chla <- read_csv(chla_file) %>%
@@ -77,7 +61,7 @@ chl_2016_y <- chl_2016_y[order(as.Date(chl_2016_y$date)),]
 chl_2016_ma <- subset(chl_flow_temp, region == "upstream") # main_above
 chl_2016_ma <- chl_2016_ma[order(as.Date(chl_2016_ma$date)),]
 
-tiff("data_publication/figures/2016_plot.tif", width = 7, height = 8.5, units = "in", pointsize = 14,
+tiff("manuscript_code/figures/Fig6_2016_plot.tif", width = 7, height = 8.5, units = "in", pointsize = 14,
     bg = "white", res = 350)
 
 plot(chl_2016_mb$date, chl_2016_mb$chlorophyll, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
