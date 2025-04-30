@@ -13,6 +13,7 @@ library(tidyr)
 library(ggplot2)
 library(gratia)
 library(patchwork)
+library(janitor)
 
 # Theme
 theme_vis <- theme_bw() +
@@ -43,7 +44,8 @@ res_d <- data.frame(fitted = fitted(gam_downstream), resid = resid_d, flow = dow
 
 ### RE
 sm <- smooth_estimates(gam_downstream) %>%
-  add_confint()
+  add_confint() %>%
+  clean_names()
 
 ### ACF Plots
 conf.level <- 0.95
@@ -88,10 +90,10 @@ bpacfdf_d <- with(bpacf_d, data.frame(lag, acf))
     labs(x = "Inundation Factor", y = "Residuals")+
     theme_vis)
 (d_p7 <- downstream_re <- sm %>%
-  filter (smooth == "s(station)") %>%
+  filter(smooth == "s(station)") %>%
   ggplot()+
-  geom_point(aes(x = station, y = est), size = 3) +
-  geom_errorbar(aes(x = station, ymin = est-se, ymax = est+se))+
+  geom_point(aes(x = station, y = estimate), size = 3) +
+  geom_errorbar(aes(x = station, ymin = estimate-se, ymax = estimate+se))+
     labs(x = "Station", y = "Estimate") +
   theme_vis +
     theme(axis.text.x = element_text(size = 7, angle = 14, hjust = 0.5, vjust = 0.5)))
@@ -106,7 +108,8 @@ res_y <- data.frame(fitted = fitted(gam_yolo), resid = resid_y, flow = yolo$log_
 
 ### RE
 sm_yolo <- smooth_estimates(gam_yolo) %>%
-  add_confint()
+  add_confint() %>%
+  clean_names()
 
 ### ACF Plots
 conf.level <- 0.95
@@ -153,8 +156,8 @@ bpacfdf_y <- with(bpacf_y, data.frame(lag, acf))
 (y_p7 <- yolo_re <- sm_yolo %>%
     filter (smooth == "s(station)") %>%
     ggplot()+
-    geom_point(aes(x = station, y = est), size = 3) +
-    geom_errorbar(aes(x = station, ymin = est-se, ymax = est+se))+
+    geom_point(aes(x = station, y = estimate), size = 3) +
+    geom_errorbar(aes(x = station, ymin = estimate-se, ymax = estimate+se))+
     labs(x = "Station", y = "Estimate") +
     theme_vis)
 (y_p8 <- pacf_y)
@@ -168,7 +171,8 @@ res_u <- data.frame(fitted = fitted(gam_upstream), resid = resid_u, flow = upstr
   mutate(inund_fac = factor(inund_fac, levels = c("none", "short", "long")))
 ### RE
 sm_up <- smooth_estimates(gam_upstream) %>%
-  add_confint()
+  add_confint() %>%
+  clean_names()
 
 ### ACF plot
 conf.level <- 0.95
@@ -215,8 +219,8 @@ bpacfdf_u <- with(bpacf_u, data.frame(lag, acf))
 (u_p7 <- upstream_re <- sm_up %>%
     filter (smooth == "s(station)") %>%
     ggplot()+
-    geom_point(aes(x = station, y = est), size = 3) +
-    geom_errorbar(aes(x = station, ymin = est-se, ymax = est+se))+
+    geom_point(aes(x = station, y = estimate), size = 3) +
+    geom_errorbar(aes(x = station, ymin = estimate-se, ymax = estimate+se))+
     labs(x = "Station", y = "Estimate") +
     theme_vis)
 (u_p8 <- pacf_u)
@@ -230,14 +234,13 @@ bpacfdf_u <- with(bpacf_u, data.frame(lag, acf))
 
 # Save figures---------------------------------------------------------
 
-png(filename = "./data_publication/figures/validation_gam_downstream.png", width = 7.5, height = 9, units = "in", res = 300)
+tiff(filename = "./manuscript_code/figures/FigS7_validation_gam_downstream.tiff", width = 7.5, height = 9, units = "in", res = 300)
 patched_d
 dev.off()
 
-png(filename = "./data_publication/figures/validation_gam_yolo.png", width = 7.5, height = 9, units = "in", res = 300)
+tiff(filename = "./manuscript_code/figures/FigS6_validation_gam_yolo.tiff", width = 7.5, height = 9, units = "in", res = 300)
 patched_y
 dev.off()
-
-png(filename = "./data_publication/figures/validation_gam_upstream.png", width = 7.5, height = 9, units = "in", res = 300)
+tiff(filename = "./manuscript_code/figures/FigS5_validation_gam_upstream.tiff", width = 7.5, height = 9, units = "in", res = 300)
 patched_u
 dev.off()
