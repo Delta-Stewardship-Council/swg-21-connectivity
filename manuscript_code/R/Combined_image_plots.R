@@ -18,8 +18,9 @@ library(dplyr)
 library(tidyr)
 library(mgcv)
 library(viridis)
+library(here)
 
-op = function(x, d=2) sprintf(paste0("%1.",d,"f"), x) 
+op = function(x, d=2) sprintf(paste0("%1.",d,"f"), x)
 plot_limit = function(adj=0.015, usr=par('usr')){
   y_adj_low <<- usr[3]+(usr[4]-usr[3])*adj
   y_adj_high <<- usr[4]-(usr[4]-usr[3])*adj
@@ -39,7 +40,7 @@ color.bar <- function(lut, min, max=-min, nticks=11,
     } else {
       rect(0, x, 1, x+1/scale, col=lut[i], border=lut[i], lwd=0.1)
     }
-    
+
   }
 }
 plot_label = function(lab="(a)", x_prop=0.08, y_prop=0.92,
@@ -84,9 +85,13 @@ extract_polygons <- function(alpha_obj)
 #      up.temp_range, log_q_range, temp_range, do.log_q_range,
 #      do.temp_range, file="all_GAM_outputs.RData")
 # load("gams_origdata.Rdata")
-load("data_gam_results.Rdata")
-load(file = "all_GAM_outputs.RData")
-load(file="point_comparisons.RData")
+
+# Created by run_gams.R
+load(here("manuscript_code/data_clean/data_gam_results.Rdata"))
+# Created by all_GAM_outputs.R
+load(file = here("manuscript_code/data_clean/all_GAM_outputs.RData"))
+# Created by Combined_point_estimates.R
+load(file=here("manuscript_code/data_clean/point_comparisons.RData"))
 
 
 # Raw Data ----------------------------------------------------------------
@@ -265,7 +270,7 @@ down_x2_ats = log(down_x2_labs)
 # windows(height=7*1.6, width=8.5)
 # pdf("Figure_3_Khanna.pdf", height=7*1.6, width=8.5)
 par(mfrow=c(3,2), mar=c(2.5,3,2.75,1), oma=c(11,3.5,6.5,0))
-image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
       xlab="", ylab="", col = up.none_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 axis(side = 3, at = main_x2_ats, labels = main_x2_labs/1000, cex.axis=1.2)
@@ -277,21 +282,21 @@ plot_label("(a)",  x_prop = 0.96, y_prop=0.94, fcex = 1.35)
 points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.none.df$x, polygon.up.none.df$y, lty=1, lwd=1)
 
-image(x = up.log_q_range, y = up.temp_range, z = up.shrt_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.shrt_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = up.shrt_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 points(up.shrt_points_red$log_qsdy, up.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.shrt.df$x, polygon.up.shrt.df$y, lty=5, lwd=1)
 points(up_points$log_q , up_points$temp, pch=23, bg="white", lwd=0.75)
 for(i in 1:5){
-  text(x = up_points$log_q[i]+c(-0.033,0,0,0,0)[i], 
-       y = up_points$temp[i]+c(0,-1.1,-1,1.35,-1.5)[i], 
-       font=2,labels = paste0("a.", 1:5)[i], cex=1.15, 
+  text(x = up_points$log_q[i]+c(-0.033,0,0,0,0)[i],
+       y = up_points$temp[i]+c(0,-1.1,-1,1.35,-1.5)[i],
+       font=2,labels = paste0("a.", 1:5)[i], cex=1.15,
        adj = c(c(1,0.5,0.5,0.25,0.5)[i],c(0.35,0,0.35,1,0)[i]))
 }
 
 
-image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
       xlab="", ylab="", col = up.none_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 mtext(text = "Flow (Thousands of cfs)", side = 3, line = 2.5, cex=1)
@@ -300,21 +305,21 @@ axis(side = 3, at = main_x2_ats, labels = main_x2_labs/1000, cex.axis=1.2)
 points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.none.df$x, polygon.up.none.df$y, lty=1, lwd=1)
 
-image(x = up.log_q_range, y = up.temp_range, z = up.long_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.long_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = up.long_col_pal,
       useRaster=TRUE, las=1)
 points(up.long_points_red$log_qsdy, up.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.long.df$x, polygon.up.long.df$y, lty=3, lwd=1)
 points(up_points$log_q , up_points$temp, pch=23, bg="white", lwd=0.75)
 for(i in 1:5){
-  text(x = up_points$log_q[i]+c(-0.033,0,0,0,0)[i], 
-       y = up_points$temp[i]+c(0,-1.1,-1.1,1.35,-1.45)[i], 
-       font=2,labels = paste0("a.", 1:5)[i], cex=1.15, 
+  text(x = up_points$log_q[i]+c(-0.033,0,0,0,0)[i],
+       y = up_points$temp[i]+c(0,-1.1,-1.1,1.35,-1.45)[i],
+       font=2,labels = paste0("a.", 1:5)[i], cex=1.15,
        adj = c(c(1,0.5,0.25,0.25,0.5)[i],c(0.35,0,0.35,1,0)[i]))
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"],
       xlab="", ylab="", col = yo.none_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 mtext(text = "Floodplain", side = 2, line = 5, font=2, cex=1.15)
@@ -324,20 +329,20 @@ plot_label("(c)", x_prop = 0.96, y_prop=0.94, fcex = 1.35)
 points(yo.none_points_red$log_qsdy, yo.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.none.df$x, polygon.yo.none.df$y, lty=1, lwd=1)
 
-image(x = log_q_range, y = temp_range, z = yolo.shrt_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.shrt_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = yo.shrt_col_pal,
       useRaster=TRUE, las=1)
 points(yo.shrt_points_red$log_qsdy, yo.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.shrt.df$x, polygon.yo.shrt.df$y,lty=5, lwd=1)
 points(yo_points$log_q , yo_points$temp, pch=23, bg="white", lwd=0.75)
 for(i in 1:5){
-  text(x = yo_points$log_q[i]+c(0,0.15,-0.2,0,0)[i], 
-       y = yo_points$temp[i]+c(-1.15,0,0,2,-2)[i], 
-       font=2,labels = paste0("b.", 1:5)[i], cex=1.15, 
+  text(x = yo_points$log_q[i]+c(0,0.15,-0.2,0,0)[i],
+       y = yo_points$temp[i]+c(-1.15,0,0,2,-2)[i],
+       font=2,labels = paste0("b.", 1:5)[i], cex=1.15,
        adj = c(c(0.4,0,1,0,0.25)[i],c(0,0.35,0.35,1,0)[i]))
 }
 
-image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"],
       xlab="", ylab="", col = yo.none_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 axis(side = 3, at = flood_x2_ats, labels = flood_x2_labs/1000, cex.axis=1.2)
@@ -345,21 +350,21 @@ plot_label("(d)", x_prop = 0.96, y_prop=0.94, fcex = 1.35)
 points(yo.none_points_red$log_qsdy, yo.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.none.df$x, polygon.yo.none.df$y, lty=1, lwd=1)
 
-image(x = log_q_range, y = temp_range, z = yolo.long_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.long_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = yo.long_col_pal,
       useRaster=TRUE, las=1)
 points(yo.long_points_red$log_qsdy, yo.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.long.df$x, polygon.yo.long.df$y, lty=3, lwd=1)
 points(yo_points$log_q , yo_points$temp, pch=23, bg="white", lwd=0.75)
 for(i in 1:5){
-  text(x = yo_points$log_q[i]+c(0,0.15,-0.2,0,0)[i], 
-       y = yo_points$temp[i]+c(-1.15,0,0,2,-1.5)[i], 
-       font=2,labels = paste0("b.", 1:5)[i], cex=1.15, 
+  text(x = yo_points$log_q[i]+c(0,0.15,-0.2,0,0)[i],
+       y = yo_points$temp[i]+c(-1.15,0,0,2,-1.5)[i],
+       font=2,labels = paste0("b.", 1:5)[i], cex=1.15,
        adj = c(c(0.4,0,1,0.25,0.25)[i],c(0,0.35,0.35,1,0)[i]))
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"],
       xlab="", ylab="", col = do.none_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 axis(side = 3, at = down_x2_ats, labels = down_x2_labs/1000, cex.axis=1.2)
@@ -370,20 +375,20 @@ plot_label("(e)",  x_prop = 0.96, y_prop=0.94, fcex = 1.35)
 points(do.none_points_red$log_qsdy, do.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.none.df$x, polygon.do.none.df$y, lty=1, lwd=1)
 
-image(x = do.log_q_range, y = do.temp_range, z = down.shrt_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.shrt_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = do.shrt_col_pal,
       useRaster=TRUE, las=1)
 points(do.shrt_points_red$log_qsdy, do.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.shrt.df$x, polygon.do.shrt.df$y, lty=5, lwd=1)
 points(do_points$log_q , do_points$temp, pch=23, bg="white", lwd=0.75)
 for(i in 1:4){
-  text(x = do_points$log_q[i]+c(-0.2,-0.25,-0.175,0)[i], 
-       y = do_points$temp[i]+c(-0.25,0.25,0.75,-0.35)[i], 
-       font=2,labels = paste0("c.", 1:4)[i], cex=1.15, 
+  text(x = do_points$log_q[i]+c(-0.2,-0.25,-0.175,0)[i],
+       y = do_points$temp[i]+c(-0.25,0.25,0.75,-0.35)[i],
+       font=2,labels = paste0("c.", 1:4)[i], cex=1.15,
        adj = c(c(0,0,0,0.25)[i],c(1,0,0,1)[i]))
 }
 
-image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"],
       xlab="", ylab="", col = do.none_col_pal,
       useRaster=TRUE, las=1, cex.axis=1.2)
 axis(side = 3, at = down_x2_ats, labels = down_x2_labs/1000, cex.axis=1.2)
@@ -393,16 +398,16 @@ mtext(text = bquote(log[e](Flow~(cfs))), side = 1, line = 3)
 points(do.none_points_red$log_qsdy, do.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.none.df$x, polygon.do.none.df$y, lty=1, lwd=1)
 
-image(x = do.log_q_range, y = do.temp_range, z = down.long_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.long_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = do.long_col_pal,
       useRaster=TRUE, las=1)
 points(do.long_points_red$log_qsdy, do.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.long.df$x, polygon.do.long.df$y, lty=3, lwd=1)
 points(do_points$log_q , do_points$temp, pch=23, bg="white", lwd=0.75)
 for(i in 1:4){
-  text(x = do_points$log_q[i]+c(-0.2,-0.25,-0.175,0)[i], 
-       y = do_points$temp[i]+c(-0.25,0.25,0.75,-0.35)[i], 
-       font=2,labels = paste0("c.", 1:4)[i], cex=1.15, 
+  text(x = do_points$log_q[i]+c(-0.2,-0.25,-0.175,0)[i],
+       y = do_points$temp[i]+c(-0.25,0.25,0.75,-0.35)[i],
+       font=2,labels = paste0("c.", 1:4)[i], cex=1.15,
        adj = c(c(0,0,0,0.25)[i],c(1,0,0,1)[i]))
 }
 
@@ -486,27 +491,27 @@ text(y = up_sub_panel_lab_y,
      x =c(3.5,6.5,9.5,12.5, 15.5)-2.85, cex=1.15, font=2,
      labels = paste0("(a.", 1:5,")"), adj = c(0,0.25))
 
-arrows(x0=c(1:3), x1=c(1:3), y0=unlist(up_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(1:3), x1=c(1:3), y0=unlist(up_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(up_points_bc[1,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(1:3), y=unlist(up_points_bc[1,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(4:6), x1=c(4:6), y0=unlist(up_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(4:6), x1=c(4:6), y0=unlist(up_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(up_points_bc[2,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(4:6), y=unlist(up_points_bc[2,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(7:9), x1=c(7:9), y0=unlist(up_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(7:9), x1=c(7:9), y0=unlist(up_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(up_points_bc[3,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(7:9), y=unlist(up_points_bc[3,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(10:12), x1=c(10:12), y0=unlist(up_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(10:12), x1=c(10:12), y0=unlist(up_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(up_points_bc[4,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(10:12), y=unlist(up_points_bc[4,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(13:15), x1=c(13:15), y0=unlist(up_points_bc[5,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(13:15), x1=c(13:15), y0=unlist(up_points_bc[5,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(up_points_bc[5,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(13:15), y=unlist(up_points_bc[5,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
@@ -542,27 +547,27 @@ text(y = yo_sub_panel_lab_y,
      x =c(3.5,6.5,9.5,12.5, 15.5)-2.85, cex=1.15, font=2,
      labels = paste0("(b.", 1:5,")"), adj = c(0,0.25))
 
-arrows(x0=c(1:3), x1=c(1:3), y0=unlist(yo_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(1:3), x1=c(1:3), y0=unlist(yo_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(yo_points_bc[1,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(1:3), y=unlist(yo_points_bc[1,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(4:6), x1=c(4:6), y0=unlist(yo_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(4:6), x1=c(4:6), y0=unlist(yo_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(yo_points_bc[2,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(4:6), y=unlist(yo_points_bc[2,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(7:9), x1=c(7:9), y0=unlist(yo_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(7:9), x1=c(7:9), y0=unlist(yo_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(yo_points_bc[3,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(7:9), y=unlist(yo_points_bc[3,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(10:12), x1=c(10:12), y0=unlist(yo_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(10:12), x1=c(10:12), y0=unlist(yo_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(yo_points_bc[4,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(10:12), y=unlist(yo_points_bc[4,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(13:15), x1=c(13:15), y0=unlist(yo_points_bc[5,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(13:15), x1=c(13:15), y0=unlist(yo_points_bc[5,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(yo_points_bc[5,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(13:15), y=unlist(yo_points_bc[5,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
@@ -598,22 +603,22 @@ text(y = do_sub_panel_lab_y,
      x =c(3.5,6.5,9.5,12.5)-0.15, cex=1.15, font=2,
      labels = paste0("(c.", 1:4,")"), adj = c(1,0.25))
 
-arrows(x0=c(1:3), x1=c(1:3), y0=unlist(do_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(1:3), x1=c(1:3), y0=unlist(do_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(do_points_bc[1,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(1:3), y=unlist(do_points_bc[1,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(4:6), x1=c(4:6), y0=unlist(do_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(4:6), x1=c(4:6), y0=unlist(do_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(do_points_bc[2,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(4:6), y=unlist(do_points_bc[2,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(7:9), x1=c(7:9), y0=unlist(do_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(7:9), x1=c(7:9), y0=unlist(do_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(do_points_bc[3,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(7:9), y=unlist(do_points_bc[3,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
 
-arrows(x0=c(10:12), x1=c(10:12), y0=unlist(do_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]), 
+arrows(x0=c(10:12), x1=c(10:12), y0=unlist(do_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]),
        y1=unlist(do_points_bc[4,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
 points(x=c(10:12), y=unlist(do_points_bc[4,c("none_pred", "shrt_pred", "long_pred")]),
        pch=21, bg=c("purple", "green", "tomato3"), cex=1.5)
@@ -664,7 +669,7 @@ plot_temp_lims = range(yolo$WTmwk)
 # windows(height=7*1.33, width=8.5)
 # pdf("NCEAS_image_plots_scaled2.pdf", height=7*1.4, width=8.5)
 par(mfrow=c(3,2), mar=c(3,3,1,1), oma=c(11,3.5,3,0))
-image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
       xlab="", ylab="", col = up.none_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
@@ -673,14 +678,14 @@ plot_label("(a)",  x_prop = 0.96, y_prop=0.94)
 points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.none.df$x, polygon.up.none.df$y, lty=1, lwd=1)
 
-image(x = up.log_q_range, y = up.temp_range, z = up.shrt_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.shrt_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = up.shrt_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 points(up.shrt_points_red$log_qsdy, up.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.shrt.df$x, polygon.up.shrt.df$y, lty=5, lwd=1)
 
 
-image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
       xlab="", ylab="", col = up.none_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 plot_label("(b)",  x_prop = 0.96, y_prop=0.94)
@@ -689,14 +694,14 @@ mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
 points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.none.df$x, polygon.up.none.df$y, lty=1,  lwd=1)
 
-image(x = up.log_q_range, y = up.temp_range, z = up.long_arr_red[,,"pred"], 
+image(x = up.log_q_range, y = up.temp_range, z = up.long_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = up.long_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 points(up.long_points_red$log_qsdy, up.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.up.long.df$x, polygon.up.long.df$y, lty=3, lwd=2)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"],
       xlab="", ylab="", col = yo.none_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
@@ -705,7 +710,7 @@ plot_label("(c)", x_prop = 0.96, y_prop=0.94)
 points(yo.none_points_red$log_qsdy, yo.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.none.df$x, polygon.yo.none.df$y, lty=1,  lwd=2)
 
-image(x = log_q_range, y = temp_range, z = yolo.shrt_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.shrt_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = yo.shrt_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
@@ -714,7 +719,7 @@ points(yo.shrt_points_red$log_qsdy, yo.shrt_points_red$WTmwk, cex=0.75, col=gray
 polygon(polygon.yo.shrt.df$x, polygon.yo.shrt.df$y, lty=5, lwd=2)
 
 
-image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"],
       xlab="", ylab="", col = yo.none_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
@@ -723,14 +728,14 @@ plot_label("(d)", x_prop = 0.96, y_prop=0.94)
 points(yo.none_points_red$log_qsdy, yo.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.none.df$x, polygon.yo.none.df$y, lty=1,  lwd=2)
 
-image(x = log_q_range, y = temp_range, z = yolo.long_arr_red[,,"pred"], 
+image(x = log_q_range, y = temp_range, z = yolo.long_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = yo.long_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 points(yo.long_points_red$log_qsdy, yo.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.yo.long.df$x, polygon.yo.long.df$y, lty=3, lwd=2)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"],
       xlab="", ylab="", col = do.none_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
@@ -739,14 +744,14 @@ plot_label("(e)",  x_prop = 0.96, y_prop=0.94)
 points(do.none_points_red$log_qsdy, do.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.none.df$x, polygon.do.none.df$y, lty=1, lwd=2)
 
-image(x = do.log_q_range, y = do.temp_range, z = down.shrt_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.shrt_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = do.shrt_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 points(do.shrt_points_red$log_qsdy, do.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.shrt.df$x, polygon.do.shrt.df$y, lty=5, lwd=2)
 
 
-image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"],
       xlab="", ylab="", col = do.none_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 plot_label("(f)",  x_prop = 0.96, y_prop=0.94)
@@ -755,7 +760,7 @@ mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
 points(do.none_points_red$log_qsdy, do.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
 polygon(polygon.do.none.df$x, polygon.do.none.df$y, lty=1, lwd=2)
 
-image(x = do.log_q_range, y = do.temp_range, z = down.long_arr_red[,,"pred"], 
+image(x = do.log_q_range, y = do.temp_range, z = down.long_arr_red[,,"pred"],
       xlab="", ylab="", add=TRUE, col = do.long_col_pal,
       useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
 points(do.long_points_red$log_qsdy, do.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))

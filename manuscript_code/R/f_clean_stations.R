@@ -82,11 +82,11 @@ srad_stations <- data.frame(latitude = c(38.15167, 38.35338, 38.53188), longitud
 
 
 # Chlorophyll ---------------------------
-ez2 <- read_csv(here("data_publication", "data_raw", "ez2_loc.csv")) %>%
+ez2 <- read_csv(here("manuscript_code", "data_raw", "ez2_loc.csv")) %>%
   summarize(lat = mean(latitude),
             lon = mean(longitude))
 
-(chla_id <- contentid::store(here::here("data_publication/data_clean/model_chla.csv")))
+(chla_id <- contentid::store(here::here("manuscript_code/data_clean/model_chla.csv")))
 chla_file <- contentid::resolve("hash://sha256/5ca71b04402aa9a4aed9d28e29b9a9c47cfbccfa98993b589c8613eddcbe3eb0")
 stations_chl <- readr::read_csv(chla_file) %>%
   dplyr::mutate(latitude = dplyr::case_when(station == "LIS" ~ 38.47482,
@@ -115,7 +115,7 @@ stations_chl <- readr::read_csv(chla_file) %>%
 
 
 # Bind data -------------------
-station_names <- readr::read_csv(here::here("data_publication", "data_raw","station_names.csv")) %>%
+station_names <- readr::read_csv(here::here("manuscript_code", "data_raw","station_names.csv")) %>%
   dplyr::filter(region!= "cache") %>%
   dplyr::rename(agency_program = `agency-program`,
          sampling_frequency = `sampling frequency`) %>%
@@ -163,5 +163,5 @@ stations_all <- stations_chl %>%
 
 
 # Write data --------------------------
-write_csv(stations_all, here::here("data_publication", "data_clean", "stations.csv"))
+write_csv(stations_all, here::here("manuscript_code", "data_clean", "stations.csv"))
 

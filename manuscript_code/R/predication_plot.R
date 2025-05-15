@@ -9,6 +9,11 @@ library(ggplot2)
 library(dplyr)
 library(mgcv)
 library(tidymv)
+# tidymv is now replaced by tidygam. to recreate this code download:
+# remotes::install_github(
+#   "stefanocoretta/tidymv",
+#   build_vignettes = TRUE
+# )
 library(patchwork)
 
 # data

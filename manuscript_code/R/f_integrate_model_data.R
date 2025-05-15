@@ -145,8 +145,8 @@ f_integrate_model_data<- function(){
     mutate(lm_fill = if_else(date %in% c("2006-01-24", "2015-12-16", "2017-04-18", "2019-08-08"), "N", "Y")) %>%
     select(date, doy1998, flow_downstream, flow_upstream, flow_yolo, inund_factor, chlorophyll, lm_fill) %>%
     arrange(lm_fill)
-  write_csv(covars_na, "data_publication/data_raw/missing_downstream_q.csv")
-  write_csv(covars_chla_na, "data_publication/data_raw/missing_downstream_q_chla.csv")
+  # write_csv(covars_na, "data_publication/data_raw/missing_downstream_q.csv")
+  # write_csv(covars_chla_na, "data_publication/data_raw/missing_downstream_q_chla.csv")
 
   # ------------------------------------------------------------------------------
 
@@ -200,8 +200,8 @@ f_integrate_model_data<- function(){
   # Write data -------------------------------------------------------
 
   print("Writing data...")
-  readr::write_csv(final_covars, "data_publication/data_clean/full_covars.csv")
-  readr::write_csv(filtdata, "data_publication/data_clean/model_chla_covars.csv")
+  # readr::write_csv(final_covars, "data_publication/data_clean/full_covars.csv")
+  readr::write_csv(filtdata, "manuscript_code/data_clean/model_chla_covars.csv")
   print("Data saved!")
 
 }

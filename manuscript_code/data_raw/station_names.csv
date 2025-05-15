@@ -1,0 +1,26 @@
+latitude,longitude,station,region,data_type,station_name,agency-program,sampling frequency
+38.24301,-121.6843,USGS-11455315,cache,"chl & nut, water temp,  flow",Cache Slough at S Liberty Island nr Rio Vista CA,USGS CAWSC,"monthly, 15-minute (binned to daily)"
+38.21277778,-121.6691667,USGS-11455350,cache,"chl & nut, flow",Cache Slout at Ryer Island,USGS CAWSC,monthly
+38.34916667,-121.6447222,USGS-11455140,cache,chl & nut,Toe Drain at Liberty Island nr Courtland CA,USGS CAWSC,monthly
+38.3354111,-121.658186,USGS-11455143,cache,chl & nut,Little Holland Tract nr Courtland CA,USGS CAWSC,variable
+38.19395556,-121.6580028,USGS-11455385,cache,"chl & nut, flow",Cache Slough above Ryer Island Ferry nr Rio Vista CA,USGS CAWSC,monthly
+38.33501,-121.6711,USGS-382006121401601,cache,chl & nut,Liberty Island near Liberty Cut at Courtland CA,USGS CAWSC,monthly
+38.32885,-121.6675306,USGS-11455146,cache,chl & nut,Liberty Cut at Little Holland Tract nr Courtland CA,USGS CAWSC,monthly
+38.08453,-121.7391,D22,below,chl & nut,Sacramento River at Emmaton/Three Mile Slough ,USBR,monthly
+38.14272,-121.6895,NZ068,below,chl & nut,Sacramento River below Rio Vista Bridge near United States Coast Guard station,DWR-EMP,monthly
+38.1576,-121.6856,34,below,chl & nut,Sacramento River at Rio Vista,USBR,monthly
+38.105,-121.72,653,below,chl & nut,Mid-Decker Island,USGS,monthly
+38.151667,-121.688333,657,below,chl & nut,Rio Vista,USGS,monthly
+38.093252,-121.7371772,USGS-11455478,below,chl & nut,Sacramento R at Decker Island nr Rio Vista CA,USGS CAWSC,monthly
+38.36514,-121.6377,USGS-11455139,yolo,chl & nut,Toe Drain at Mallard Rd nr Courtland CA,USGS CAWSC,monthly
+38.474816,-121.588584,LIS,yolo,"chl & nut,wtemp",Yolo Bypass Toe Drain Below Lisbon Weir,"DWR-YBFMP, DWR-NCRO",2 weeks
+38.35338,-121.643,STTD,yolo,"chl & nut,wtemp,daymet",Screw Trap in Toe Drain,DWR-YBFMP,"2 weeks, daily during sampling season"
+38.45602,-121.5013,USGS-11447650,above,chl & nut,Sacramento River at Freeport CA,USGS CAWSC,monthly
+38.53188,-121.528,SHR,above,"chl & nut,wtemp,daymet",Sacramento River at Sherwood Harbor,DWR-YBFMP,2 weeks
+38.159203,-121.684543,RVB,below,wtemp,Sacramento River at Rio Vista Bridge,DWR-EMP,15-minute (binned to daily)
+38.16,-121.686,RIO,below,flow,Sacramento River at Rio Vista,USGS CAWSC,15-minute (binned to daily)
+38.7743454,-121.5982925,USGS_11425500,above,flow,Sacramento River at Verona,USGS SFO,15-minute (binned to daily)
+38.60694444,-121.5541667,USGS_11426000,yolo,flow,Sacramento Weir Spill to Yolo Bypass nr Sac CA,USGS SFO,15-minute (binned to daily)
+38.67777778,-121.6430556,USGS_11453000,yolo,flow,Yolo Bypass nr Woodland CA,USGS SFO,15-minute (binned to daily)
+38.2097,-121.662,44,below,chl,Cache Slough,USBR,monthly
+38.2808,-121.665,PRO,cache,"chl & nut,daymet",Prospect Slough,USBR,monthly
