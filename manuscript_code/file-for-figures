@@ -1,17 +1,22 @@
-* Figure 1: plot_locations_map.R checked
-* Figure 2: plot_raw_data.R checked
-* Figure 3: Combined_image_plots.R
-* Figure 4: Combined_point_estimates.R
-* Figure 5: predication_plot.R checked
-* Figure 6: 2016_example.R checked
+**Script associated with each figure**
+
+* Figure 1: plot_locations_map.R
+  * f_clean_stations.R creates stations.csv
+* Figure 2: plot_raw_data.R
+  * f_integrate_model_data.R creates model_chla_covars.csv
+* Figure 3: Combined_image_plots.R (pending)
+  * all_GAM_ouputs.R creates all_GAM_outputs.RData
+  * run_gams.R creates data_gam_results.Rdata
+  * Combined_point_estimates.R creates point_comparisons.RData
+* Figure 4: Combined_image_plots.R (pending)
+* Figure 5: predication_plot.R
+* Figure 6: 2016_example.R
 * Figure 7: Created by Shruti Khanna
 
-
-
-* Figure S1: inund_factor_plot.R checked
-* Figure S2: plot_raw_data.R checked
-* Figure S3: plot_raw_data.R checked
-* Figure S4: Combined_dataOnly_plots.R checked
-* Figure S5: plot_model_validation_re.Rchecked
-* Figure S6: plot_model_validation_re.Rchecked
-* Figure S7: plot_model_validation_re.Rchecked
+* Figure S1: inund_factor_plot.R
+* Figure S2: plot_raw_data.R
+* Figure S3: plot_raw_data.R
+* Figure S4: Combined_dataOnly_plots.R
+* Figure S5: plot_model_validation_re.R
+* Figure S6: plot_model_validation_re.R
+* Figure S7: plot_model_validation_re.R
