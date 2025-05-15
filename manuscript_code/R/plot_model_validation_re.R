@@ -29,7 +29,7 @@ theme_vis <- theme_bw() +
 
 
 # Load data
-load(here::here("data_publication/data_clean/data_gam_results.Rdata"))
+load(here::here("manuscript_code/data_clean/data_gam_results.Rdata"))
 upstream <- alldata %>% filter(region == "upstream")
 yolo <- alldata %>% filter(region == "yolo")
 downstream <- alldata %>% filter(region == "downstream")

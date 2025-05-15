@@ -65,7 +65,7 @@ regions_final <- cbind(regions_4269, regionnames) %>%
 regions_buffer <- st_buffer(regions_final, 0.001)
 
 # stations
-stations <- read_csv(here::here("data_publication", "data_clean", "stations.csv"))
+stations <- read_csv(here::here("manuscript_code", "data_clean", "stations.csv"))
 stations_sf <- st_as_sf(stations, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE)
 stations_sf_4269 <- stations_sf %>% st_transform(crs = st_crs(California)) %>%
   filter(longitude < -121.5) %>%
