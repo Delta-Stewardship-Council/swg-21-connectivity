@@ -1,4 +1,8 @@
-# Code for making map
+##########################################################
+# Created by: Catarina Pien (cpien@usbr.gov)
+# Last updated: 4/23/2025; Added tiff export code for plots
+# Description: This script creates study map
+#########################################################
 
 # dayflow data inputs are from USGS sites:
 # 1 - USGS 11426000 SACRAMENTO WEIR SPILL TO YOLO BYPASS (Latitude 38°36'25", Longitude 121°33'15" NAD27),
@@ -46,7 +50,7 @@ yolo_4269 <- st_transform(yolo_sf, crs = 4269) %>%
   dplyr::filter(FID == 1)
 
 ## regions polygon (created from Rosie's app; edited in ArcMap)
-regions_sf <- sf::st_read(here("data_raw", "regions_shapefile", "shapefile_with_ez2_updated_20240613.shp"))
+regions_sf <- sf::st_read(here("manuscript_code", "data_raw", "regions_shapefile", "shapefile_with_ez2_updated_20240613.shp"))
 regions_4269 <- st_transform(regions_sf, crs = 4269) %>%
   mutate(id = rownames(.),
          region = case_when(id == 1 ~ "downstream",
@@ -61,7 +65,7 @@ regions_final <- cbind(regions_4269, regionnames) %>%
 regions_buffer <- st_buffer(regions_final, 0.001)
 
 # stations
-stations <- read_csv(here::here("data_publication", "data_clean", "stations.csv"))
+stations <- read_csv(here::here("manuscript_code", "data_clean", "stations.csv"))
 stations_sf <- st_as_sf(stations, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE)
 stations_sf_4269 <- stations_sf %>% st_transform(crs = st_crs(California)) %>%
   filter(longitude < -121.5) %>%
@@ -224,29 +228,15 @@ delta_map
    draw_plot(inset, x = 0.14, y = 0.53, width = 0.29, height = 0.4))
 
 
-## Combine with patchwork -------------------------------------
-
+## Combine with patchwork and save -------------------------------------
 
 library(patchwork)
-# Most current
 patchmap <- gg_inset_map +
   plot_spacer() +
   map_stations  + plot_layout(widths = c(4.1, 0.02, 2.2), heights = 7.2)
 patchmap
-ggsave(here("data_publication/figures/manuscript_map_test.png"), width = 8.5, height = 7.5, units = "in", device = 'png', dpi = 300)
+ggsave(here("manuscript_code/figures/Fig1_manuscript_map_test.tiff"), width = 8.5, height = 7.5, units = "in", device = 'tiff', dpi = 300)
 
-## Save map png--------------------------------------------
-
-# Only
-map_stations
-ggsave("figures/manuscript_map_regions_only.png", width = 6, height = 6, units = "in", device = 'png', dpi = 300)
-patchmap
-ggsave("figures/manuscript_map.png", width = 8, height = 11, units = "in", device = 'png', dpi = 300)
-
-# interactive map -----
-chl <- stations_sf_4269 %>% filter(data_type =="chl & nut")
-
-mapview::mapview(chl, zcol = "region")
 
 
 

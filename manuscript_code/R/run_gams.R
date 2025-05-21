@@ -41,7 +41,7 @@ gam.vcomp(gam_downstream)
 gam.check(gam_downstream)
 
 # Save models ------------------------------------------------
-save("gam_yolo", "gam_upstream", "gam_downstream","alldata", file = here::here("data_publication/data_clean/data_gam_results.Rdata"))
+save("gam_yolo", "gam_upstream", "gam_downstream","alldata", file = here::here("manuscript_code/data_clean/data_gam_results.Rdata"))
 
 
 
