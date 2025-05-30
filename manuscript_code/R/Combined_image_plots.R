@@ -1,6 +1,6 @@
 ################################################################################
 #~~ Script created by Jereme W Gaeta, CDFW
-#~~ Last modified by Jereme W Gaeta on 04/17/2025
+#~~ Last modified by Jereme W Gaeta on 05/27/2025
 #~~ Description: Image plots of model prediction across variable space
 ################################################################################
 
@@ -18,7 +18,6 @@ library(dplyr)
 library(tidyr)
 library(mgcv)
 library(viridis)
-library(here)
 
 op = function(x, d=2) sprintf(paste0("%1.",d,"f"), x)
 plot_limit = function(adj=0.015, usr=par('usr')){
@@ -78,23 +77,14 @@ extract_polygons <- function(alpha_obj)
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Load data ---------
 
-# save(yolo.none_arr_red , yolo.shrt_arr_red, yolo.long_arr_red, up.none_arr_red,
-#      up.shrt_arr_red, up.long_arr_red, down.none_arr_red,
-#      down.shrt_arr_red, down.long_arr_red, up.log_q_range,
-#      up.temp_range, log_q_range, temp_range, do.log_q_range,
-#      do.temp_range, file="all_GAM_outputs.RData")
-# load("gams_origdata.Rdata")
-
-# Created by run_gams.R
-load(here("manuscript_code/data_clean/data_gam_results.Rdata"))
-# Created by all_GAM_outputs.R
-load(file = here("manuscript_code/data_clean/all_GAM_outputs.RData"))
-# Created by Combined_point_estimates.R
-load(file=here("manuscript_code/data_clean/point_comparisons.RData"))
-
-
-# Raw Data ----------------------------------------------------------------
+## From earlier files --------------------
+wd <- here::here("manuscript_code/")
+load(file.path(wd, "data_clean", "data_gam_results.Rdata"))
+load(file.path(wd, "data_clean", "all_GAM_outputs.RData"))
+load(file.path(wd, "data_clean", "point_comparisons.RData"))
+## Raw Data ----------------------------------------------------------------
 
 upstream <- alldata %>% filter(region == "upstream")
 # subset the upstream data frame each inundation factor
@@ -138,7 +128,7 @@ do.long_points = data.frame(log_qsdy=do.long$log_qsdy, WTmwk=do.long$WTmwk)
 do.long_points_red = do.long_points[!duplicated(do.long_points),]
 
 
-# Convex Hulls ------------------------------------------------------------
+# Prep Convex Hulls (Fig3)  ------------------------------------------------------------
 
 alpha_parameter = 5
 yolo.none_con_hull = ahull(
@@ -180,7 +170,8 @@ down.long_con_hull = ahull(
 polygon.do.long.df <- extract_polygons(down.long_con_hull$ashape.obj)
 
 
-# Plot set-up -------------------------------------------------------------
+# Convex Hull Plot
+## set-up -------------------------------------------------------------
 
 col_n = 500
 
@@ -263,8 +254,10 @@ flood_x2_ats = log(flood_x2_labs)
 down_x2_labs=c(3000,8000,22000,60000,163000)
 down_x2_ats = log(down_x2_labs)
 
-# PLOT IT! ----------------------------------------------------------------
+## PLOT IT! ----------------------------------------------------------------
 
+# Need to run the pdf line in order to create the image plus:
+# quartz line for mac; windows line for windows
 
 # quartz(height=7*1.33, width=8.5)
 # windows(height=7*1.6, width=8.5)
@@ -276,7 +269,7 @@ image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
 axis(side = 3, at = main_x2_ats, labels = main_x2_labs/1000, cex.axis=1.2)
 mtext(text = "Mainstem", side = 2, line = 5, font=2, cex=1.15)
 mtext(text = "Flow (Thousands of cfs)", side = 3, line = 2.5, cex=1)
-text(x = 8, y= 27.5, labels = "Figure #3", font=2,  adj = 0, xpd=NA, cex=2)
+text(x = 8, y= 27.5, labels = "Figure 3", font=2,  adj = 0, xpd=NA, cex=2)
 mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
 plot_label("(a)",  x_prop = 0.96, y_prop=0.94, fcex = 1.35)
 points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
@@ -435,14 +428,9 @@ legend("top", legend = c("No Inundation", "Short Inundation", "Long Inundation")
 dev.off()
 
 
+# Pointwise comparison estimates (Fig4)---------
 
-
-
-######################################################################
-
-#~~ Pointwise comparison
-
-#####################################################################
+## set-up -----------------------
 
 up_points_bc = up_points
 yo_points_bc = yo_points
@@ -463,6 +451,10 @@ yo_y_range = range(na.omit(unlist(yo_points_bc[,c(
 do_y_range = range(na.omit(unlist(do_points_bc[,c(
   "none_lo", "none_up", "shrt_lo", "shrt_up", "long_lo", "long_up")])))
 
+
+## Plot ---------------------------
+# Need to run the pdf line in order to create the image plus:
+# quartz line for mac; windows line for windows
 
 # quartz(height=7*1.33, width=8.5)
 # windows(height=7*1.4, width=8.5)
@@ -642,150 +634,4 @@ legend("bottom", legend = c("No Inundation", "Short Inundation", "Long Inundatio
        pch=21, pt.bg=c("purple", "green", "tomato3"), inset=0.01, pt.cex=2,
        bg = NA, horiz=TRUE, cex=1.5, bty='n')
 
-
-
-
 dev.off()
-
-
-
-
-
-
-
-
-
-#####################################################################
-#####################################################################
-#~~     Previous plots
-#####################################################################
-#####################################################################
-
-plot_log_q_lims = range(yolo$log_qsdy)
-plot_temp_lims = range(yolo$WTmwk)
-
-
-# quartz(height=7*1.33, width=8.5)
-# windows(height=7*1.33, width=8.5)
-# pdf("NCEAS_image_plots_scaled2.pdf", height=7*1.4, width=8.5)
-par(mfrow=c(3,2), mar=c(3,3,1,1), oma=c(11,3.5,3,0))
-image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
-      xlab="", ylab="", col = up.none_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-plot_label("(a)",  x_prop = 0.96, y_prop=0.94)
-points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.up.none.df$x, polygon.up.none.df$y, lty=1, lwd=1)
-
-image(x = up.log_q_range, y = up.temp_range, z = up.shrt_arr_red[,,"pred"],
-      xlab="", ylab="", add=TRUE, col = up.shrt_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-points(up.shrt_points_red$log_qsdy, up.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.up.shrt.df$x, polygon.up.shrt.df$y, lty=5, lwd=1)
-
-
-image(x = up.log_q_range, y = up.temp_range, z = up.none_arr_red[,,"pred"],
-      xlab="", ylab="", col = up.none_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-plot_label("(b)",  x_prop = 0.96, y_prop=0.94)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-points(up.none_points_red$log_qsdy, up.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.up.none.df$x, polygon.up.none.df$y, lty=1,  lwd=1)
-
-image(x = up.log_q_range, y = up.temp_range, z = up.long_arr_red[,,"pred"],
-      xlab="", ylab="", add=TRUE, col = up.long_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-points(up.long_points_red$log_qsdy, up.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.up.long.df$x, polygon.up.long.df$y, lty=3, lwd=2)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"],
-      xlab="", ylab="", col = yo.none_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-plot_label("(c)", x_prop = 0.96, y_prop=0.94)
-points(yo.none_points_red$log_qsdy, yo.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.yo.none.df$x, polygon.yo.none.df$y, lty=1,  lwd=2)
-
-image(x = log_q_range, y = temp_range, z = yolo.shrt_arr_red[,,"pred"],
-      xlab="", ylab="", add=TRUE, col = yo.shrt_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-points(yo.shrt_points_red$log_qsdy, yo.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.yo.shrt.df$x, polygon.yo.shrt.df$y, lty=5, lwd=2)
-
-
-image(x = log_q_range, y = temp_range, z = yolo.none_arr_red[,,"pred"],
-      xlab="", ylab="", col = yo.none_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-plot_label("(d)", x_prop = 0.96, y_prop=0.94)
-points(yo.none_points_red$log_qsdy, yo.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.yo.none.df$x, polygon.yo.none.df$y, lty=1,  lwd=2)
-
-image(x = log_q_range, y = temp_range, z = yolo.long_arr_red[,,"pred"],
-      xlab="", ylab="", add=TRUE, col = yo.long_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-points(yo.long_points_red$log_qsdy, yo.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.yo.long.df$x, polygon.yo.long.df$y, lty=3, lwd=2)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"],
-      xlab="", ylab="", col = do.none_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-plot_label("(e)",  x_prop = 0.96, y_prop=0.94)
-points(do.none_points_red$log_qsdy, do.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.do.none.df$x, polygon.do.none.df$y, lty=1, lwd=2)
-
-image(x = do.log_q_range, y = do.temp_range, z = down.shrt_arr_red[,,"pred"],
-      xlab="", ylab="", add=TRUE, col = do.shrt_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-points(do.shrt_points_red$log_qsdy, do.shrt_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.do.shrt.df$x, polygon.do.shrt.df$y, lty=5, lwd=2)
-
-
-image(x = do.log_q_range, y = do.temp_range, z = down.none_arr_red[,,"pred"],
-      xlab="", ylab="", col = do.none_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-plot_label("(f)",  x_prop = 0.96, y_prop=0.94)
-mtext(text = bquote(log[e](Q)), side = 1, line = 2.75)
-mtext(text = bquote(Water~Temperature~"("*degree*C*")"), side = 2, line = 2.5)
-points(do.none_points_red$log_qsdy, do.none_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.do.none.df$x, polygon.do.none.df$y, lty=1, lwd=2)
-
-image(x = do.log_q_range, y = do.temp_range, z = down.long_arr_red[,,"pred"],
-      xlab="", ylab="", add=TRUE, col = do.long_col_pal,
-      useRaster=TRUE, las=1, xlim=plot_log_q_lims, ylim=plot_temp_lims)
-points(do.long_points_red$log_qsdy, do.long_points_red$WTmwk, cex=0.75, col=gray(0.1,0.5))
-polygon(polygon.do.long.df$x, polygon.do.long.df$y, lty=3, lwd=2)
-
-#~~~~~~~  Scale Bar
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 2, 0), new = TRUE)
-plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-bar_exp_lab = c(0.6,1,2,3,5,8,12,20,35,55)
-bar_exp_ax=(log(bar_exp_lab)-min(yo.all_range))/max((yo.all_range-min(yo.all_range)))
-bar_lab = seq(from=-0.5, to=4, by=0.5)
-bar_ax=(bar_lab-min(yo.all_range))/max((yo.all_range-min(yo.all_range)))
-par(mar=c(4.35,4,68.65,1))
-color.bar(col_pal, min=0, max = 1, ticks = FALSE)
-axis(side = 1, at = bar_ax, labels=format(bar_lab, digits=3), las=1, cex.axis=1.2)
-axis(side = 3, at = bar_exp_ax, labels=format(bar_exp_lab, digits=3), las=1, cex.axis=1.2)
-mtext(text = bquote(log[e](Chlorophyll)~Color~Scale), side = 1, line = 2.85, xpd=NA)
-mtext(text = bquote(Chlorophyll~Color~Scale), side = 3, line = 2.2, xpd=NA)
-box(which="plot")
-
-par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0.5, 0), new = TRUE)
-plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-legend("top", legend = c("No Innundation", "Short Innundation", "Long Innundation"),
-       lty=c(1,5,3), horiz = TRUE, cex=1.5, bty='n', lwd=1.5)
-
-dev.off()
-
