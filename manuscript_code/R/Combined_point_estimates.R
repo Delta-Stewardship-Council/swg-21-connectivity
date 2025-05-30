@@ -1,7 +1,8 @@
 ################################################################################
 #~~ Script created by Jereme W Gaeta, CDFW
 #~~ Last modified by Jereme W Gaeta on 04/17/2025
-#~~ Description: Point estimate showing uncertainty around model predictions
+#~~ Description: Point estimate data showing uncertainty around model predictions;
+            #~~ actual image created in Combined_image_plots.R
 ################################################################################
 
 
@@ -19,7 +20,6 @@ library(dplyr)
 library(tidyr)
 library(mgcv)
 library(viridis)
-library(here)
 
 op = function(x, d=2) sprintf(paste0("%1.",d,"f"), x)
 plot_limit = function(adj=0.015, usr=par('usr')){
@@ -88,8 +88,9 @@ extract_polygons <- function(alpha_obj)
 
 
 # load("gams_origdata.Rdata")
-load(here("manuscript_code/data_clean/data_gam_results.Rdata"))
-load(file = here("manuscript_code/data_clean/all_GAM_outputs.RData"))
+wd <- here::here("manuscript_code/")
+load(file.path(wd, "data_clean", "data_gam_results.Rdata"))
+load(file.path(wd, "data_clean", "all_GAM_outputs.RData"))
 
 
 ###############################################################################
@@ -727,6 +728,7 @@ do.mult_comp_letters_df = do.mult_comp_letters_df[order(do.mult_comp_letters_df[
 
 do.mult_comp_letters_df = cbind(do_points_new_data,do.mult_comp_letters_df)
 
+
 do.mult_comp_letters_df_wide=data.frame(pivot_wider(
   data = do.mult_comp_letters_df[,c("log_qsdy","WTmwk","inund_factor","letter")],
   id_cols = c("log_qsdy","WTmwk"), values_from = "letter",
@@ -741,209 +743,11 @@ do.plot_multComp_letters = data.frame(
 do.plot_multComp_letters$plot_x = as.integer(row.names(do.plot_multComp_letters))
 
 
+########################################################################
+# Save as RData file
+
+save(up_points, yo_points, do_points, up.plot_multComp_letters,
+     yo_plot_multComp_letters, do.plot_multComp_letters,
+     file = file.path(wd, "data_clean", "point_comparisons.RData"))
 
 
-
-###############################################################################
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~  Plot it!!!
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###############################################################################
-
- # save(up_points, yo_points, do_points, up.plot_multComp_letters,
- #      yo_plot_multComp_letters, do.plot_multComp_letters,
- #      file = here::here("manuscript_code/data_clean/point_comparisons.RData"))
-
-up_points_bc = up_points
-yo_points_bc = yo_points
-do_points_bc = do_points
-
-up_points_bc[,6:14] = exp(up_points_bc[,6:14])
-yo_points_bc[,6:14] = exp(yo_points_bc[,6:14])
-do_points_bc[,6:14] = exp(do_points_bc[,6:14])
-
-up.plot_multComp_letters$plot_y = exp(up.plot_multComp_letters$plot_y)
-yo_plot_multComp_letters$plot_y = exp(yo_plot_multComp_letters$plot_y)
-do.plot_multComp_letters$plot_y = exp(do.plot_multComp_letters$plot_y)
-
-up_y_range = range( na.omit(unlist(up_points_bc[,c(
-      "none_lo", "none_up", "shrt_lo", "shrt_up", "long_lo", "long_up")])))
-yo_y_range = range(na.omit(unlist(yo_points_bc[,c(
-  "none_lo", "none_up", "shrt_lo", "shrt_up", "long_lo", "long_up")])))
-do_y_range = range(na.omit(unlist(do_points_bc[,c(
-  "none_lo", "none_up", "shrt_lo", "shrt_up", "long_lo", "long_up")])))
-
-
-# quartz(height=7*1.33, width=8.5)
-# windows(height=7*1.33, width=8.5)
-# pdf("revised_NCEAS_pointEst_plots2.pdf", height=7*1.4, width=8.5)
-par(mfrow=c(3,1), mar=c(2.5,3,2.75,1), oma=c(11,3.5,4.5,0))
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~ Mainstem plot
-plot(c(up_y_range[1], up_y_range[2]*1.05)~c(1,12), type="n", las=1, xlim=c(0.25,15.75),
-     xaxs="i", xaxt="n", xlab="", ylab="")
-mtext(text = "Mainstem", side = 2, line = 5, font=2, cex=1.15)
-polygon(x = c(0,3.5,3.5,0,0), y=c(-10,-10,100,100,-10), border=NA, col="gray85")
-polygon(x = c(6.5,9.5,9.5,6.5,6.5), y=c(-10,-10,100,100,-10), border=NA, col="gray85")
-polygon(x = c(12.5,15.75,15.75,12.5,12.5), y=c(-10,-10,100,100,-10), border=NA, col="gray85")
-#polygon(x = c(18.5,21.75,21.75,18.5,18.5), y=c(-10,-10,10,10,-10), border=NA, col="gray85")
-abline(v=c(3.5,6.5,9.5, 12.5, 15.75), lty=3, col="gray70", xlab="")
-# mtext(text = bquote(log[e](Chl)), side = 2, line = 2.5)
-mtext(text = bquote(Chlorophyll-a), side = 2, line = 2.5)
-plot_label("(a)", x_prop = 0.02, y_prop=0.94)
-text(y = up.plot_multComp_letters$plot_y + (up_y_range[2]*1.05-up_y_range[2]),
-     x = up.plot_multComp_letters$plot_x, cex=1.15,
-     labels = up.plot_multComp_letters$plot_letters, adj = c(0.5,0.25))
-up_sub_panel_lab_y = par('usr')[3]+(par('usr')[4]-par('usr')[3])*0.05
-text(y = up_sub_panel_lab_y,
-     x =c(3.5,6.5,9.5,12.5, 15.5)-2.85, cex=1, font=2,
-     labels = paste0("(a.", 1:5,")"), adj = c(0,0.25))
-
-arrows(x0=c(1:3), x1=c(1:3), y0=unlist(up_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(up_points_bc[1,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(1:3), y=unlist(up_points_bc[1,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(4:6), x1=c(4:6), y0=unlist(up_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(up_points_bc[2,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(4:6), y=unlist(up_points_bc[2,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(7:9), x1=c(7:9), y0=unlist(up_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(up_points_bc[3,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(7:9), y=unlist(up_points_bc[3,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(10:12), x1=c(10:12), y0=unlist(up_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(up_points_bc[4,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(10:12), y=unlist(up_points_bc[4,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(13:15), x1=c(13:15), y0=unlist(up_points_bc[5,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(up_points_bc[5,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(13:15), y=unlist(up_points_bc[5,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-for(i in 1:7){
-  text(x=c(2,5,8,11,14)[i], y=up_y_range[1]-diff(up_y_range)*0.1, adj=c(0.5,1),
-       labels=bquote(log[e](Flow~(cfs))*"="*.(op(round(up_points_bc[i,"log_q"],digits=2),d = 2))),
-       xpd=NA)
-  text(x=c(2,5,8,11,14)[i], y=up_y_range[1]-diff(up_y_range)*0.2, adj=c(0.5,1),
-       labels=bquote(Water~Temp.*"="*.(op(round(up_points_bc[i,"temp"],digits=2)),d=2)),
-       xpd=NA)
-}
-box(which="plot")
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~ Yolo plot
-plot(c(yo_y_range[1], yo_y_range[2]*1.05)~c(1,12), type="n", las=1, xlim=c(0.5,15.5),
-     xaxs="i", xaxt="n", xlab="", ylab="")
-mtext(text = "Floodplain", side = 2, line = 5, font=2, cex=1.15)
-polygon(x = c(0,3.5,3.5,0,0), y=c(-100,-100,100,100,-10), border=NA, col="gray85")
-polygon(x = c(6.5,9.5,9.5,6.5,6.5), y=c(-10,-10,100,100,-10), border=NA, col="gray85")
-polygon(x = c(12.5,15.5,15.5,12.5,12.5), y=c(-10,-10,100,100,-10), border=NA, col="gray85")
-abline(v=c(3.5,6.5,9.5, 12.5, 15.5, 18.5), lty=3, col="gray70", xlab="")
-# mtext(text = bquote(log[e](Chl)), side = 2, line = 2.5)
-mtext(text = bquote(Chlorophyll-a), side = 2, line = 2.5)
-plot_label("(b)", x_prop = 0.025)
-text(y = yo_plot_multComp_letters$plot_y + (yo_y_range[2]*1.05-yo_y_range[2]),
-     x = yo_plot_multComp_letters$plot_x, cex=1.15,
-     labels = yo_plot_multComp_letters$plot_letters, adj = c(0.5,0.25))
-yo_sub_panel_lab_y = par('usr')[3]+(par('usr')[4]-par('usr')[3])*0.05
-text(y = yo_sub_panel_lab_y,
-     x =c(3.5,6.5,9.5,12.5, 15.5)-2.85, cex=1, font=2,
-     labels = paste0("(b.", 1:5,")"), adj = c(0,0.25))
-
-arrows(x0=c(1:3), x1=c(1:3), y0=unlist(yo_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(yo_points_bc[1,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(1:3), y=unlist(yo_points_bc[1,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(4:6), x1=c(4:6), y0=unlist(yo_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(yo_points_bc[2,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(4:6), y=unlist(yo_points_bc[2,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(7:9), x1=c(7:9), y0=unlist(yo_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(yo_points_bc[3,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(7:9), y=unlist(yo_points_bc[3,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(10:12), x1=c(10:12), y0=unlist(yo_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(yo_points_bc[4,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(10:12), y=unlist(yo_points_bc[4,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(13:15), x1=c(13:15), y0=unlist(yo_points_bc[5,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(yo_points_bc[5,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(13:15), y=unlist(yo_points_bc[5,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-for(i in 1:5){
-  text(x=c(2,5,8,11,14)[i], y=yo_y_range[1]-diff(yo_y_range)*0.1, adj=c(0.5,1),
-       labels=bquote(log[e](Flow~(cfs))*"="*.(op(round(yo_points_bc[i,"log_q"],digits=2),d = 2))),
-       xpd=NA)
-  text(x=c(2,5,8,11,14)[i], y=yo_y_range[1]-diff(yo_y_range)*0.2, adj=c(0.5,1),
-       labels=bquote(Water~Temp.*"="*.(op(round(yo_points_bc[i,"temp"],digits=2)),d=2)),
-       xpd=NA)
-}
-box(which="plot")
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~ Downstream plot
-plot(c(do_y_range[1], do_y_range[2]*1.05)~c(1,12), type="n", las=1, xlim=c(0.25,12.5),
-     xaxs="i", xaxt="n", xlab="", ylab="")
-mtext(text = "Downstream", side = 2, line = 5, font=2, cex=1.15)
-polygon(x = c(0,3.5,3.5,0,0), y=c(-10,-10,10,10,-10), border=NA, col="gray85")
-polygon(x = c(6.5,9.5,9.5,6.5,6.5), y=c(-10,-10,10,10,-10), border=NA, col="gray85")
-abline(v=c(3.5,6.5,9.5, 12.5, 15.75), lty=3, col="gray70", xlab="")
-# mtext(text = bquote(log[e](Chl)), side = 2, line = 2.5)
-mtext(text = bquote(Chlorophyll-a), side = 2, line = 2.5)
-plot_label("(c)", x_prop = 0.02, y_prop=0.94)
-text(y = do.plot_multComp_letters$plot_y + (do_y_range[2]*1.05-do_y_range[2]),
-     x = do.plot_multComp_letters$plot_x, cex=1.15,
-     labels = do.plot_multComp_letters$plot_letters, adj = c(0.5,0.25))
-
-do_sub_panel_lab_y = par('usr')[3]+(par('usr')[4]-par('usr')[3])*0.05
-text(y = do_sub_panel_lab_y,
-     x =c(3.5,6.5,9.5,12.5)-0.15, cex=1, font=2,
-     labels = paste0("(c.", 1:4,")"), adj = c(1,0.25))
-
-arrows(x0=c(1:3), x1=c(1:3), y0=unlist(do_points_bc[1,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(do_points_bc[1,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(1:3), y=unlist(do_points_bc[1,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(4:6), x1=c(4:6), y0=unlist(do_points_bc[2,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(do_points_bc[2,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(4:6), y=unlist(do_points_bc[2,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(7:9), x1=c(7:9), y0=unlist(do_points_bc[3,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(do_points_bc[3,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(7:9), y=unlist(do_points_bc[3,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-arrows(x0=c(10:12), x1=c(10:12), y0=unlist(do_points_bc[4,c("none_lo", "shrt_lo", "long_lo")]),
-       y1=unlist(do_points_bc[4,c("none_up", "shrt_up", "long_up")]), code=3, angle = 90, length = 0.1)
-points(x=c(10:12), y=unlist(do_points_bc[4,c("none_pred", "shrt_pred", "long_pred")]),
-       pch=21, bg=c("purple4", "green", "darkred"), cex=1.5)
-
-for(i in 1:7){
-  text(x=c(2,5,8,11)[i], y=do_y_range[1]-diff(do_y_range)*0.1, adj=c(0.5,1),
-       labels=bquote(log[e](Flow~(cfs))*"="*.(op(round(do_points_bc[i,"log_q"],digits=2),d = 2))),
-       xpd=NA)
-  text(x=c(2,5,8,11)[i], y=do_y_range[1]-diff(do_y_range)*0.2, adj=c(0.5,1),
-       labels=bquote(Water~Temp.*"="*.(op(round(do_points_bc[i,"temp"],digits=2)),d=2)),
-       xpd=NA)
-}
-box(which="plot")
-
-legend("bottomleft", legend = c("No Inundation", "Short Inundation", "Long Inundation"),
-        pch=21, pt.bg=c("purple4", "green", "darkred"), inset=0.045, pt.cex=1.5,
-       bg = "white")
-
-dev.off()
