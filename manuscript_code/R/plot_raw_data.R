@@ -53,7 +53,7 @@ pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
   geom_jitter(aes(x = inund_factor, y = log_chla, color = inund_factor), alpha = 0.7) +
   geom_boxplot(aes(x = inund_factor, y = log_chla ),alpha = 0, size = 0.6) +
   scale_color_manual(values = pal_vals) +
-  scale_y_continuous(breaks = seq(-2, 4, 1), sec.axis = sec_axis(~exp(.), name = expression(Chlorophyll-a~(µg~L^-1)), breaks = c(0.37, 1, 2.71, 7.39, 20.09, 54.6))) +
+  scale_y_continuous(breaks = seq(-2, 4, 1), sec.axis = sec_axis(~exp(.), name = expression(Chlorophyll-a~(µg~L^-1)), breaks = c(0.4, 1, 2.7, 7.4, 20.1, 54.6))) +
   facet_wrap(~region) +
     labs(y = expression(log[e]~Chlorophyll-a), x = "Inundation Factor", color = "Region") +
   theme_bw() +
@@ -67,12 +67,13 @@ pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
     geom_boxplot(aes(x = inund_factor, y = log_qsdy), alpha = 0, size = 0.6) +
     facet_wrap(~region) +
     scale_color_manual(values = pal_vals) +
-    scale_y_continuous(sec.axis = sec_axis(~exp(.), name = "Mean Daily Flow (cfs)", breaks = c(148.4, 1808.0, 22026.5,268337.3)))+
+    scale_y_continuous(sec.axis = sec_axis(~exp(.), name = "Mean Daily Flow (cfs)", breaks = c(148, 1808, 22027,268337)))+
     # scale_y_continuous(breaks = seq(0, 15, 3), sec.axis = sec_axis(~exp(.), name = "Flow (cfs)")) +
     labs(y = expression(log[e]~Mean~Daily~Flow), color = "Region") +
     theme_bw() +
     theme_vis +
-    theme(axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
           axis.title.y.right = element_text(margin = margin(0,0,0, 11))))
 
 
@@ -83,7 +84,8 @@ pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
     labs(y = "Mean Weekly\nWater Temperature (°C)", color = "Region") +
     theme_bw() +
     theme_vis +
-    theme(axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
           axis.title.y.right = element_text(margin = margin(0,0,0, 11))))
 
 ## Combine boxplots -----------------------------------------------------
