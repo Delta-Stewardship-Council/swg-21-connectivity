@@ -64,6 +64,18 @@ chl_2016_ma <- chl_2016_ma[order(as.Date(chl_2016_ma$date)),]
 tiff("manuscript_code/figures/Fig6_2016_plot.tif", width = 7, height = 8.5, units = "in", pointsize = 14,
     bg = "white", res = 350)
 
+plot(chl_2016_y$date, chl_2016_y$yolo_dayflow, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
+     col = "#0072B2", type = 'l', lwd = 3, lty = 1, pch = 18, cex = 0.75,
+     xlab = "", ylab = "", xaxt='n', yaxt='n') #lty = 6,type = 'b'
+mtext("Flow (in thousands, cfs)", side=4, line=-1.5)
+axis(4, at = seq(3000, 15000, 3000), labels = c(3, 6, 9, 12, 15))
+par(new = TRUE)
+plot(chl_2016_y$date, chl_2016_y$mean, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
+     col = "#D55E00", ylim = c(0,70), type = 'l', lty = 1, lwd = 3,  pch = 20, cex = 0.75,
+     xlab = "", ylab = "", xaxt='n', yaxt='n') #lty = 4,type = 'b'
+
+par(new = TRUE)
+
 plot(chl_2016_mb$date, chl_2016_mb$chlorophyll, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
      col = "#56B4E9", ylim = c(0,70), type = 'b', lwd = 3, lty = 5, pch = 17, cex = 0.75,
      xlab = "Date", ylab = expression(Chlorophyll-a~(µg~L^-1)))
@@ -77,22 +89,14 @@ par(new = TRUE)
 plot(chl_2016_ma$date, chl_2016_ma$chlorophyll, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
      col = "#999999", ylim = c(0,70), type = 'b', lwd = 3, lty = 3, pch = 15, cex = 0.75,
      xlab = "", ylab = "", xaxt='n', yaxt='n')
-par(new = TRUE)
-plot(chl_2016_y$date, chl_2016_y$yolo_dayflow, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
-     col = "#0072B2", type = 'b', lwd = 3, lty = 6, pch = 18, cex = 0.75,
-     xlab = "", ylab = "", xaxt='n', yaxt='n')
-mtext("Flow (in thousands, cfs)", side=4, line=-1.5)
-axis(4, at = seq(3000, 15000, 3000), labels = c(3, 6, 9, 12, 15))
-par(new = TRUE)
-plot(chl_2016_y$date, chl_2016_y$mean, xlim = c(as.Date("2016-01-27"), as.Date("2016-06-13")),
-     col = "#D55E00", ylim = c(0,70), type = 'b', lwd = 3, lty = 4, pch = 20, cex = 0.75,
-     xlab = "", ylab = "", xaxt='n', yaxt='n')
+
+
 #segments(x0 = as.Date("2016-03-25"), y0 = 58.8, x1 = as.Date("2016-05-11"), y1 = 58.8, lwd = 3)
 #text(as.Date("2016-04-16"), 62, "45 days")
 op <- par(cex = 0.75)
 legend("topleft", c("Mainstem Chl-a", "Floodplain Chl-a", "Downstream Chl-a", "Flow (cfs)", "Temperature (°C)"),
        col = c("#999999", "#009E73", "#56B4E9", "#0072B2", "#D55E00"),
        pch = c(15, 16, 17, 18, 20),
-       lty = c(3, 2, 5, 6, 4), lwd = 2)
+       lty = c(3, 2, 5, 1, 1), lwd = 2) #, 6, 4
 
 dev.off()
