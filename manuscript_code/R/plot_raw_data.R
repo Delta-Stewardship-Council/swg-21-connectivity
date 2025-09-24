@@ -72,7 +72,8 @@ pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
     labs(y = expression(log[e]~Mean~Daily~Flow), color = "Region") +
     theme_bw() +
     theme_vis +
-    theme(axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
           axis.title.y.right = element_text(margin = margin(0,0,0, 11))))
 
 
@@ -83,7 +84,8 @@ pal_vals = c("#CC79A7","#D55E00", "#0072B2" )
     labs(y = "Mean Weekly\nWater Temperature (°C)", color = "Region") +
     theme_bw() +
     theme_vis +
-    theme(axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_text(margin = margin(0, 0, 0, 0)),
           axis.title.y.right = element_text(margin = margin(0,0,0, 11))))
 
 ## Combine boxplots -----------------------------------------------------
